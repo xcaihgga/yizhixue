@@ -615,8 +615,7 @@ function posDiagram(name,area){
   </svg>`;
 }
 function bodyGlyph(area){
-  const parts=area;
-  return `<svg width="52" height="54" viewBox="0 0 40 44"><g fill="none" stroke="#444" stroke-width="1.6" stroke-linecap="round"><circle cx="20" cy="7" r="5.2"/><path d="M15 15 h10 M20 12 V18"/><path d="M15 18 l-4 12 M25 18 l4 12"/><path d="M16 30 L12 42 M24 30 L28 42"/></g></svg>`;
+  return `<svg width="52" height="54" viewBox="0 0 40 44"><g fill="none" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round"><circle cx="20" cy="7" r="5.2"/><path d="M15 15 h10 M20 12 V18"/><path d="M15 18 l-4 12 M25 18 l4 12"/><path d="M16 30 L12 42 M24 30 L28 42"/></g></svg>`;
 }
 
 /* ---------- 历史 ---------- */
@@ -777,7 +776,7 @@ function applyTheme(mode){
   const male = mode==="male";
   const btn=$("#themeToggle"); if(btn)btn.innerHTML = male?"♀ 女生版":"♂ 男生版";
   const sw=$("#swTheme"); if(sw)sw.classList.toggle("on",male);
-  const mc=document.querySelector('meta[name="theme-color"]'); if(mc)mc.setAttribute("content", male?"#0E7C7B":"#B8566B");
+  const mc=document.querySelector('meta[name="theme-color"]'); if(mc)mc.setAttribute("content", male?"#081319":"#0B1220");
   try{ localStorage.setItem("rad_theme",male?"male":"female"); }catch(e){}
 }
 function toggleTheme(sw){
