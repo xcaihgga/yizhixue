@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="female">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>放射学习助手</title>
+  <meta name="theme-color" content="#B8566B">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="greet">
+        <div>
+          <h1 class="brand"><span class="brand-logo" data-lucide="activity"></span> 放射学习助手</h1>
+          <div class="sub">AI 阅片 · 每日一练 · 复习回看</div>
+        </div>
+        <div class="topbar-right">
+          <button id="themeToggle" class="theme-toggle" type="button">♂ 男生版</button>
+          <div class="badge">Radiology</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 7 视图容器（每次仅一个 .active） -->
+    <main id="view-home" class="view active"></main>
+    <main id="view-ai" class="view"></main>
+    <main id="view-dr" class="view"></main>
+    <main id="view-quiz" class="view"></main>
+    <main id="view-pos" class="view"></main>
+    <main id="view-history" class="view"></main>
+    <main id="view-mine" class="view"></main>
+
+    <!-- 底部导航（冻结，7 项不可增删改序） -->
+    <nav class="tabbar">
+      <div class="tab active" data-v="home"><span class="ti" data-lucide="home"></span><span class="tl">首页</span></div>
+      <div class="tab" data-v="ai"><span class="ti" data-lucide="scan-line"></span><span class="tl">阅片</span></div>
+      <div class="tab" data-v="dr"><span class="ti" data-lucide="crosshair"></span><span class="tl">判读</span></div>
+      <div class="tab" data-v="quiz"><span class="ti" data-lucide="pencil-line"></span><span class="tl">练习</span></div>
+      <div class="tab" data-v="pos"><span class="ti" data-lucide="person-standing"></span><span class="tl">体位</span></div>
+      <div class="tab" data-v="history"><span class="ti" data-lucide="history"></span><span class="tl">历史</span></div>
+      <div class="tab" data-v="mine"><span class="ti" data-lucide="user"></span><span class="tl">我的</span></div>
+    </nav>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script>window.APP_VERSION = "20260901a";</script>
+  <script src="mock.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
