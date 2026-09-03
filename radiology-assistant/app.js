@@ -94,6 +94,21 @@ function rate(){ return QUIZ_STATS.total? Math.round(QUIZ_STATS.correct/QUIZ_STA
 
 function getWrong(){ return store.get("rad_wrong_book",[]); }
 function addWrong(t){ const w=getWrong(); if(!w.some(x=>x.t===t.t)){ w.push(t); store.set("rad_wrong_book",w); } }
+
+/* 体位「标记已掌握」：兼具收藏 + 学习打卡统计 */
+function posTotalCount(){ return Object.values(DB.posAreas).reduce((n,g)=>n+g.pos.length,0); }
+function getMastered(){ return store.get("rad_mastered_pos",[]); }
+function masteredCount(){ return getMastered().length; }
+function isMastered(key){ return getMastered().indexOf(key)>=0; }
+function toggleMastered(key){
+  const m=getMastered(); const at=m.indexOf(key); const posKey=key;
+  if(at>=0){ m.splice(at,1); store.set("rad_mastered_pos",m);
+    QUIZ_STATS.total=Math.max(0,QUIZ_STATS.total-1); QUIZ_STATS.correct=Math.max(0,QUIZ_STATS.correct-1); saveStats();
+    return false; }
+  m.push(posKey); store.set("rad_mastered_pos",m);
+  QUIZ_STATS.total++; QUIZ_STATS.correct++; bumpStreak(); saveStats(); // 计入学习统计并打卡
+  return true;
+}
 function todaysDaily(){
   const k="rad_daily_"+todayStr();
   let d = store.get(k,null);
@@ -238,14 +253,15 @@ function drBoneFilm(kind){
     <g transform="translate(0,10)">${fig}</g></svg>`;
 }
 function renderDR(){
-  const box=$("#view-dr"); box.style.display="block";
-  // 用一次性渲染容器，避免 display 竞争
-  box.style.display="";
+  const box=$("#view-dr"); box.style.display="block"; box.style.display="";
   const i=S.dr.idx; const c=DB.drCases[i];
-  const done = S.dr.judged;
-  const pct = num(done/DR_TOTAL*100);
-  const chosen = S.dr.map[i];
+  const done = S.dr.judged; const pct = num(done/DR_TOTAL*100);
+  const chosen = S.dr.map[i]; const pending = S.dr.pending; const judged = chosen!==undefined;
   const letters=["A","B","C","D","E"];
+  // 选项 class：已提交→高亮对错并锁定；未提交→高亮当前选中
+  const optCls = idx => judged
+    ? (idx===c.a ? "correct" : (idx===chosen ? "wrong" : ""))
+    : (idx===pending ? "selected" : "");
   box.innerHTML=`
     <div class="dr-progress">
       <div class="dp-l">骨折判读</div>
@@ -254,30 +270,33 @@ function renderDR(){
     </div>
     <div class="dr-film"><span class="film-tag">DR · ${c.type}</span>${drBoneFilm(c.type)}<div class="muted" style="font-size:11px">${c.part}</div></div>
     <div class="dr-q">第 ${i+1} 例 · ${c.t}</div>
-    ${letters.map((k,idx)=>`<button class="dr-opt ${chosen!==undefined && idx===c.a?"correct":""}" data-o="${idx}"><span class="k">${k}</span>${c.o[idx]}</button>`).join("")}
+    ${letters.map((k,idx)=>`<button class="dr-opt ${optCls(idx)}" data-o="${idx}" ${judged?'disabled':''}><span class="k">${k}</span>${c.o[idx]}</button>`).join("")}
+    <div id="drSubmitArea" class="mt16">${judged
+      ? `<button class="btn btn-primary btn-block" disabled>${icon("check")} 已提交</button>`
+      : `<button class="btn btn-primary btn-block" id="drSubmit" ${pending===undefined?'disabled':''}>${icon("check")} 提交答案</button>`}</div>
     <div id="drEval" class="mt16"></div>
     <div class="dr-foot">
       <button class="btn btn-line" id="drPrev" ${i===0?'disabled':''}>上一例</button>
       <button class="btn btn-ghost" id="drRedo">↺ 重做</button>
       <button class="btn btn-primary" id="drNext" ${i>=DR_TOTAL-1?'disabled':''}>下一例</button>
     </div>
-    <div class="dr-nav-note muted" style="font-size:11px;text-align:center;margin-top:8px">作答即判定，翻页保留；进度仅存于本次会话（同原版）</div>`;
+    <div class="dr-nav-note muted" style="font-size:11px;text-align:center;margin-top:8px">先选答案，再点「提交」判定；已提交的翻页保留，进度仅存于本次会话</div>`;
 
-  $$("#view-dr .dr-opt").forEach(b=>b.addEventListener("click",()=>answerDR(i,+b.dataset.o)));
+  // 选项：未提交时可选中（换选即高亮）；已提交锁定
+  $$("#view-dr .dr-opt").forEach(b=>b.addEventListener("click",()=>{
+    if(judged) return;
+    S.dr.pending = +b.dataset.o; renderDR();
+  }));
+  // 提交：仅在有选中时机生效
+  const submit=$("#drSubmit"); if(submit) submit.addEventListener("click",()=>{ if(S.dr.pending!==undefined) answerDR(i,S.dr.pending); });
+  // 导航：切换/重做时清掉当前待提交选择
   let btn;
-  (btn=$("#drPrev"))&&btn.addEventListener("click",()=>{ if(S.dr.idx>0){S.dr.idx--;renderDR();} });
-  (btn=$("#drRedo"))&&btn.addEventListener("click",()=>{ S.dr.map={}; S.dr.judged=0; S.dr.idx=0; renderDR(); toast("已重置本轮判读会话"); });
-  (btn=$("#drNext"))&&btn.addEventListener("click",()=>{ if(S.dr.idx<DR_TOTAL-1){S.dr.idx++;renderDR();} });
+  (btn=$("#drPrev"))&&btn.addEventListener("click",()=>{ if(S.dr.idx>0){ S.dr.pending=undefined; S.dr.idx--; renderDR(); } });
+  (btn=$("#drRedo"))&&btn.addEventListener("click",()=>{ S.dr.map={}; S.dr.judged=0; S.dr.pending=undefined; S.dr.idx=0; renderDR(); toast("已重置本轮判读会话"); });
+  (btn=$("#drNext"))&&btn.addEventListener("click",()=>{ if(S.dr.idx<DR_TOTAL-1){ S.dr.pending=undefined; S.dr.idx++; renderDR(); } });
 
-  if(chosen!==undefined){
-    const cc=c, ch=chosen;
-    const right = ch===cc.a;
-    // 高亮
-    $$("#view-dr .dr-opt").forEach(b=>{
-      const o=+b.dataset.o;
-      if(o===ch)b.classList.add(right?"correct":"wrong");
-      if(o===cc.a)b.classList.add("correct");
-    });
+  if(judged){
+    const cc=c, ch=chosen, right=ch===cc.a;
     $("#drEval").innerHTML =
       `<div class="feedback ${right?'ok':'bad'}">
         <div class="fb-t">${right?icon("check-circle"):icon("x-circle")} ${right?"回答正确":"回答错误"}</div>
@@ -288,8 +307,8 @@ function renderDR(){
   }
 }
 function answerDR(i,o){
-  if(S.dr.map[i]!==undefined) return; // 已锁定
-  S.dr.map[i]=o; S.dr.judged=Object.keys(S.dr.map).length;
+  if(S.dr.map[i]!==undefined) return; // 已提交，锁定
+  S.dr.map[i]=o; S.dr.judged=Object.keys(S.dr.map).length; S.dr.pending=undefined;
   QUIZ_STATS.total++; if(o===DB.drCases[i].a)QUIZ_STATS.correct++; bumpStreak(); saveStats();
   renderDR();
 }
@@ -556,7 +575,10 @@ function renderPos(){
       <button data-p="body" class="on">人体图</button>
       <button data-p="all">全部部位</button>
     </div>
-    <div id="posBody" class="mt8"></div>`;
+    <div class="pos-master mt12" style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft)">
+      <span class="tag rose">${icon("check")} 已掌握</span> ${masteredCount()} / ${posTotalCount()} 个标准体位
+    </div>
+    <div id="posBody" class="mt12"></div>`;
   const tabs=$$("#view-pos .pos-tabs button");
   tabs.forEach(b=>b.addEventListener("click",()=>{ S.posTab=b.dataset.p; tabs.forEach(x=>x.classList.toggle("on",x===b)); renderPosInner(); }));
   const si=$("#posSearch");
@@ -589,19 +611,31 @@ function openAreaSheet(area){
   const g=DB.posAreas[area];
   openSheet(`<div class="sheet-head"><h3>${area}</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
     <div class="muted" style="font-size:13px;margin-bottom:10px">${g.pos.length} 个标准体位 · 点按查看详解</div>
-    <div class="card-btnlist">${g.pos.map((p,i)=>`<button data-p="${i}"><span style="font-size:18px;color:var(--warn)">${icon("person-standing")}</span> ${p.name} <span style="margin-left:auto;color:var(--ink-soft)">${icon("chevron-right")}</span></button>`).join("")}</div>`);
+    <div class="card-btnlist">${g.pos.map((p,i)=>`<button data-p="${i}"><span style="font-size:18px;color:var(--warn)">${icon("person-standing")}</span> ${p.name} ${isMastered(area+'::'+i)?`<span style="color:var(--ok)">${icon("check-circle")}</span>`:''} <span style="margin-left:auto;color:var(--ink-soft)">${icon("chevron-right")}</span></button>`).join("")}</div>`);
   $$(".sheet [data-p]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.p; openPosDetail(area,i); }));
   bindSheetClose();
 }
 function openPosDetail(area,i){
   const p=DB.posAreas[area].pos[i];
+  const key=area+"::"+i;
+  const master=isMastered(key);
   const kv=[["摄影目的",p.aim],["患者体位",p.post],["探测器 / 暗盒",p.det],["中心线",p.cr],["SID",p.sid],["照射野",p.field],["曝光条件",p.expo],["标准影像",p.standard],["常见错误",p.errors]];
   openSheet(`<div class="sheet-head"><h3>${p.name}</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
     <div class="tag rose mb0">${area} · 标准体位</div>
     <div class="mt16">${posDiagram(p.name,area)}</div>
     <div class="mt16 card">
       ${kv.map(([k,v])=>v?`<div class="pos-detail-kv"><div class="k">${k}</div><div class="v">${v}</div></div>`:"").join("")}
-    </div>`);
+    </div>
+    <button class="btn btn-block mt16 ${master?'':'btn-primary'}" id="posMaster">${icon(master?"check-circle":"book-open")} ${master?"已掌握（点击取消）":"标记已掌握 · 提交"}</button>`);
+  const mk=$("#posMaster");
+  if(mk) mk.addEventListener("click",()=>{
+    const on=toggleMastered(key);
+    mk.innerHTML = on ? icon("check-circle")+" 已掌握（点击取消）" : icon("book-open")+" 标记已掌握 · 提交";
+    mk.classList.toggle("btn-primary",!on); mk.classList.toggle("btn-line",on);
+    const pm=$(".pos-master"); // 同步顶部已掌握进度
+    if(pm) pm.innerHTML = `<span class="tag rose">${icon("check")} 已掌握</span> ${masteredCount()} / ${posTotalCount()} 个标准体位`;
+    toast(on ? "已标记「"+p.name+"」，计入学习统计与打卡" : "已取消「"+p.name+"」已掌握");
+  });
   bindSheetClose();
 }
 function posDiagram(name,area){
