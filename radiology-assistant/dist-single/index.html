@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="female">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>放射学习助手</title>
+  <meta name="theme-color" content="#0B1220">
+  <style>
+/* ============================================================
+   放射学习助手 · 高保真原型 styles.css
+   深色医学风 · 双主题：female(脉冲红粉) ⇄ male(医疗青绿)  html[data-theme]
+   Design Contract: vanilla / pure-static / 移动端 SPA
+   ============================================================ */
+:root{
+  /* 深色医学风 · 女生版：深海军蓝 + 脉冲红粉强调 */
+  --cream:#0B1220; --surface:#121A2B; --ink:#E8EEF8; --ink-soft:#8FA1BC; --line:#24304C;
+  --rose:#FF7FA2; --rose-soft:#3A2434;
+  --grad:linear-gradient(135deg,#FF7FA2 0%,#F59E6B 100%);
+  --grad-soft:linear-gradient(135deg,rgba(255,127,162,.16) 0%,rgba(245,158,107,.16) 100%);
+  --ok:#35D0A1; --ok-soft:#12372E; --bad:#FF6B6B; --bad-soft:#3A2025; --warn:#F5B46B;
+  --ai:#6FA8FF; --ai-soft:#1B2A44; --ai-ink:#9CC0FF;
+  --lav:#2A2F4A; --peach:#3A2E22; --mint:#173331;
+  --shadow:0 12px 34px -18px rgba(0,0,0,.65);
+  --shadow-soft:0 1px 2px rgba(0,0,0,.4),0 12px 32px -20px rgba(0,0,0,.6);
+  --shadow-card:0 1px 2px rgba(0,0,0,.35),0 12px 30px -18px rgba(0,0,0,.55);
+  --ring:0 0 0 3px rgba(255,127,162,.35);
+  --safe-bottom:env(safe-area-inset-bottom,0px); --safe-top:env(safe-area-inset-top,0px);
+  --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro SC","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+  --font-num:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --radius-lg:24px; --radius-md:16px; --radius-sm:12px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="male"]{
+  /* 深色医学风 · 男生版：冷青灰底 + 医疗青绿强调 */
+  --cream:#081319; --surface:#0E1D26; --ink:#E4F2F1; --ink-soft:#8FB0B0; --line:#1E343D;
+  --rose:#2FE0CE; --rose-soft:#0E2E2C;
+  --grad:linear-gradient(135deg,#2FE0CE 0%,#56C4FF 100%);
+  --grad-soft:linear-gradient(135deg,rgba(47,224,206,.16) 0%,rgba(86,196,255,.16) 100%);
+  --ok:#35D0A1; --ok-soft:#12372E; --bad:#FF6B6B; --bad-soft:#3A2025; --warn:#F5B46B;
+  --ai:#6FA8FF; --ai-soft:#16304b; --ai-ink:#9CC0FF;
+  --lav:#243047; --peach:#332C1E; --mint:#123029;
+  --shadow:0 12px 34px -18px rgba(0,0,0,.6);
+  --shadow-soft:0 1px 2px rgba(0,0,0,.38),0 12px 32px -20px rgba(0,0,0,.55);
+  --shadow-card:0 1px 2px rgba(0,0,0,.32),0 12px 30px -18px rgba(0,0,0,.5);
+  --ring:0 0 0 3px rgba(47,224,206,.32);
+  --fig-stroke:#4FCBD0; --fig-grad-top:#102733; --fig-grad-bot:#0C1C25;
+}
+[data-theme="female"]{ --fig-stroke:#E98AA6; --fig-grad-top:#1E2A44; --fig-grad-bot:#111826; }
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font-sans);color:var(--ink);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(900px 480px at 50% -8%, color-mix(in srgb,var(--rose) 16%,transparent), transparent 65%),
+    radial-gradient(700px 420px at 100% 110%, color-mix(in srgb,var(--ai) 12%,transparent), transparent 60%),
+    var(--cream);
+  background-attachment:fixed}
+
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:transparent;position:relative;padding-top:var(--safe-top);padding-bottom:calc(82px + var(--safe-bottom));}
+
+/* ---------- 顶栏 ---------- */
+.topbar{position:sticky;top:0;z-index:20;padding:16px 18px 12px;background:color-mix(in srgb,var(--cream) 78%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.greet{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.topbar h1{font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1.2;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.topbar h1 svg{width:23px;height:23px;color:var(--rose)}
+.topbar .sub{font-size:12.5px;color:var(--ink-soft);margin-top:4px;font-weight:400}
+.topbar-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.theme-toggle{background:var(--rose-soft);border:none;color:var(--rose);font-weight:700;font-size:12px;padding:5px 11px;border-radius:999px;cursor:pointer;font-family:inherit}
+.theme-toggle:active{transform:scale(.94)}
+.badge{font-family:var(--font-num);font-size:10px;color:var(--ink-soft);letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+
+/* ---------- 视图容器 ---------- */
+.view{display:none;padding:16px 16px 24px;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.view.active>*{animation:riseIn .34s var(--ease) both}
+.view.active>*:nth-child(2){animation-delay:.04s}
+.view.active>*:nth-child(3){animation-delay:.08s}
+.view.active>*:nth-child(4){animation-delay:.12s}
+.view.active>*:nth-child(5){animation-delay:.16s}
+.view.active>*:nth-child(6){animation-delay:.20s}
+@keyframes riseIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+/* ---------- 底部导航 ---------- */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--safe-bottom));z-index:30}
+.tab{flex:1;text-align:center;padding:9px 0 8px;cursor:pointer;color:var(--ink-soft);transition:.15s var(--ease);position:relative;background:none;border:none;font-family:inherit}
+.tab .ti,.tab .tl{position:relative;z-index:1}
+.tab .ti{font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;height:24px}
+.tab .ti svg{width:22px;height:22px}
+.tab .tl{font-size:10px;margin-top:3px;font-weight:600}
+.tab.active{color:var(--rose)}
+.tab.active .ti svg{color:var(--rose)}
+.tab.active::before{content:"";position:absolute;top:3px;left:50%;transform:translateX(-50%);width:32px;height:28px;border-radius:50%;background:var(--rose-soft);z-index:0}
+.tab:active{transform:scale(.92)}
+
+/* ---------- 通用组件 ---------- */
+[data-lucide]{width:20px;height:20px;stroke-width:1.9}
+.card{background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:16px}
+.card-hover{transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.card-hover:active{transform:scale(.98)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:14px;padding:13px 18px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:.16s var(--ease)}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 18px -8px rgba(176,88,107,.5)}
+[data-theme="male"] .btn-primary{box-shadow:0 8px 18px -8px rgba(14,124,123,.5)}
+.btn-ghost{background:var(--rose-soft);color:var(--rose)}
+.btn-soft{background:var(--grad-soft);color:var(--rose)}
+.btn-line{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn-block{width:100%}
+.btn:disabled,.btn.disabled{opacity:.55;pointer-events:none}
+.btn-sm{padding:7px 13px;font-size:13px;border-radius:11px}
+.btn svg{width:17px;height:17px}
+
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px}
+.tag b{font-weight:700}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.tag.ai{background:var(--ai-soft);color:var(--ai-ink)}
+.tag.rose{background:var(--rose-soft);color:var(--rose)}
+.tag.lav{background:var(--lav);color:var(--ink-soft)}
+.tag.mint{background:var(--mint);color:var(--ok)}
+
+.divider{height:1px;background:var(--line);margin:14px 0}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}
+.muted{color:var(--ink-soft)}
+.num{font-family:var(--font-num)}
+
+/* ---------- 首页 ---------- */
+.h-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.h-stat{background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:14px 10px;text-align:center}
+.h-stat .val{font-family:var(--font-num);font-size:24px;font-weight:800;color:var(--rose)}
+.h-stat .lbl{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+.h-hero{background:var(--grad);color:#fff;border-radius:var(--radius-lg);padding:18px;position:relative;overflow:hidden}
+.h-hero::after{content:"";position:absolute;right:-24px;top:-24px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12)}
+.h-hero::before{content:"";position:absolute;right:34px;bottom:-40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08)}
+.h-hero .date{font-size:12px;opacity:.92}
+.h-hero .slogan{font-size:17px;font-weight:800;margin-top:2px}
+.h-hero .spark{font-size:12px;opacity:.9;margin-top:6px}
+.h-sec-title{font-size:13px;font-weight:800;color:var(--ink);margin:20px 0 10px;display:flex;align-items:center;justify-content:space-between}
+.h-sec-title .more{font-size:12px;font-weight:600;color:var(--ink-soft)}
+.h-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.h-quick{background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:14px;cursor:pointer;transition:transform .16s,box-shadow .16s;border:none;text-align:left;font-family:inherit;width:100%}
+.h-quick:active{transform:scale(.97)}
+.h-quick .ic{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+.h-quick .ic svg{width:21px;height:21px}
+.h-quick .qt{font-weight:800;font-size:15px;color:var(--ink)}
+.h-quick .qd{font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.45}
+.ic-pos{background:var(--peach);color:var(--warn)}
+.ic-ai{background:var(--ai-soft);color:var(--ai-ink)}
+.ic-quiz{background:var(--rose-soft);color:var(--rose)}
+.ic-exam{background:var(--lav);color:#6d5bb0}
+.ic-book{background:var(--bad-soft);color:var(--bad)}
+.ic-hist{background:var(--mint);color:var(--ok)}
+.h-tip{background:var(--grad-soft);border-radius:var(--radius-md);padding:14px 15px;display:flex;gap:11px}
+.h-tip svg{color:var(--rose);flex-shrink:0;margin-top:2px}
+.h-tip .t{font-size:13px;color:var(--ink);line-height:1.6}
+
+/* ---------- AI 阅片 ---------- */
+.mode-switch{display:flex;background:var(--surface);border-radius:13px;padding:4px;gap:4px;box-shadow:var(--shadow-card)}
+.mode-switch button{flex:1;border:none;background:transparent;padding:10px;border-radius:10px;font-size:13.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;font-family:inherit}
+.mode-switch button.on{background:var(--grad);color:#fff;box-shadow:0 4px 10px -4px rgba(0,0,0,.25)}
+.seg{display:flex;gap:8px}
+.seg .seg-btn{flex:1;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:11px;text-align:center;font-weight:700;font-size:13.5px;color:var(--ink-soft);cursor:pointer;font-family:inherit}
+.seg .seg-btn.on{border-color:var(--rose);color:var(--rose);background:var(--rose-soft)}
+.field-label{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:14px 0 8px;display:block}
+.upload-zone{border:1.8px dashed var(--line);border-radius:var(--radius-md);background:var(--surface);padding:22px;text-align:center;cursor:pointer;transition:.16s;min-height:120px;display:flex;align-items:center;justify-content:center}
+.upload-zone:active{border-color:var(--rose)}
+.upload-zone .uz-svg{width:44px;height:44px;border-radius:14px;background:var(--rose-soft);color:var(--rose);display:flex;align-items:center;justify-content:center;margin:0 auto 9px}
+.upload-zone .uz-svg svg{width:22px;height:22px}
+.upload-zone .uz-t{font-weight:800;font-size:14.5px}
+.upload-zone .uz-d{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.thumb-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.thumb{width:76px;height:76px;border-radius:12px;border:1.5px solid var(--line);overflow:hidden;position:relative;background:var(--cream)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+.loading-bar{height:4px;border-radius:99px;background:var(--rose-soft);overflow:hidden;margin-top:12px}
+.loading-bar i{display:block;height:100%;width:40%;border-radius:99px;background:var(--grad);animation:bar 1s infinite}
+@keyframes bar{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+.report{background:var(--ai-soft);border-radius:var(--radius-md);padding:14px}
+.report .r-h{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--ai-ink);font-size:14px}
+.report .r-h svg{width:17px;height:17px}
+.ai-gate{background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);border-radius:var(--radius-md);padding:13px 14px;display:flex;gap:11px;align-items:flex-start}
+.ai-gate svg{color:var(--warn);flex-shrink:0;margin-top:2px}
+.ai-gate .g-t{font-size:13px;font-weight:700;color:var(--warn)}
+.ai-gate .g-d{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+
+/* Cobb 角测量 */
+.cobb{background:#0B0F14;border-radius:var(--radius-lg);overflow:hidden;padding:8px}
+.cobb svg{display:block;width:100%;height:auto;min-height:210px}
+.cobb-line{stroke:var(--rose);stroke-width:2.5;stroke-linecap:round}
+.cobb-anchor{fill:var(--rose)}
+.cobb-vertex{fill:#fff}
+.cobb-tag{font-family:var(--font-num);font-size:12px;fill:#fff}
+.cobb-title{display:flex;align-items:center;gap:7px;color:var(--rose);font-weight:800;font-size:13px;margin-top:8px;padding:0 4px}
+.cobb-title svg{width:16px;height:16px;color:var(--rose)}
+
+/* ---------- 判读 ---------- */
+.dr-progress{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dr-progress .dp-l{font-size:13px;font-weight:700}
+.dr-progress .dp-bar{flex:1;margin:0 12px;height:7px;border-radius:99px;background:var(--line);overflow:hidden}
+.dr-progress .dp-bar i{display:block;height:100%;border-radius:99px;background:var(--grad);transition:width .3s var(--ease)}
+.dr-progress .dp-count{font-family:var(--font-num);font-size:13px;font-weight:800;color:var(--rose)}
+.dr-film{background:linear-gradient(var(--fig-grad-top),var(--fig-grad-bot));border-radius:var(--radius-md);padding:10px;text-align:center;position:relative;border:1px solid var(--line)}
+.dr-film svg{width:100%;height:auto;max-height:230px}
+.dr-film .film-tag{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:700;color:var(--ink-soft);background:rgba(255,255,255,.6);padding:3px 8px;border-radius:6px}
+.dr-q{margin-top:14px;font-size:15.5px;font-weight:800;line-height:1.5}
+.dr-opt{display:block;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;margin-top:10px;font-size:14.5px;cursor:pointer;font-family:inherit;transition:.14s;line-height:1.5}
+.dr-opt:active{transform:scale(.99)}
+.dr-opt .k{display:inline-flex;width:22px;height:22px;border-radius:7px;background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--ink-soft);align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-right:9px}
+.dr-opt.selected{border-color:var(--rose);background:var(--rose-soft)}
+.dr-opt.selected .k{background:var(--rose);color:#fff}
+.dr-opt.correct{border-color:var(--ok);background:var(--ok-soft)}
+.dr-opt.correct .k{background:var(--ok);color:#fff}
+.dr-opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.dr-opt.wrong .k{background:var(--bad);color:#fff}
+.dr-foot{display:flex;gap:10px;margin-top:16px}
+.dr-foot button{flex:1}
+.feedback{margin-top:14px;border-radius:var(--radius-md);padding:13px 14px;font-size:13.5px;line-height:1.6;border:1px solid var(--line)}
+.feedback.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);border-color:color-mix(in srgb,var(--ok) 32%,transparent)}
+.feedback.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad);border-color:color-mix(in srgb,var(--bad) 32%,transparent)}
+.feedback .fb-t{font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+/* 折叠面板 */
+.collapse{border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface);overflow:hidden;margin-top:14px}
+.collapse-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;cursor:pointer;font-weight:700;font-size:14px}
+.collapse-head svg{width:17px;height:17px;transition:transform .2s;color:var(--ink-soft)}
+.collapse.open .collapse-head svg{transform:rotate(180deg)}
+.collapse-body{max-height:0;overflow:hidden;transition:max-height .25s var(--ease)}
+.collapse.open .collapse-body{max-height:1600px}
+.collapse.inner{padding:14px;border-top:1px solid var(--line);animation:riseIn .25s both}
+
+/* ---------- 练习 ---------- */
+.quiz-tabs{display:flex;background:var(--surface);border-radius:13px;padding:4px;gap:4px;box-shadow:var(--shadow-card);overflow-x:auto}
+.quiz-tabs::-webkit-scrollbar{display:none}
+.quiz-tabs button{flex:none;padding:9px 14px;border:none;background:transparent;border-radius:10px;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;font-family:inherit;white-space:nowrap}
+.quiz-tabs button.on{background:var(--grad);color:#fff}
+.quiz-stat{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.q-chip{display:flex;align-items:center;gap:10px;padding:13px;border-radius:var(--radius-sm);background:var(--surface);box-shadow:var(--shadow-card)}
+.q-chip .qc-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.q-chip .qc-ic svg{width:19px;height:19px}
+.q-chip .qc-t{font-size:12px;color:var(--ink-soft)}
+.q-chip .qc-v{font-family:var(--font-num);font-size:17px;font-weight:800}
+.quiz-item-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.qtype-tag{font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px}
+.qtype-tag.single{background:var(--ai-soft);color:var(--ai-ink)}
+.qtype-tag.shared{background:var(--lav);color:#6d5bb0}
+.qtype-tag.multi{background:var(--peach);color:var(--warn)}
+.q-group{background:var(--grad-soft);border-radius:var(--radius-md);padding:12px 14px;font-size:13.5px;color:var(--ink);margin-bottom:12px;line-height:1.6}
+.q-round{font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.q-stem{font-size:15.5px;font-weight:800;line-height:1.55;margin:10px 0 4px}
+.q-subsen{font-size:13.5px;color:var(--ink);line-height:1.6}
+.q-explain{background:var(--ai-soft);border-left:3px solid var(--ai);border-radius:8px;padding:11px 13px;font-size:13px;color:var(--ai-ink);line-height:1.65;margin-top:12px}
+.exam-desc{background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:16px}
+.exam-desc .r1{display:flex;align-items:center;justify-content:space-between}
+.exam-desc .ed-sub{font-size:14px;font-weight:800}
+.exam-desc .ed-meta{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.7}
+.exam-sector{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.exam-sector:last-child{border-bottom:none}
+.exam-sector .es-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.exam-sector .es-ic svg{width:17px;height:17px}
+.exam-sector .es-t{font-weight:700;font-size:13.5px}
+.exam-sector .es-d{font-size:11.5px;color:var(--ink-soft)}
+.exam-sector .es-n{margin-left:auto;font-family:var(--font-num);font-size:14px;font-weight:800}
+
+/* 错题本 */
+.book-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.book-item:last-child{border-bottom:none}
+.book-item .bi-no{width:26px;height:26px;border-radius:8px;background:var(--bad-soft);color:var(--bad);font-family:var(--font-num);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.book-item .bi-t{flex:1}
+.book-meta{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.list-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.list-row:last-child{border-bottom:none}
+.list-row .lr-main{flex:1;min-width:0}
+.list-row .lr-t{font-weight:700;font-size:14.5px}
+.list-row .lr-d{font-size:12px;color:var(--ink-soft);margin-top:3px}
+
+/* ---------- 体位 ---------- */
+.pos-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.pos-tabs button{flex:none;padding:8px 14px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit}
+.pos-tabs button.on{border-color:var(--rose);background:var(--rose-soft);color:var(--rose)}
+.pos-body-card{background:linear-gradient(180deg, var(--surface), color-mix(in srgb,var(--surface) 55%,transparent));border:1px solid var(--line);border-radius:var(--radius-lg);padding:8px;position:relative}
+.pos-body-card svg{display:block;width:100%;height:auto}
+.pos-bubble{position:absolute;cursor:pointer;}
+.pos-bubble .p-dot{width:16px;height:16px;border-radius:50%;background:var(--rose);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25);margin:auto;animation:bubblePulse 2.2s infinite}
+@keyframes bubblePulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--rose) 45%,transparent)}60%{box-shadow:0 0 0 9px transparent}}
+.pos-bubble .p-lbl{font-size:10px;font-weight:700;color:var(--rose);text-align:center;margin-top:2px}
+.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pos-cell{background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:13px;cursor:pointer;border:none;text-align:left;font-family:inherit}
+.pos-cell:active{transform:scale(.97)}
+.pos-cell .pc-t{font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+.pos-cell .pc-t svg{width:16px;height:16px;color:var(--ink-soft)}
+.pos-cell .pc-n{font-size:11.5px;color:var(--ink-soft);margin-top:3px}
+.search-box{display:flex;align-items:center;gap:9px;background:var(--surface);border-radius:13px;padding:11px 13px;box-shadow:var(--shadow-card);border:1px solid var(--line)}
+.search-box svg{width:18px;height:18px;color:var(--ink-soft)}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;font-family:inherit;background:transparent;color:var(--ink)}
+.pos-detail-kv{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.pos-detail-kv:last-child{border-bottom:none}
+.pos-detail-kv .k{flex:0 0 84px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+.pos-detail-kv .v{flex:1;font-size:13.5px;line-height:1.6}
+
+/* ---------- 历史 ---------- */
+.empty{padding:52px 20px;text-align:center;color:var(--ink-soft)}
+.empty .e-ic{width:72px;height:72px;border-radius:24px;background:var(--rose-soft);color:var(--rose);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.empty .e-ic svg{width:34px;height:34px}
+.empty .e-t{font-size:15px;font-weight:700;color:var(--ink)}
+.empty .e-d{font-size:12.5px;margin-top:6px;line-height:1.6}
+.hist-card{background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:14px;margin-bottom:12px}
+.hist-card .hc-t{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:14.5px}
+
+/* ---------- 我的 ---------- */
+.mine-avatar{display:flex;align-items:center;gap:14px;padding:6px 2px}
+.mine-avatar .av{width:54px;height:54px;border-radius:18px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--shadow)}
+.mine-avatar .nm{font-weight:800;font-size:17px}
+.mine-avatar .sb{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.mine-status{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.mine-status .ms{background:var(--surface);border-radius:var(--radius-sm);box-shadow:var(--shadow-card);padding:12px 8px;text-align:center}
+.mine-status .ms .v{font-family:var(--font-num);font-weight:800;font-size:18px}
+.mine-status .ms .l{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.mine-row{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.mine-row:last-child{border-bottom:none}
+.mine-row .mr-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mine-row .mr-ic svg{width:19px;height:19px}
+.mine-row .mr-t{flex:1;font-weight:700;font-size:14.5px}
+.mine-row .mr-d{font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+.mine-row .mr-arrow{color:var(--ink-soft)}
+.api-config .ac-field{margin-bottom:12px}
+.api-config .ac-l{font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--ink);outline:none}
+.input:focus{border-color:var(--rose);box-shadow:var(--ring)}
+.switch{position:relative;width:44px;height:26px;border-radius:999px;background:var(--line);cursor:pointer;transition:.2s;border:none;flex-shrink:0}
+.switch.on{background:var(--rose)}
+.switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.on i{left:21px}
+.li-row{display:flex;align-items:center;justify-content:space-between;padding:15px 2px;border-bottom:1px solid var(--line)}
+.li-row:last-child{border-bottom:none}
+.li-row .li-t{font-weight:700;font-size:14.5px}
+.li-row .li-d{font-size:12px;color:var(--ink-soft);margin-top:3px}
+
+/* ---------- 弹层 / 模态 ---------- */
+.modal-mask{position:fixed;inset:0;background:rgba(20,16,18,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal-mask.center{align-items:center;padding:20px}
+.sheet{background:var(--cream);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:18px 18px calc(18px + var(--safe-bottom));animation:sheetUp .28s var(--ease)}
+@keyframes sheetUp{from{transform:translateY(60px);opacity:.5}to{transform:none;opacity:1}}
+.sheet-grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sheet-head h3{font-size:17px;font-weight:800}
+.sheet-close{width:30px;height:30px;border-radius:50%;background:var(--surface);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-soft)}
+.sheet-close svg{width:16px;height:16px}
+.card-btnlist button{display:flex;align-items:center;gap:11px;width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:13px;padding:13px 14px;margin-top:11px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink);text-align:left}
+.card-btnlist button:active{transform:scale(.98)}
+.card-btnlist button svg{color:var(--rose);flex-shrink:0}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:#E8EDF5;color:#0E1523;padding:11px 18px;border-radius:14px;font-size:13.5px;font-weight:700;opacity:0;pointer-events:none;transition:.25s var(--ease);z-index:99;max-width:88vw;text-align:center;box-shadow:0 14px 34px -12px rgba(0,0,0,.6)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- 通用骨架 ---------- */
+.skel{border-radius:10px;background:linear-gradient(90deg,var(--line),var(--cream),var(--line));background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.hide{display:none!important}
+
+@media (min-width:520px){ .app{box-shadow:0 0 46px -22px rgba(0,0,0,.3)} }
+</style>
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="greet">
+        <div>
+          <h1 class="brand"><span class="brand-logo" data-lucide="activity"></span> 放射学习助手</h1>
+          <div class="sub">AI 阅片 · 每日一练 · 复习回看</div>
+        </div>
+        <div class="topbar-right">
+          <button id="themeToggle" class="theme-toggle" type="button">♂ 男生版</button>
+          <div class="badge">Radiology</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 7 视图容器（每次仅一个 .active） -->
+    <main id="view-home" class="view active"></main>
+    <main id="view-ai" class="view"></main>
+    <main id="view-dr" class="view"></main>
+    <main id="view-quiz" class="view"></main>
+    <main id="view-pos" class="view"></main>
+    <main id="view-history" class="view"></main>
+    <main id="view-mine" class="view"></main>
+
+    <!-- 底部导航（冻结，7 项不可增删改序） -->
+    <nav class="tabbar">
+      <div class="tab active" data-v="home"><span class="ti" data-lucide="home"></span><span class="tl">首页</span></div>
+      <div class="tab" data-v="ai"><span class="ti" data-lucide="scan-line"></span><span class="tl">阅片</span></div>
+      <div class="tab" data-v="dr"><span class="ti" data-lucide="crosshair"></span><span class="tl">判读</span></div>
+      <div class="tab" data-v="quiz"><span class="ti" data-lucide="pencil-line"></span><span class="tl">练习</span></div>
+      <div class="tab" data-v="pos"><span class="ti" data-lucide="person-standing"></span><span class="tl">体位</span></div>
+      <div class="tab" data-v="history"><span class="ti" data-lucide="history"></span><span class="tl">历史</span></div>
+      <div class="tab" data-v="mine"><span class="ti" data-lucide="user"></span><span class="tl">我的</span></div>
+    </nav>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script>window.APP_VERSION = "20260901a";</script>
+  <script>
+/* ============================================================
+   放射学习助手 · mock.js —— 单一数据来源
+   覆盖：每日一练 / 模拟考试 / 判读22例 / 体位15部位，供 prototype 使用
+   ============================================================ */
+const DB = {
+
+  dailyTip: "💡 肝血管瘤增强「早出晚归」（周边结节向中心填充）；肝癌「快进快出」。",
+
+  /* ---------- 每日一练真题池 ---------- */
+  practicePool: [
+    {sub:"颅骨", t:"颅骨正位（后前位）标准影像上，最能清晰显示的结构是", o:["蝶鞍","岩骨、内耳道","额窦与眼眶","乳突气房"], a:1, ex:"颅骨后前位时岩骨影落入眼眶下方，蝶鞍与内听道显示相对清晰；侧位才侧重蝶鞍。"},
+    {sub:"颈椎", t:"颈椎侧位片最常用于观察", o:["椎间孔","寰枢关节","椎体及椎间隙、生理曲度","棘突骨质"], a:2, ex:"侧位主要显示椎体、椎间隙、生理曲度和棘突序列；椎间孔需斜位。"},
+    {sub:"胸椎", t:"胸椎正位标准影像不包括下列哪一项", o:["椎体呈四方形","可见两侧锁骨投影于上方","椎间隙清晰","椎板棘突重叠成像"], a:1, ex:"正位显示椎体、椎间隙、椎弓根与棘突；锁骨投影属颈部/胸上部摄影的判别点，非胸椎正位必需。"},
+    {sub:"腰椎", t:"腰椎斜位显示「Scottie Dog」征的结构是", o:["椎弓根","椎弓峡部（关节间部）","横突","椎板"], a:1, ex:"斜位下椎弓峡部形成「小狗」颈部，是诊断峡部裂（滑脱）的关键位置。"},
+    {sub:"骨盆", t:"骨盆正位摄片，两侧髂前上棘至台面等距的意义是", o:["减少散射线","消除左右旋转","显示骶髂关节","减小放大率"], a:1, ex:"保持骨盆水平、消除旋转，才能对称显示髋关节与闭孔形态。"},
+    {sub:"肩关节", t:"肩关节前后位标准像应能显示", o:["肩锁关节间隙","肱骨头与肩盂关系、冈上肌出口","锁骨全长","肩峰下间隙"], a:2, ex:"前后位主要评估肱骨头-肩盂对位关系；冈上肌出口需特殊的穿胸位/Y位，肩颈区展示以对位为主。"},
+    {sub:"肘关节", t:"肘关节正位片属于外旋位时，可观察到", o:["肘关节完全伸直困难","肱骨两髁不对称","桡骨头与尺骨重叠减少、侧位影像","尺骨鹰嘴脱位"], a:1, ex:"外旋位会使肱骨内、外上髁旋转不对称，正位应取解剖位（腕中立、上肢水平）。"},
+    {sub:"腕关节", t:"腕关节正位显示舟骨呈", o:["长方形","斜行条状——前后重叠","舟骨近端可见间隙","半圆形"], a:1, ex:"正位舟骨因倾斜重叠而呈斜条状，需尺偏位（舟骨位）才能拉直显示。"},
+    {sub:"手", t:"手正位摄片时，为避免软组织显影重叠应做到", o:["手掌平放紧贴胶片","各指自然分开","蟹钳样展开","手呈半握拳"], a:1, ex:"各指自然分离展开，避免指间软组织重叠，利于观察指骨与关节。"},
+    {sub:"髋关节", t:"髋关节正位观察股骨颈的最佳投照，必不可少的是", o:["脚尖内旋15°～20°","脚尖外旋","髋屈曲45°","球管向头侧倾斜"], a:0, ex:"脚尖内旋可补偿股骨颈前倾角，使股骨颈在正位展开，正面观察其长度与Shenton线。"},
+    {sub:"膝关节", t:"膝关节侧位标准影像可见", o:["髌骨与股骨髁重叠","股骨内外髁完全重叠、髌骨呈菱形","胫骨前缘与髌骨增大间隙","髁间窝重叠"], a:1, ex:"标准侧位要内外髁几近重叠，髌股关节间隙清晰，利于观察积液与退变。"},
+    {sub:"踝关节", t:"踝关节正位显示踝穴的关键在于", o:["足部内旋约10°～15°","足尖外旋","足背伸","足部下垂"], a:0, ex:"踝关节正位内旋约15°，使内、外踝与距骨组成踝穴口，清晰显示间隙。"},
+    {sub:"胸部", t:"胸部正位（后前位）摄影要求采用", o:["低声压高毫安秒","高千伏+深吸气后屏气","低千伏低毫安","不使用滤线栅"], a:1, ex:"高千伏（常120kV）压缩对比、深吸气屏气提高肺野充气度，是胸片标准要求。"},
+    {sub:"腹部", t:"腹部立位平片观察膈下游离气体，应采用", o:["仰卧位","立位或坐位，中心线居中","左侧卧位","俯卧位"], a:1, ex:"立位时游离气上升至膈下，最易显示气腹。"},
+    {sub:"造影/数字", t:"DR 与传统屏/胶系统相比的优势不包括", o:["宽容度大，减少重复投照","曝光剂量可降低","空间分辨率高于胶片直接成像","实时预览与后处理"], a:2, ex:"DR 在超大信息量与前处理上有优势，但像素化空间分辨率并非总是高于胶片系统的固有条纹密度。"}
+  ],
+
+  /* ---------- 模拟考试：4 科目 ---------- */
+  examSubjects: [
+    {name:"基础知识", tag:"single", total:1567, count:75, pct:"单选",
+      pool:[
+        {t:"CT 值单位为", o:["HU","kVp","mAs","mm"], a:0, ex:"CT 值以 Hounsfield 单位（HU）表示，水的 CT 值为 0。"},
+        {t:"MRI 的成像基础信号来源是", o:["人体内氢质子","电子","X 射线","γ 射线"], a:0, ex:"MRI 主要利用氢原子核的磁共振信号成像。"},
+        {t:"DR 的工作原理基于", o:["碘化铯加非晶硅","荧光屏加胶片","增感屏","银盐卤化"], a:0, ex:"DR 直接/间接数字平板：碘化铯闪烁体+非晶硅探测器是主流间接式。"},
+        {t:"X 射线的本质是", o:["电磁波","超声","机械波","粒子流仅"], a:0, ex:"X 射线是波长很短的高能电磁波，同时具波粒二象性。"},
+        {t:"标准胸部正位摄影通常使用", o:["后前位","前后位","斜位","侧位"], a:0, ex:"胸片标准为后前位（PA），放大率小且降低心脏比例失真。"},
+        {t:"滤线栅的作用是", o:["减少散射线","增加对比度以外","吸收原发射线","提高剂量"], a:0, ex:"滤线栅吸收散射的斜射X射线，提高影像对比。"},
+        {t:"高压注射器的常规造影部位不包括", o:["头颅 CT 增强","DSA 血管造影","胃肠道钡餐","CT 肺动脉成像(CTPA)"], a:2, ex:"胃肠道钡餐用手工口服/钡灌，无需高压注射器。"},
+        {t:"碘对比剂变态反应最常见类型是", o:["轻度荨麻疹","过敏性休克","心脏骤停","肾衰竭仅"], a:0, ex:"以轻度的皮肤/呼吸道症状最常见，重度过敏性休克少见但致命需防范。"},
+        {t:"CT 扫描中最常用的重建矩阵是", o:["512×512","128×128","1024×1024","2048×2048"], a:0, ex:"512 矩阵是 CT 标准最常用重建矩阵。"},
+        {t:"X 射线与人体作用后产生影像的主要机制是", o:["光电效应与康普顿散射","核裂变","电子对湮灭","磁共振"], a:0, ex:"光电效应与康普顿散射形成衰减差异，构成X线影像。"},
+        {t:"CT 机的球管电压通常分为", o:["80–140kV","20–50kV","220–380kV","500kV以上"], a:0, ex:"CT 球管电压常用 80/100/120/140kV。"},
+        {t:"磁共振 T1 加权成像中，脂肪信号为", o:["高信号","低信号","无信号","等信号"], a:0, ex:"T1WI 脂肪呈高信号（亮），是常用脂肪抑制的依据。"}
+      ]},
+    {name:"专业知识", tag:"shared", total:1548, count:20, pct:"共用题干",
+     groups:[
+        {g:"患者男性，45岁，外伤后右腕肿胀，临床疑舟骨骨折。",
+         items:[
+           {s:"1. 检查舟骨骨折最常用的体位是", o:["腕舟骨位（尺偏）","常规腕正位","腕侧位","斜位"], a:0, ex:"尺偏（舟骨位）拉直舟骨，减少重叠，提高骨折检出。"},
+           {s:"2. 舟骨骨折延迟显示时通常需", o:["即刻复查","一周后复查","半年后复查","无需复查"], a:0, ex:"隐匿骨折需 7–10 天复 查，随骨质吸收显影清晰。"}]},
+        {g:"患者女性，60岁，胸痛伴咯血，临床怀疑肺栓塞。",
+         items:[
+           {s:"1. 首选确诊影像学手段是", o:["CTPA","胸片","超声","MR"], a:0, ex:"CT 肺动脉成像（CTPA）是肺栓塞首选确诊方法。"},
+           {s:"2. CTPA 扫描触发基线一般置于", o:["主肺动脉","上腔静脉","右心房","降主动脉"], a:0, ex:"以肺动脉干/主肺动脉为触发基线，避免上腔静脉伪影。"}]},
+        {g:"患者男性，28岁，腰椎下段车祸伤。",
+         items:[
+           {s:"1. 判断腰椎椎弓峡部裂最佳体位是", o:["腰椎斜位","正位","侧位","动力位"], a:0, ex:"斜位可见「Scottie Dog」颈部断裂（峡部裂）。"},
+           {s:"2. 腰椎椎间孔显示最佳体位是", o:["斜位","正位","侧位","轴位"], a:0, ex:"斜位 45° 展开椎间孔，呈「小狗」征同时平视椎间孔。"}]},
+        {g:"患儿6岁，肘关节外伤，X线疑肱骨髁上骨折。",
+         items:[
+           {s:"1. 儿童髁上骨折最常用正位体位是", o:["前后位","摄影正位+侧位原则","斜位","轴位"], a:0, ex:"常规正侧位，特别注意外旋变形的识别。"},
+           {s:"2. 观察肱骨髁上骨折伴随的脂肪垫征应取", o:["正位","侧位","斜位","轴位"], a:0, ex:"关节腔积血推移脂肪垫——肘前/后脂肪垫征在侧位最典型。"}]}
+      ]},
+    {name:"相关专业知识", tag:"multi", total:1540, count:5, pct:"多选",
+     pool:[
+        {t:"DR 平板探测器的组成包括（多选）", o:["闪烁体（碘化铯）","光电二极管/非晶硅","信号采集电路","银盐胶片","X 线管"], a:[0,1,2], ex:"间接式 DR=碘化铯闪烁体+非晶硅光电二极管阵列+读出电路；胶片属传统屏片系统，X线管是成像源非探测器。"},
+        {t:"下列属于高压注射器注射的造影检查（多选）", o:["CT增强","DSA/血管造影","头颈CTA","胃肠道钡餐","ERCP造影"], a:[0,1,2], ex:"CTA、DSA、CT增强均需高压注射器；钡餐与ERCP 为手工/专用器械。"},
+        {t:"胸部正位摄影质量标准包括（多选）", o:["肺尖充分包括","避免旋转与运动伪影","膈肌下方包括12后肋或足够","骨密度均匀显示","双侧肩锁对称"], a:[0,1,4], ex:"四大标准：肺尖、肋膈角、旋转对称、无运动模糊。"},
+        {t:"MRI 禁忌证包括（多选）", o:["心脏起搏器","体内金属植入（非MRI兼容）","怀孕早期非必需","皮肤外伤","已取出之钢板"], a:[0,1,2], ex:"起搏器、铁磁金属、孕期为相对禁忌；兼容植入物与已取钢板安全。"},
+        {t:"DR 相对 CR 的优势包括（多选）", o:["成像速度更快","剂量更低可降噪","空间分辨率更高","可后处理","利用IP板多次成像"], a:[0,1,2,3], ex:"DR 即时、低剂量、高图像质量且可后处理；CR 才用 IP 板。"},
+        {t:"脊柱摄影中需加滤线栅的部位（多选）", o:["腰椎","颈椎侧位","胸椎","骶尾椎","手指"], a:[0,1,2], ex:"厚部位（腰椎/颈椎侧位/胸椎/骶尾椎）使用滤线栅降低散射线；手部属薄部位。"}
+      ]},
+    {name:"专业实践能力", tag:"single", total:1560, count:100, pct:"单选",
+      pool:[
+        {t:"颈椎正位摄影时球管应向头侧倾斜约", o:["0°","5°～8°","15°","30°"], a:1, ex:"上颈椎原上斜，头侧倾斜 5°~8° 使齿状突与枕骨分离成像。"},
+        {t:"腰椎斜位 45° 主要用于显示", o:["椎弓峡部","椎间盘","关节突关节","骶孔"], a:0, ex:"斜位重点看峡部是否断裂(scottie dog 断颈)。"},
+        {t:"标准骨盆正位摄影时，球管中心线对准", o:["耻骨联合","髂前上棘连线中点","骶骨中段","股骨大转子"], a:1, ex:"中心线对准两侧髂前上棘连线中点（脐下约 8cm）。"},
+        {t:"手后前位摄影时球管角度", o:["0°（垂直）","向头侧10°","向足侧10°","30°"], a:0, ex:"手正位一般垂直投照，自然展开指爪。"},
+        {t:"踝关节正位摄影足部应内旋约", o:["10°～15°","40°","90°","5°"], a:0, ex:"内旋以打开踝穴，使距骨与双踝清晰显示。"},
+        {t:"胸部侧位摄影中心线对准", o:["肩胛骨前方","腋中线第4肋","胸骨","肺门"], a:1, ex:"侧位中心线经腋中线、平第4胸椎（肺门水平）。"},
+        {t:"肘关节正位标准外展位（上肢伸直）时手掌应", o:["旋前（掌心向上）","掌心向上为侧位","中立（拇指向上）","屈曲"], a:2, ex:"正位取解剖位拇指向上，避免肱骨髁旋转。"},
+        {t:"CT 增强扫描了解肾脏排泄期，延迟时间约为", o:["30秒","60秒","90秒","120秒"], a:1, ex:"排泄期常在注射后 90–120s 采集，皮质期~25-30s、髓质期~60-90s。"}
+      ]}
+  ],
+
+  /* ---------- DR 骨折判读 22 例 ---------- */
+  drCases: [
+    {type:"锁骨", part:"右侧锁骨中段", t:"该影像显示锁骨中段可见", o:["横行透亮线，皮质断裂","正常骨小梁","陈旧性密度增高","无异常"], a:0, said:"右锁骨中段可见横行透亮线、断端轻度错位——急性单纯性锁骨骨折。要点：锁骨中段是剪力最大部位，首选正位即可显示；注意同时扫肩锁/胸锁关节是否受累。处理按悬吊固定后随访。"},
+    {type:"肩胛", part:"肩胛骨", t:"该肩胛影像提示最可能为", o:["肩胛冈骨折","锁骨骨折","肩峰骨折","正常"], a:0, said:"可见肩胛骨一处透亮骨折线（本例压迫所致）。要点：肩胛骨折多由高能直接暴力，需排查合并肋骨骨折/气胸及血管损伤；正位+肩胛斜位观察，必要时 CT。"},
+    {type:"肱骨", part:"肱骨近端", t:"肱骨近端外展嵌插表现最符合", o:["外科颈嵌插型骨折","解剖颈骨折","大结节撕脱骨折","病理性骨折"], a:0, said:"肱骨外科颈处见嵌插、成角，未明显移位——外科颈嵌插型骨折。要点：老年人常见，需评估是否累及解剖颈及肱骨头缺血风险；无移位可保守管理挂上臂带，移位者考虑内固定。"},
+    {type:"手舟骨", part:"腕舟骨", t:"注意舟骨腰部，该表现提示", o:["舟骨腰部骨折（未见明显移位）","腕月骨脱位","三角骨骨折","正常"], a:0, said:"舟骨腰部见细微透亮线，复位良好。要点：舟骨近端供血差，隐匿骨折易漏，建议加摄舟骨位并经 7–10 天复查；早期固定以防缺血性坏死。"},
+    {type:"桡骨", part:"桡骨远端", t:"桡骨远端骨折呈餐叉样畸形，最符合", o:["Colles 骨折","Smith 骨折","Barton 骨折","尺骨茎突骨折"], a:0, said:"桡骨远端背侧移位+塌陷，呈典型 Colles 骨折。要点：以直线/切线显示桡骨掌倾角与桡偏角；评估是否波及关节面（Barton）及尺骨茎突，必要时 CT 规划钢板固定。"},
+    {type:"尺骨", part:"尺骨鹰嘴", t:"尺骨鹰嘴游离骨片，诊断考虑", o:["鹰嘴骨折（轻度分离）","肘关节脱位","髁上骨折","正常"], a:0, said:"鹰嘴见一骨片与主体轻度分离——鹰嘴骨折。要点：分离型常需张力带/钢板固定以防不愈合；注意有无肘脱位。侧位显示最清楚。"},
+    {type:"股骨颈", part:"股骨颈", t:"该股骨颈骨折按 Garden 分型最符合", o:["GardenⅡ 嵌插型","GardenⅣ 完全移位","转子间骨折","股骨头骨折"], a:0, said:"股骨颈可见断裂，断端嵌插无移位——GardenⅡ 型。要点：内旋正位+俯床显示长度；未移位可行内固定，老年移位者倾向置换。必须排除隐匿骨折时加 CT/MRI。"},
+    {type:"胫骨", part:"胫腓骨", t:"胫腓骨中段影像显示", o:["胫腓骨双骨折（螺旋型）","单纯胫骨骨折","应力骨折","正常"], a:0, said:"胫骨中段与腓骨均见螺旋形透亮线——双骨折且为高能旋转暴力。要点：正侧位完整包括近远端关节，警惕胫骨迟发性畸形与开放伤口；常需髓内钉固定。"},
+    {type:"踝", part:"踝关节", t:"内踝透亮线伴外踝骨折，提示", o:["双踝骨折（腓骨+内踝）","单纯内踝骨折","距骨脱位","正常"], a:0, said:"内、外踝均见骨折线——双踝骨折，提示旋转/外翻暴力。要点：需要正侧位并判断是否累及后踝（三踝）及踝穴稳定；移位者需切开复位。"},
+    {type:"肋骨", part:"右侧第6肋", t:"肋骨下缘见透亮线，最可能为", o:["单根肋骨骨折","肺纹理重叠","肋软骨钙化","正常"], a:0, said:"右侧第6肋前段见透亮骨折线，无明显错位。要点：肋骨骨折多因直接撞击，注意是否伴气胸/血胸/连枷胸；单发无移位者对症镇痛即可。"},
+    {type:"腕-月骨", part:"腕部", t:"月骨周围脱位时正位最特征的表现是", o:["月骨周围结构呈「切三片」/泪滴征消失","舟骨骨折","掌骨骨折","桡骨茎突骨折"], a:0, said:"月骨周围脱位正位可见月骨与周围腕骨关系异常（泪滴线丧失）、侧位可示月骨向前脱垂。要点：属高能损伤，注意并发舟骨骨折，通常需复位+克氏针固定。"},
+    {type:"股骨远端", part:"股骨远端", t:"股骨远端髁上/髁骨折的手术前评估最可靠手段是", o:["CT 三维重建","X 线正侧位","超声","骨科摄影仅"], a:0, said:"髁上髁间骨折常累及关节面与粉碎需 CT+三维重建规划内固定与关节面复位。X线用于初筛与随访。"},
+    {type:"肘-髁上", part:"肱骨髁上（儿童）", t:"儿童肘部外伤，肘周脂肪垫征明显，最可能", o:["肱骨髁上骨折","肘关节后脱位","桡骨头脱位","正常"], a:0, said:"肘关节积液推移脂肪垫，正侧位见髁上细微骨折线——儿童髁上骨折。要点：评估肱桡线/髁间线以排除脱位；按 Gartland 分型决定保守或内固定，警惕 Volkmann 缺血挛缩。"},
+    {type:"腰椎", part:"腰椎1椎体", t:"腰椎压缩性骨折最典型的X线表现是", o:["椎体前缘压缩变扁、皮质皱折","椎体后部正常","椎弓根断裂","无异常"], a:0, said:"椎体前缘高度减低呈压缩楔形、前缘皮质皱折——压缩性骨折。要点：以轴向压缩暴力为主（坠楼/跌倒），需评估椎体后壁是否受累及高度丢失>50%；老年骨质疏松者易发并易漏。"},
+    {type:"胸椎", part:"胸腰段", t:"胸腰段爆裂性骨折伴椎体后壁骨折，最需评估的是", o:["椎管内骨块与神经受损风险","仅椎体前缘高度","肋骨是否并裂","椎间隙宽度"], a:0, said:"爆裂型骨折椎体高度重度丢失、后壁骨块突入椎管——重点评估神经与椎管内占位。要点：胸腰段是脊柱枢纽受力集中区，正侧位结合 CT 评估椎管占位，多数需减压固定。"},
+    {type:"髌骨", part:"髌骨", t:"髌骨侧位见横行透亮线跨越髌骨，诊断考虑", o:["髌骨横断骨折","髌骨二分骨变异","胫骨结节撕脱","正常"], a:0, said:"髌骨中段横行骨折线、断端对位良好——髌骨横断骨折。要点：多为直接撞击或股四头肌牵拉；分离型需张力带固定，注意评估伸膝装置（股四头肌腱/髌腱）完整性。"},
+    {type:"跟骨", part:"跟骨", t:"跟骨侧轴位见结节塌陷、Böhler 角变小，提示", o:["跟骨关节内骨折","跟腱炎","跟骨骨刺","正常"], a:0, said:"跟骨高度丢失致 Böhler 角减小（<20°）——跟骨关节内骨折。要点：多由高处坠落直接暴力，需侧位+轴位评估距下关节面塌陷；塌陷明显者通常需切开复位内固定。"},
+    {type:"掌骨", part:"第5掌骨颈", t:"第5掌骨颈骨折伴掌侧成角，通称", o:["Boxer 拳击者骨折","Bennett 骨折","Rolando 骨折","正常"], a:0, said:"第5掌骨颈短缩、股骨头向掌侧成角——拳击手骨折(Boxer)。要点：常因握拳挥击所致；成角/旋转明显或关节内移位需复位固定，轻度可保守制动。"},
+    {type:"桡骨小头", part:"桡骨头", t:"肘外展伤后桡骨小头见骨折线，最符合", o:["MasonⅠ型桡骨头骨折","鹰嘴骨折","肱骨髁骨折","尺骨茎突骨折"], a:0, said:"桡骨头骨皮质中断、肘关节积液，骨折无明显移位——MasonⅠ型。要点：多为外翻暴力，常伴肱骨小头挫伤；非移位型可早期活动，移位或粉碎需手术干预。"},
+    {type:"股骨转子", part:"股骨转子间", t:"转子间骨折区别于股骨颈骨折的关键X线表现是", o:["骨折线位于股骨颈基底之外的小转子/大转子区","骨折线在股骨头内","Shenton 线连续","股骨头塌陷"], a:0, said:"骨折线在股骨颈基底之外的转子间区，血供好、不塌陷——转子间骨折。要点：多系老年低能量摔伤；皮质厚愈合良好，闭合复位髓内钉固定预后佳，与股骨颈骨折的缺血风险明显不同。"},
+    {type:"胫骨平台", part:"胫骨平台", t:"胫骨平台外侧塌陷伴关节内台阶，评估塌陷程度优先检查", o:["膝关节正侧位+CT","仅膝关节正位","仅侧位","轴位"], a:0, said:"胫骨平台外侧塌陷、关节面台阶——平台骨折。要点：多由轴向+外翻暴力；X线评估对线，CT 精确测量关节面塌陷以决定固定与是否植骨，必要时加压螺钉+钢板。"},
+    {type:"第5跖骨", part:"第5跖骨基底部", t:"第5跖骨基底部撕脱骨折最常见紧附着结构是", o:["腓骨短肌腱附着处","跟腱","内踝三角韧带","距腓前韧带"], a:0, said:"第5跖骨基底部见骨片——腓骨短肌腱撕脱所致。要点：踝内翻时腓骨短肌强直牵拉撕脱；需与琼斯(Jones)骨折及基底部副骨化中心鉴别；撕脱型血供好多可保守。"}
+  ],
+
+  /* ---------- 体位摆放：15 部位 · 42 体位 ---------- */
+  posAreas: {
+    "头颅":{
+      color:"#C9882F", icon:"cable", pos:[
+        {name:"头颅前后位（正位）", aim:"观察颅骨整体形态、骨缝与蝶鞍中线结构", post:"仰卧，头正中矢状面垂直台面，听眦线垂直，尽量屈颈", det:"探测器于头颅同侧", cr:"对准眉间（中心线经眉间）", sid:"100cm", field:"全颅（17×14）", expo:"70–80kV / 30–40mAs，加滤线栅", standard:"骨缝清晰、双侧眼眶对称、岩骨对称位于眶下部", errors:"头部旋转导致左右不对称；颈部过伸使岩骨投影上移"},
+        {name:"头颅侧位", aim:"显示蝶鞍、鼻窦与颅骨侧位结构", post:"头侧置台，矢状面平行台面，听眦线垂直台面", det:"12×10", cr:"对准外耳孔上 2cm（鞍区）", sid:"100cm", expo:"70–80kV / 20–30mAs，加滤线栅", standard:"蝶鞍、蝶骨小翼清晰，双侧颧弓投影重叠良好"}]},
+    "颈椎":{
+      color:"#6E655E", icon:"bar-chart", pos:[
+        {name:"颈椎正位", aim:"显示椎体、钩突与环枢关节概况", post:"仰卧，头部正中，听鼻线垂直台面", det:"直立11×14，含 C1–T1", cr:"向头侧倾斜 5°～8°，对准甲状软骨", sid:"100cm", field:"颈部（12×10/11×14）", expo:"70kV/60mAs，加滤线栅", standard:"双侧钩椎关节对称、齿状突清晰"},
+        {name:"颈椎侧位", aim:"显示椎体、椎间隙与生理曲度", post:"侧卧或坐，双肩尽量下垂以避开下颌重叠", det:"12×17 直", cr:"对准甲状软骨（约 C4）", sid:"150–180cm（远距离）", expo:"高千伏 90kV/用滤线栅", standard:"椎体、椎间隙、生理曲度清晰，下颌与肩部不重叠"},
+        {name:"颈椎斜位（45°）", aim:"显示椎间孔及其上下关节突关系", post:"侧卧或坐，矢状面与台面成 45°", det:"12×17 直", cr:"对准甲状软骨（约 C4）", sid:"100cm", expo:"70kV/50mAs", standard:"椎间孔呈「耳状」、两侧对称清晰显示"},
+        {name:"寰枢椎张口位（开口位）", aim:"显示寰枢椎、齿状突与寰枢关节间隙", post:"仰卧，尽力张口使上牙列与下牙列分开", det:"8×10 直", cr:"对准张开的门区位（口腔中线）", sid:"100cm", expo:"70kV/40mAs", standard:"齿状突位于中央，两侧寰齿间隙对称（<2mm）"}]},
+    "胸椎":{
+      color:"#8B5BB0", icon:"columns", pos:[
+        {name:"胸椎正位", aim:"显示椎体、椎间隙与椎弓根", post:"仰卧，胸背贴近台面，正矢状面垂直", det:"14×17 直/横", cr:"对准胸骨切迹至剑突中点（T6）", sid:"100cm", field:"含 T1–L1", expo:"80–90kV/50mAs，加滤线栅", standard:"椎体、椎弓根、间隙对称显示"},
+        {name:"胸椎侧位", aim:"显示椎体侧位轮廓与椎间隙", post:"侧卧，双臂上举，脊柱与台面平行", det:"14×17 直", cr:"对准 T6–T7", sid:"100cm", expo:"85kV/40mAs，加滤线栅", standard:"椎体侧位轮廓影重叠良好、双肩不重叠"}]},
+    "腰椎":{
+      color:"#3B6FB0", icon:"scan", pos:[
+        {name:"腰椎正位", aim:"显示椎体、椎间盘，鉴别椎弓峡部", post:"仰卧，髋膝屈曲以贴平腰椎生理前突", det:"14×14/14×17", cr:"对准脐上约 4cm（L3）", sid:"100cm", expo:"75–85kV/50mAs，加滤线栅", standard:"椎骨对称、双侧椎弓根对称显示"},
+        {name:"腰椎侧位", aim:"显示椎体前缘轮廓、生理前凸与椎间隙", post:"侧卧，髋膝屈曲以贴平腰椎", det:"14×17 直", cr:"对准髂嵴上 3cm（L3）", sid:"100cm", expo:"85–95kV/60mAs，加滤线栅", standard:"椎体前缘轮廓整齐、椎间隙清晰显示"},
+        {name:"腰椎斜位（45°）", aim:"显示椎弓峡部（Scottie Dog 征）", post:"仰卧，躯干向对侧旋转 45°", det:"14×17 直", cr:"对准 L3", sid:"100cm", expo:"80kV/50mAs，加滤线栅", standard:"「小狗」颈部（峡部）清晰、双眼与耳对称"},
+        {name:"腰椎动力位（过伸过屈）", aim:"评估腰椎不稳与椎体滑移的动态变化", post:"侧卧，指导患者过伸与过屈各摄一片", det:"14×17 直", cr:"对准 L4/L5", sid:"100cm", expo:"85kV/60mAs，加滤线栅", standard:"两片对比可测量椎体前后位移改变"}]},
+    "骨盆":{
+      color:"#D25A4E", icon:"align-horizontal", pos:[
+        {name:"骨盆正位", aim:"显示骨盆环、髋关节与股骨近端", post:"仰卧，两下肢内旋 15°，骨盆水平对称", det:"14×17 或 35×43", cr:"对准两侧髂前上棘连线中点（脐下8cm）", sid:"100cm", expo:"75kV/50mAs，加滤线栅", standard:"闭孔对称、髂前上棘等高、股骨颈内旋展开"},
+        {name:"骶髂关节斜位", aim:"显示骶髂关节间隙与其前后壁", post:"仰卧，躯干向对侧旋转约 25°～30°", det:"10×12", cr:"对准对侧重髂前上棘内 2cm", sid:"100cm", expo:"80kV/40mAs，加滤线栅", standard:"骶髂关节间隙清晰开放、两侧对比"}]},
+    "肩关节":{
+      color:"#0E7C7B", icon:"activity", pos:[
+        {name:"肩关节前后位", aim:"显示肱骨头与肩盂对位、肩锁间隙", post:"坐/仰靠，患臂自然下垂、手掌朝外旋位", det:"8×10 直", cr:"对准喙突下约 4cm（肱骨头）", sid:"100cm", expo:"70kV/20mAs", standard:"肱骨头与肩盂内外旋转不对称小、肩鞍清楚"},
+        {name:"肩关节穿胸位（Y 位）", aim:"显示肩胛骨盂唇、肱骨头与肩峰的关系", post:"站位或侧卧，患臂下垂，躯干向患侧斜约 15°", det:"10×12", cr:"对准肩胛冈中段", sid:"100cm", expo:"70kV/20mAs", standard:"肩胛骨呈「Y」形、肱骨头与盂唇居中"},
+        {name:"肩关节轴位", aim:"显示肱骨头与肩盂前后缘、评估脱位方向", post:"坐位，患臂外展约 70°，探测器置于肩上方", det:"10×12", cr:"对准肩关节（外展肱骨轴线）", sid:"100cm", expo:"70kV/20mAs", standard:"肱骨头与肩盂前后缘及关节间隙显示"}]},
+    "肘关节":{
+      color:"#C9882F", icon:"arrow-up", pos:[
+        {name:"肘关节前后位", aim:"显示肱骨远端、尺桡骨近端与关节间隙", post:"上肢完全伸直，掌心向上（拇指朝外侧）", det:"8×10", cr:"对准肘关节（肱骨外上髁约2cm内）", sid:"100cm", expo:"65kV/16mAs", standard:"肱骨内、外上髁对称、鹰嘴窝居中显示"},
+        {name:"肘关节侧位", aim:"显示肱骨远端与尺桡骨前后关系", post:"坐式，肘屈曲 90°，掌心向内", det:"8×10", cr:"对准肘关节（外上髁）", sid:"100cm", expo:"65kV/16mAs", standard:"肱骨髁近乎重叠、尺桡骨近端平行显示"}]},
+    "腕关节":{
+      color:"#6E655E", icon:"hand", pos:[
+        {name:"腕关节正位（后前位）", aim:"显示桡骨远端、腕骨与掌骨基底部", post:"坐式，腕掌面贴台，手掌平放，五指稍分", det:"8×10", cr:"对准腕关节中点", sid:"100cm", expo:"60kV/12mAs", standard:"腕舟骨呈斜条状、各腕骨间隙互不重叠性良好"},
+        {name:"腕关节侧位", aim:"显示桡腕关节、腕骨屈伸与关节脱位", post:"坐式，腕尺侧贴台，掌面与台面垂直", det:"8×10 直", cr:"对准桡骨茎突", sid:"100cm", expo:"60kV/12mAs", standard:"桡骨远端、舟骨与月骨的关系显示清晰"},
+        {name:"腕舟骨尺偏位", aim:"拉直舟骨消除重叠，筛查舟骨骨折", post:"掌贴台，手向尺侧偏斜约 20°～25°", det:"8×10 横", cr:"对准舟骨", sid:"100cm", expo:"60kV/12mAs", standard:"舟骨展平伸直、舟月间隙清晰显示"}]},
+    "手":{
+      color:"#8B5BB0", icon:"grip", pos:[
+        {name:"手后前位", aim:"显示指骨、掌指骨关节与软组织", post:"坐式，手掌平贴，各指自然分离展开", det:"8×10 直", cr:"对准第三掌骨头", sid:"100cm", expo:"55kV/10mAs", standard:"各指分离、指骨全长及末节显示"},
+        {name:"手斜位（后前斜位）", aim:"显示掌骨、指骨斜位结构与关节", post:"掌平贴，手向桡侧旋转约 45°", det:"8×10 直", cr:"对准第三掌骨", sid:"100cm", expo:"55kV/10mAs", standard:"掌骨、指骨斜位影像显示、各指相互分离"},
+        {name:"手侧位", aim:"显示指骨、拇指与掌骨侧位", post:"手掌垂直台面，拇指外展", det:"8×10", cr:"对准第二掌骨", sid:"100cm", expo:"55kV/10mAs", standard:"指骨、掌骨侧位影像重叠较少且清晰"}]},
+    "髋关节":{
+      color:"#D25A4E", icon:"triangle", pos:[
+        {name:"髋关节正位", aim:"显示股骨头、颈与髋臼关系", post:"仰卧，患肢稍内旋，对侧抬高健肢垫高", det:"10×12", cr:"对准股动脉搏动与腹股沟中点外 2cm", sid:"100cm", expo:"75kV/50mAs", standard:"股骨颈充分展现、Shenton 线连续"},
+        {name:"髋关节蛙式位（小儿）", aim:"同时显示双侧股骨头、颈与髋臼发育", post:"仰卧，双膝屈曲外展呈蛙式", det:"12×14", cr:"对准耻骨联合中点", sid:"100cm", expo:"75kV/50mAs", standard:"双侧股骨头、颈对位显示、髋臼指数可测"},
+        {name:"髋关节轴位（侧斜位）", aim:"显示股骨头前方位与脱位方向", post:"仰卧/侧卧，患髋屈曲，中心线经髋斜向台面", det:"10×12", cr:"对准髋关节", sid:"100cm", expo:"75kV/50mAs", standard:"股骨头与髋臼对位关系、双侧闭孔显示"}]},
+    "膝关节":{
+      color:"#3B6FB0", icon:"unfold", pos:[
+        {name:"膝关节前后位", aim:"显示股骨髁、胫骨平台与关节间隙", post:"坐/仰卧，膝关节伸直、脚尖向上（中立）", det:"10×12 横", cr:"对准髌骨下缘（膝关节间隙）", sid:"100cm", expo:"65kV/20mAs", standard:"关节间隙向内、外侧等宽，髌骨居中"},
+        {name:"膝关节侧位", aim:"显示髌股关节与胫骨平台前后关系", post:"患侧靠台侧卧，膝屈曲约 20°~30°", det:"10×12", cr:"对准膝关节间隙，球管中心线垂直", sid:"100cm", expo:"65kV/20mAs", standard:"股骨内外髁几乎完全重叠、髌骨呈菱形"},
+        {name:"髌骨轴位（俯卧屈膝位）", aim:"显示髌股关节、髌骨运动轨迹与骨折", post:"俯卧，患膝屈曲约 45°～55°（可调）", det:"10×12", cr:"对准髌股关节间隙（髋骨线上方）", sid:"100cm", expo:"60kV/20mAs", standard:"髌股关节间隙清晰、髌骨呈半圆形"},
+        {name:"髁间窝位（Tunnel 位）", aim:"显示股骨髁间窝与髁后部结构", post:"膝屈曲约 40°～50°，中心线经腘窝斜向", det:"10×12", cr:"对准髁间窝", sid:"100cm", expo:"65kV/20mAs", standard:"髁间窝与后交叉附着区清晰显示"}]},
+    "踝关节":{
+      color:"#C9882F", icon:"move", pos:[
+        {name:"踝关节前后位", aim:"显示踝穴、距骨与内外踝间隙", post:"坐位，足底平贴台面，足部内旋约10°~15°", det:"8×10 直", cr:"对准踝穴中点（内外踝连线中点）", sid:"100cm", expo:"60kV/16mAs", standard:"踝穴对位良好、距骨上关节面形成平滑弧线"},
+        {name:"踝关节侧位", aim:"显示距跟关节与踝关节侧位关系", post:"侧卧，外踝贴台，足与台面垂直", det:"8×10", cr:"对准内踝上 1cm", sid:"100cm", expo:"60kV/16mAs", standard:"距骨、跟骨与内外踝重叠良好"},
+        {name:"踝关节内旋位（踝穴位）", aim:"重点观察踝穴与距骨外移情况", post:"坐位，足内旋约 15°～20°", det:"8×10 直", cr:"对准踝穴", sid:"100cm", expo:"60kV/16mAs", standard:"踝穴对位良好、距骨上关节面呈平滑弧线"}]},
+    "足":{
+      color:"#6E655E", icon:"footprints", pos:[
+        {name:"足前后位", aim:"显示跖跗骨、趾骨序列与软组织", post:"坐位，足平放，足底贴台", det:"10×12", cr:"对准第三跖骨根部", sid:"100cm", expo:"58kV/12mAs", standard:"趾骨、跖骨全长清晰显示"},
+        {name:"足斜位（后前斜位）", aim:"显示跖跗骨斜位结构与关节", post:"足平放，向内（中）倾斜约 30°～40°", det:"10×12", cr:"对准第三跖骨基部", sid:"100cm", expo:"58kV/12mAs", standard:"跖跗骨斜位、各跖骨间间隙清晰"},
+        {name:"跟骨轴位", aim:"显示跟骨轴位与距下关节", post:"坐位，足与台面垂直，中心线经跟骨后踝向台面约 40°", det:"10×12", cr:"对准跟骨后下缘", sid:"100cm", expo:"60kV/16mAs", standard:"跟骨轴位呈「H」形、距下关节显示"}]},
+    "胸部":{
+      color:"#3B6FB0", icon:"wind", pos:[
+        {name:"胸部后前位（正位）", aim:"评估心肺影、肺纹理，是胸片标准体位", post:"站立，胸贴探测器，肩内旋，深吸气后屏气", det:"14×17 直", cr:"对准第4胸椎（平第5～6肋）", sid:"180cm（远距离）", field:"含双肺尖与肋膈角", expo:"高千伏 120kV / 使用滤线栅", standard:"肺尖充分、两侧肋膈角对称完整、无旋转无运动"},
+        {name:"胸部侧位", aim:"显示肺野前后层次、心影与胸廓侧位", post:"侧躺/站立，患侧或四左胸贴探测器，双臂上举", det:"14×17 直", cr:"对准腋中线第 4 肋（肺门）", sid:"180cm（远距离）", expo:"高千伏 120kV / 使用滤线栅", standard:"肺门横列、胸骨与脊柱重叠、心影清楚"}]},
+    "腹部":{
+      color:"#D25A4E", icon:"package", pos:[
+        {name:"腹部立位平片", aim:"观察肠气分布、膈下游离气体与钙化", post:"站立，背靠台，双手扶边，平静呼吸或屏气", det:"14×17 直", cr:"对准剑突与耻骨联合中点", sid:"100cm（屏床法则）", expo:"75kV/60mAs，加滤线栅", standard:"膈下含气显示清楚、骨盆环与腰大肌大致对称"},
+        {name:"腹部仰卧位（KUB）", aim:"显示肾、输尿管、膀胱结石与腹内钙化", post:"仰卧，双臂上举，腰部垫高以减少脊柱与组织重叠", det:"14×17 直", cr:"对准剑突与耻骨联合中点", sid:"100cm", expo:"75kV/60mAs，加滤线栅", standard:"两侧腰大肌缘、双肾影与骨性结构显示"}]}
+  },
+  posOrder:["头颅","颈椎","胸椎","腰椎","骨盆","肩关节","肘关节","腕关节","手","髋关节","膝关节","踝关节","足","胸部","腹部"]
+};
+</script>
+  <script>
+/* ============================================================
+   放射学习助手 · api.js —— API 桩（无真实后端）
+   签名/延迟/加载态对齐未来真实接口，替换实现即可接入。
+   约定：
+     - apiConfig = { textProvider, textModel, textKey, visionProvider, visionModel, visionKey }
+       存于 localStorage('rad_api')
+     - 未配置密钥 → 返回 { gate:true }（前端弹门禁提示）
+   ============================================================ */
+const API = (() => {
+
+  function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  function loadConfig(){
+    try { return JSON.parse(localStorage.getItem("rad_api") || "null") || {}; }
+    catch(e){ return {}; }
+  }
+  function saveConfig(c){ try { localStorage.setItem("rad_api", JSON.stringify(c)); }catch(e){} }
+
+  /* 自检：列出文本/视觉两通道配置状态 */
+  function checkConnections(){
+    const c = loadConfig();
+    const text = [c.textProvider, c.textModel, c.textKey].every(Boolean);
+    const vis  = [c.visionProvider, c.visionModel, c.visionKey].every(Boolean);
+    return {
+      text:{ ok:text, provider:c.textProvider||"", model:c.textModel||"", key:!!c.textKey },
+      vision:{ ok:vis, provider:c.visionProvider||"", model:c.visionModel||"", key:!!c.visionKey }
+    };
+  }
+
+  /* 演示用）配置了任一 Key 即放行，返回 canned 回复。
+       TODO: 替换为 POST /api/ai/explain
+       req: { questionText, options, apiConfig }  resp: { reply }         */
+  async function explain(questionText, options){
+    await delay(650); // 模拟网络延迟，触发 loading
+    const ok = checkConnections().text.ok || checkConnections().vision.ok;
+    if(!ok) return { gate:true };
+    return { reply: "【AI 详细讲解】" + (qDesc(questionText) + " 结合临床情景分析如下：该题考查" +
+      (options||"") + "，核心在把握投照体位与影像判读要点，建议对照教材案例强化记忆。").slice(0,220) };
+  }
+
+  /* TODO: 替换为 POST /api/ai/reading（multipart 影像）
+       req: { images:[dataURL], modality, apiConfig }  resp: { report, findings }  */
+  async function aiReading(images, modality){
+    await delay(1200);
+    const ok = checkConnections().vision.ok;
+    if(!ok) return { gate:true };
+    const n = images ? images.length : 0;
+    return {
+      report: "影像AI分析报告（演示）",
+      findings: [
+        { label: modality, text: `共接收 ${n} 张${modality}影像，已启用视觉模型通道进行智能分析。` },
+        { label: "建议", text: "未检出明确异常征象（演示输出）。震荡与骨密度判读需结合临床；若为筛查建议结合原始DICOM进一步评估。" }
+      ]
+    };
+  }
+
+  function qDesc(t){ return "题干（" + (t||"").slice(0,30) + "…）"; }
+
+  return { loadConfig, saveConfig, checkConnections, explain, aiReading, delay };
+})();
+</script>
+  <script>
+/* ============================================================
+   放射学习助手 · app.js —— 路由 / 状态 / 视图渲染
+   纯前端 SPA：view 切换 + localStorage 持久化，无后端
+   ============================================================ */
+(function(){
+"use strict";
+
+/* ---------- 工具 ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const num = n => (isNaN(n)?0:n);
+
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ---------- 图标（内联 Lucide SVG，离线可用） ---------- */
+const ICONS = {
+  "home":'<path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/>',
+  "activity":'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  "scan-line":'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  "crosshair":'<circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/>',
+  "pencil-line":'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+  "person-standing":'<circle cx="12" cy="5" r="1"/><path d="m9 20 3-6 3 6"/><path d="m6 8 6 2 6-2"/><path d="M12 10v4"/>',
+  "history":'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  "user":'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  "sparkles":'<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+  "brain":'<path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M12 5v14"/>',
+  "gamepad-2":'<line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.018.152C2.56 9.845 2 14 2 14c0 1 .5 2 2 2 1 0 1.5-.5 2-1 .33-.33.3-.38.83-.38.53 0 .77.42.83.88C7.9 16.5 8.5 17 9.5 17c.95 0 1.66-.85 2.87-.69.3.03.51.19.63.69.13.5.5.69 1.5.69 1 0 1.5-.5 2-1 .5-.5-.4-2 0-3 .3-.77.5-1.35.5-2a5.18 5.18 0 0 0-.18-1.41c-.02-.05-.04-.1-.07-.15Z"/>',
+  "book-open":'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  "chevron-right":'<path d="m9 18 6-6-6-6"/>',
+  "chevron-down":'<path d="m6 9 6 6 6-6"/>',
+  "arrow-left":'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  "x":'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  "check-circle":'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>',
+  "x-circle":'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+  "alert-triangle":'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  "lightbulb":'<path d="M9 18h6"/><path d="M10 22h4"/><path d="M9 13c0-2.5.9-4 1.6-5.4C11.7 6 12 5.5 12 5a2 2 0 0 0-4 0c0 .7.3 1 .9 1.7.5.6.1.3.1 1.3"/><path d="M8 8.3a5 5 0 1 1 8 4.4c-.6.6-1 1.2-1 2.3v.5"/>',
+  "settings":'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  "rotate-ccw":'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  "trash-2":'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  "clipboard-list":'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  "shield-check":'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  "upload-cloud":'<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>',
+  "info":'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  "database":'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+  "gem":'<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+  "text":'<path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15 18.1H3"/>',
+  "eye":'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  "check":'<path d="M20 6 9 17l-5-5"/>',
+  "wrench":'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  "eraser":'<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
+  "search":'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  "grip":'<circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/>',
+  "triangle":'<path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>',
+  "unfold":'<path d="M16 17l5-5-5-5"/><path d="M8 17l-5-5 5-5"/>'
+};
+function icon(name, cls){
+  const body = ICONS[name]||ICONS.info;
+  return `<svg class="${cls||'li'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+function patchStaticIcons(){
+  $$("[data-lucide]").forEach(el=>{
+    const n = el.getAttribute("data-lucide");
+    if(ICONS[n]) el.innerHTML = icon(n); // icon() 返回完整 <svg>，保证图标正确渲染
+  });
+}
+
+/* ---------- 全局 SPA 状态 ---------- */
+const todayStr = ()=>{
+  const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+};
+let QUIZ_STATS = store.get("rad_stats",{total:0,correct:0,streak:1,last:""});
+function bumpStreak(){
+  const t=todayStr();
+  if(QUIZ_STATS.last!==t){
+    const y=new Date(Date.now()-864e5); const ys=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+    QUIZ_STATS.streak = (QUIZ_STATS.last===ys) ? QUIZ_STATS.streak+1 : 1;
+    QUIZ_STATS.last = t;
+  }
+}
+function saveStats(){ store.set("rad_stats",QUIZ_STATS); }
+function rate(){ return QUIZ_STATS.total? Math.round(QUIZ_STATS.correct/QUIZ_STATS.total*100) : 0; }
+
+function getWrong(){ return store.get("rad_wrong_book",[]); }
+function addWrong(t){ const w=getWrong(); if(!w.some(x=>x.t===t.t)){ w.push(t); store.set("rad_wrong_book",w); } }
+
+/* 体位「标记已掌握」：兼具收藏 + 学习打卡统计 */
+function posTotalCount(){ return Object.values(DB.posAreas).reduce((n,g)=>n+g.pos.length,0); }
+function getMastered(){ return store.get("rad_mastered_pos",[]); }
+function masteredCount(){ return getMastered().length; }
+function isMastered(key){ return getMastered().indexOf(key)>=0; }
+function toggleMastered(key){
+  const m=getMastered(); const at=m.indexOf(key); const posKey=key;
+  if(at>=0){ m.splice(at,1); store.set("rad_mastered_pos",m);
+    QUIZ_STATS.total=Math.max(0,QUIZ_STATS.total-1); QUIZ_STATS.correct=Math.max(0,QUIZ_STATS.correct-1); saveStats();
+    return false; }
+  m.push(posKey); store.set("rad_mastered_pos",m);
+  QUIZ_STATS.total++; QUIZ_STATS.correct++; bumpStreak(); saveStats(); // 计入学习统计并打卡
+  return true;
+}
+function todaysDaily(){
+  const k="rad_daily_"+todayStr();
+  let d = store.get(k,null);
+  if(!d){ d={ set:poolShuffle(), idx:0, ans:[], finish:false, correct:0 }; store.set(k,d); }
+  return d;
+}
+function poolShuffle(){ return DB.practicePool.map(x=>x).sort(()=>Math.random()-0.5); }
+
+/* 全局视图/模块状态 */
+const S = {
+  view:"home",
+  ai:{ mode:"read", modality:"CT", files:[] },
+  dr:{ idx:0, map:{}, judged:0 },
+  exam:{ si:0, items:[], idx:0, correct:0, ans:{}, running:false },
+  quizTab:"day", posTab:"body", hisTab:"read"
+};
+const L = c=>document.createElement("div"); // not used heavily
+
+/* ============================================================
+   视图渲染
+   ============================================================ */
+
+/* ---------- 首页 ---------- */
+function renderHome(){
+  const q = QUIZ_STATS;
+  const d = new Date();
+  const week=["日","一","二","三","四","五","六"][d.getDay()];
+  const dateStr = (d.getMonth()+1)+"月"+d.getDate()+"日 星期"+week;
+  const daily = todaysDaily();
+  const totalPos = Object.values(DB.posAreas).reduce((n,g)=>n+g.pos.length,0);
+  const quick = [
+    {ic:"person-standing",iccls:"ic-pos",t:"体位摆放",d:DB.posOrder.length+" 个部位 · "+totalPos+" 个 DR 标准体位，点人体图查看",v:"pos"},
+    {ic:"scan-line",iccls:"ic-ai",t:"AI 阅片",d:"上传影像 智能分析",v:"ai"},
+    {ic:"pencil-line",iccls:"ic-quiz",t:"每日一练",d:"真题练习 "+(daily.ans.length)+"/"+daily.set.length,v:"quiz"},
+    {ic:"gamepad-2",iccls:"ic-exam",t:"模拟考试",d:"分科练习 · 100题/科",v:"quiz"},
+    {ic:"book-open",iccls:"ic-book",t:"错题库",d:"每日+模拟 共 "+getWrong().length+" 题",v:"quiz"},
+    {ic:"history",iccls:"ic-hist",t:"阅片历史",d:"共 "+(store.get("rad_read_hist",[]).length)+" 条记录",v:"history"}
+  ];
+  $("#view-home").innerHTML = `
+    <div class="h-hero">
+      <div class="date">Radiology · ${dateStr}</div>
+      <div class="slogan">今天也要元气满满地学习哦～</div>
+      <div class="spark">专业是积累，判读是沉淀。</div>
+    </div>
+    <div class="h-stat-row mt16">
+      <div class="h-stat"><div class="val">${daily.ans.length}/${daily.set.length}</div><div class="lbl">今日答题</div></div>
+      <div class="h-stat"><div class="val">${rate()}%</div><div class="lbl">总正确率</div></div>
+      <div class="h-stat"><div class="val">${q.streak}</div><div class="lbl">连续打卡</div></div>
+    </div>
+    <div class="h-sec-title">快捷功能<span class="more">一键直达</span></div>
+    <div class="h-quick-grid">
+      ${quick.map((x,i)=>`<button class="h-quick" data-go="${x.v}" style="animation-delay:${i*0.05}s">
+        <div class="ic ${x.iccls}">${icon(x.ic)}</div>
+        <div class="qt">${x.t}</div><div class="qd">${x.d}</div></button>`).join("")}
+    </div>
+    <div class="h-sec-title">今日学习提示</div>
+    <div class="h-tip">${icon("lightbulb")}<div class="t">${DB.dailyTip}</div></div>`;
+  $("#view-home").querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
+}
+
+/* ---------- AI 阅片 ---------- */
+function renderAI(){
+  $("#view-ai").innerHTML = `
+    <div class="mode-switch">
+      <button data-m="read" class="${S.ai.mode==='read'?'on':''}">${icon("scan-line")} AI 阅片</button>
+      <button data-m="cobb" class="${S.ai.mode==='cobb'?'on':''}">${icon("triangle")} Cobb 角测量</button>
+    </div>
+    <div id="aiBody"></div>`;
+  $("#view-ai").querySelectorAll(".mode-switch button").forEach(b=>b.addEventListener("click",()=>{ S.ai.mode=b.dataset.m; renderAI(); }));
+  S.ai.mode==='read' ? renderAIRead() : renderAICobb();
+}
+function renderAIRead(){
+  const box = $("#aiBody");
+  box.innerHTML = `
+    <label class="field-label">影像类型</label>
+    <div class="seg">${["CT","MRI","DR"].map(m=>`<button class="seg-btn ${S.ai.modality===m?'on':''}" data-m="${m}">${m}</button>`).join("")}</div>
+    <label class="field-label">上传影像（可多张）</label>
+    <div class="upload-zone" id="uz">
+      <div><div class="uz-svg">${icon("upload-cloud")}</div>
+        <div class="uz-t">点击或拖入影像</div><div class="uz-d">支持 JPG / PNG，一次可多张</div></div>
+    </div>
+    <div class="thumb-grid" id="thumbs"></div>
+    <input type="file" id="fileInput" accept="image/*" multiple class="hide">
+    <button class="btn btn-primary btn-block mt20" id="runAI">${icon("sparkles")} AI 智能分析</button>
+    <div id="aiOut" class="mt16"></div>`;
+  box.querySelectorAll(".seg-btn").forEach(b=>b.addEventListener("click",()=>{ S.ai.modality=b.dataset.m; renderAIRead(); }));
+  const uz=$("#uz"), fi=$("#fileInput");
+  uz.addEventListener("click",()=>fi.click());
+  fi.addEventListener("change",e=>{
+    const fs=[].slice.call(e.target.files||[]);
+    S.ai.files=S.ai.files.concat(fs.map(f=>({name:f.name,url:URL.createObjectURL(f)})));
+    drawThumbs();
+  });
+  function drawThumbs(){
+    $("#thumbs").innerHTML=S.ai.files.map((f,i)=>`<div class="thumb"><img src="${f.url}" alt="${f.name}"><button class="del" data-i="${i}">${icon("x")}</button></div>`).join("");
+    $$("#thumbs .del").forEach(b=>b.addEventListener("click",()=>{ S.ai.files.splice(+b.dataset.i,1); drawThumbs(); }));
+  }
+  $("#thumbs").innerHTML && drawThumbs();
+  $("#runAI").addEventListener("click",async ()=>{
+    const out=$("#aiOut");
+    if(!S.ai.files.length){ toast("请先上传至少一张影像"); return; }
+    out.innerHTML=`<div class="report"><div class="r-h">${icon("sparkles")} 正在分析…</div><div class="loading-bar"><i></i></div></div>`;
+    const r=await API.aiReading(S.ai.files,S.ai.modality);
+    out.innerHTML = r.gate
+      ? aiGateHTML()
+      : `<div class="report"><div class="r-h">${icon("sparkles")} ${r.report}</div>
+         ${r.findings.map(f=>`<div class="mt12"><b>${f.label}：</b>${f.text}</div>`).join("")}</div>`;
+  });
+}
+function renderAICobb(){
+  $("#aiBody").innerHTML = `
+    <div class="cobb title-tip">
+      <svg viewBox="0 0 320 200">
+        <rect width="320" height="200" fill="#0B0F14"/>
+        <path d="M40 30 L60 150" class="cobb-line A"/>
+        <path d="M150 20 L140 170" class="cobb-line A"/>
+        <circle cx="36" cy="42" r="4" class="cobb-anchor A"/><circle cx="64" cy="138" r="4" class="cobb-anchor A"/>
+        <circle cx="146" cy="32" r="4" class="cobb-anchor A"/><circle cx="136" cy="158" r="4" class="cobb-anchor A"/>
+        <path d="M64 138 q60 -30 82 -106" fill="none" stroke="rgba(255,255,255,.35)" stroke-dasharray="4 4"/>
+        <text x="96" y="120" class="cobb-tag">∠ 12.4°</text>
+      </svg>
+      <div class="cobb-title">${icon("triangle")} Cobb 角测量演示 <span class="muted" style="font-size:11px;margin-left:auto">脊柱侧弯示例</span></div>
+    </div>
+    <button class="btn btn-ghost btn-block mt16" id="cobbRun">${icon("wrench")} 重新测量</button>
+    <div class="ai-gate mt16">${icon("info")}<div><div class="g-t">说明</div><div class="g-d">在当前原型中，Cobb 角测量以上端椎/下端椎交界线夹角示意；接入真实影像后替换为自动描点计算。</div></div></div>`;
+  $("#cobbRun").addEventListener("click",()=>toast("已按当前上下端椎重新推算 ∠12.4°"));
+}
+function aiGateHTML(){
+  return `<div class="ai-gate">${icon("alert-triangle")}<div>
+    <div class="g-t">未配置视觉模型 Key</div>
+    <div class="g-d">请先在「我的」配置视觉模型 API Key 后再试。配置后即可获得 AI 智能分析（演示返回）。</div>
+    <button class="btn btn-sm btn-line mt8" id="goMine">去配置</button></div></div>`;
+}
+
+/* ---------- 判读（DR 骨折 22 例） ---------- */
+const DR_TOTAL = DB.drCases.length;
+function drBoneFilm(kind){
+  const fig = kind==="肩胛"||kind==="锁骨"
+    ? `<path d="M60 60 c30 -14 120 -12 150 6 c8 5 -6 22 -30 24 c-20 2 -34 -6 -50 -8 c-34 -4 -70 6 -70 6z" fill="#E8E5DF" stroke="#C7BFAe" stroke-width="1"/>`
+    : `<path d="M88 34 h40 c22 0 30 10 28 30 c-2 18 -10 26 -30 26 h-30 c22 0 34 12 30 34 c-3 18 -14 30 -38 28 l-30 -3 c-24 -2 -38 -18 -34 -40 c4 -22 24 -26 34 -44 z" fill="#EEEAE2" stroke="#CFC7B8" stroke-width="1.2"/>`;
+  return `<svg viewBox="0 0 240 220" focusable="false"><defs><linearGradient id="film" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${getComputedStyle(document.documentElement).getPropertyValue('--fig-grad-top').trim()||'#FFF8FA'}"/><stop offset="1" stop-color="${getComputedStyle(document.documentElement).getPropertyValue('--fig-grad-bot').trim()||'#F6E7EA'}"/></linearGradient></defs>
+    <g transform="translate(0,10)">${fig}</g></svg>`;
+}
+function renderDR(){
+  const box=$("#view-dr"); box.style.display="block"; box.style.display="";
+  const i=S.dr.idx; const c=DB.drCases[i];
+  const done = S.dr.judged; const pct = num(done/DR_TOTAL*100);
+  const chosen = S.dr.map[i]; const pending = S.dr.pending; const judged = chosen!==undefined;
+  const letters=["A","B","C","D","E"];
+  // 选项 class：已提交→高亮对错并锁定；未提交→高亮当前选中
+  const optCls = idx => judged
+    ? (idx===c.a ? "correct" : (idx===chosen ? "wrong" : ""))
+    : (idx===pending ? "selected" : "");
+  box.innerHTML=`
+    <div class="dr-progress">
+      <div class="dp-l">骨折判读</div>
+      <div class="dp-bar"><i style="width:${pct}%"></i></div>
+      <div class="dp-count">${done}/${DR_TOTAL}</div>
+    </div>
+    <div class="dr-film"><span class="film-tag">DR · ${c.type}</span>${drBoneFilm(c.type)}<div class="muted" style="font-size:11px">${c.part}</div></div>
+    <div class="dr-q">第 ${i+1} 例 · ${c.t}</div>
+    ${letters.map((k,idx)=>`<button class="dr-opt ${optCls(idx)}" data-o="${idx}" ${judged?'disabled':''}><span class="k">${k}</span>${c.o[idx]}</button>`).join("")}
+    <div id="drSubmitArea" class="mt16">${judged
+      ? `<button class="btn btn-primary btn-block" disabled>${icon("check")} 已提交</button>`
+      : `<button class="btn btn-primary btn-block" id="drSubmit" ${pending===undefined?'disabled':''}>${icon("check")} 提交答案</button>`}</div>
+    <div id="drEval" class="mt16"></div>
+    <div class="dr-foot">
+      <button class="btn btn-line" id="drPrev" ${i===0?'disabled':''}>上一例</button>
+      <button class="btn btn-ghost" id="drRedo">↺ 重做</button>
+      <button class="btn btn-primary" id="drNext" ${i>=DR_TOTAL-1?'disabled':''}>下一例</button>
+    </div>
+    <div class="dr-nav-note muted" style="font-size:11px;text-align:center;margin-top:8px">先选答案，再点「提交」判定；已提交的翻页保留，进度仅存于本次会话</div>`;
+
+  // 选项：未提交时可选中（换选即高亮）；已提交锁定
+  $$("#view-dr .dr-opt").forEach(b=>b.addEventListener("click",()=>{
+    if(judged) return;
+    S.dr.pending = +b.dataset.o; renderDR();
+  }));
+  // 提交：仅在有选中时机生效
+  const submit=$("#drSubmit"); if(submit) submit.addEventListener("click",()=>{ if(S.dr.pending!==undefined) answerDR(i,S.dr.pending); });
+  // 导航：切换/重做时清掉当前待提交选择
+  let btn;
+  (btn=$("#drPrev"))&&btn.addEventListener("click",()=>{ if(S.dr.idx>0){ S.dr.pending=undefined; S.dr.idx--; renderDR(); } });
+  (btn=$("#drRedo"))&&btn.addEventListener("click",()=>{ S.dr.map={}; S.dr.judged=0; S.dr.pending=undefined; S.dr.idx=0; renderDR(); toast("已重置本轮判读会话"); });
+  (btn=$("#drNext"))&&btn.addEventListener("click",()=>{ if(S.dr.idx<DR_TOTAL-1){ S.dr.pending=undefined; S.dr.idx++; renderDR(); } });
+
+  if(judged){
+    const cc=c, ch=chosen, right=ch===cc.a;
+    $("#drEval").innerHTML =
+      `<div class="feedback ${right?'ok':'bad'}">
+        <div class="fb-t">${right?icon("check-circle"):icon("x-circle")} ${right?"回答正确":"回答错误"}</div>
+        <div>${right?"判读精准，继续保持。":"正确答案为 " + letters[cc.a] + "。"}</div>
+        <div class="mt12" style="font-weight:700">AI 解读</div>
+        <div class="q-explain" style="background:var(--ai-soft);color:var(--ai-ink);border:none">${cc.said}</div>
+      </div>`;
+  }
+}
+function answerDR(i,o){
+  if(S.dr.map[i]!==undefined) return; // 已提交，锁定
+  S.dr.map[i]=o; S.dr.judged=Object.keys(S.dr.map).length; S.dr.pending=undefined;
+  QUIZ_STATS.total++; if(o===DB.drCases[i].a)QUIZ_STATS.correct++; bumpStreak(); saveStats();
+  renderDR();
+}
+
+/* ---------- 练习 ---------- */
+function quizTabHTML(active){
+  return `<div class="quiz-tabs">
+    <button data-t="day" class="${active==='day'?'on':''}">每日一练</button>
+    <button data-t="exam" class="${active==='exam'?'on':''}">模拟考试</button>
+    <button data-t="wrong" class="${active==='wrong'?'on':''}">错题库</button>
+  </div><div id="quizBody"></div>`;
+}
+function renderQuiz(){
+  $("#view-quiz").innerHTML=quizTabHTML(S.quizTab||"day");
+  const btns=$$("#view-quiz .quiz-tabs button");
+  btns.forEach(b=>b.addEventListener("click",()=>{ S.quizTab=b.dataset.t; renderQuiz(); }));
+  const B=$("#quizBody");
+  if(S.quizTab==="wrong") return renderWrong(B);
+  if(S.quizTab==="exam") return renderExamSetup(B);
+  return renderDaily(B);
+}
+/* 每日一练 */
+function renderDaily(B){
+  const d=todaysDaily();
+  const chips=`<div class="quiz-stat">
+    <div class="q-chip"><div class="qc-ic ic-quiz">${icon("text")}</div><div><div class="qc-t">累计答题</div><div class="qc-v">${num(QUIZ_STATS.total)}</div></div></div>
+    <div class="q-chip"><div class="qc-ic ic-ai">${icon("check-circle")}</div><div><div class="qc-t">正确率</div><div class="qc-v">${rate()}%</div></div></div>
+  </div>`;
+  B.innerHTML=chips+'<div class="mt16" id="dailyBox"></div>';
+  renderDailyStage($("#dailyBox"),d);
+}
+function renderDailyStage(box,d){
+  if(d.finish){ box.innerHTML=dailyDone(d); bindDailyDone(box); return; }
+  const q=d.set[d.idx]; if(!q){ d.finish=true; renderDailyStage(box,d); return; }
+  box.innerHTML=dailyItemHTML(d,q);
+  $$("#dailyBox .dr-opt").forEach(b=>b.addEventListener("click",()=>answerDaily(+b.dataset.o)));
+  const dn=$("#dNext"); if(dn) dn.addEventListener("click",nextDaily);
+}
+function dailyItemHTML(d,q){
+  const letters=["A","B","C","D","E"];
+  return `
+    <div class="quiz-item-head"><span class="q-round">第 ${d.idx+1}/${d.set.length} 题 · ${q.sub}</span>
+      <span class="qtype-tag single">单选</span></div>
+    <div class="q-stem">${q.t}</div>
+    <div id="dailyOpts">${letters.map((k,i)=>`<button class="dr-opt" data-o="${i}"><span class="k">${k}</span>${q.o[i]}</button>`).join("")}</div>
+    <div id="dailyEval" class="mt16"></div>
+    <div class="dr-foot"><button class="btn btn-primary btn-block" id="dNext">${d.idx>=d.set.length-1?"完成本日":"下一题"}</button></div>`;
+}
+function answerDaily(o){
+  const d=todaysDaily(); const q=d.set[d.idx];
+  if(d.ans[d.idx]!==undefined) return;
+  d.ans[d.idx]=o; if(o===q.a)d.correct++; store.set("rad_daily_"+todayStr(),d);
+  QUIZ_STATS.total++; if(o===q.a)QUIZ_STATS.correct++; bumpStreak(); saveStats();
+  // 高亮 + 反馈
+  const opts=$$("#dailyOpts .dr-opt");
+  opts.forEach(b=>{ const x=+b.dataset.o; if(x===o)b.classList.add(o===q.a?"correct":"wrong"); if(x===q.a)b.classList.add("correct"); });
+  $("#dailyEval").innerHTML=`
+    <div class="feedback ${o===q.a?'ok':'bad'}">
+      <div class="fb-t">${o===q.a?icon("check-circle"):icon("x-circle")} ${o===q.a?"正确":"错误"}</div>
+      <div style="font-weight:700">解析</div>
+      <div class="mt8">${q.ex}</div>
+    </div>
+    <div class="collapse" id="dAIcoll">
+      <div class="collapse-head">${icon("sparkles")} 让 AI 详细讲解 <span>${icon("chevron-down")}</span></div>
+      <div class="collapse-body"><div class="collapse inner" id="dAIout">点击开启 AI 讲解（需在「我的」配置 API Key）</div></div>
+    </div>`;
+  $("#dAIcoll .collapse-head").addEventListener("click",e=>{
+    const c=$("#dAIcoll"); c.classList.toggle("open");
+    if(c.classList.contains("open")) dailyAI();
+  });
+  $("#dNext").addEventListener("click",nextDaily);
+  opts.forEach(b=>b.disabled=true);
+}
+async function dailyAI(){
+  const out=$("#dAIout"); if(!out) return;
+  const d=todaysDaily(); const q=d.set[d.idx];
+  out.innerHTML=`<div class="loading-bar"><i></i></div>`;
+  const r=await API.explain(q.t,q.o.join(" / "));
+  out.innerHTML = r.gate ? "未配置 API Key，请到「我的」配置后使用。" : r.reply;
+}
+function nextDaily(){
+  const d=todaysDaily();
+  if(d.idx<d.set.length-1){ d.idx++; store.set("rad_daily_"+todayStr(),d); renderDaily($("#quizBody")); }
+  else { d.finish=true; d.idx=0; store.set("rad_daily_"+todayStr(),d); renderDaily($("#quizBody")); }
+}
+function dailyDone(d){
+  let b=""; $$("#view-quiz .dr-opt").forEach(x=>x.removeAttribute("disabled"));
+  return `<div class="card" style="text-align:center;padding:34px 20px">
+    <div style="width:64px;height:64px;margin:0 auto 14px;border-radius:22px;background:var(--grad-soft);color:var(--rose);display:flex;align-items:center;justify-content:center">${icon("check-circle","",true)}</div>
+    <div style="font-size:20px;font-weight:800">今日练习完成</div>
+    <div style="color:var(--ink-soft);margin-top:6px">共 ${d.set.length} 题，答对 <b style="color:var(--ok)">${d.correct}</b> 题</div>
+    <div class="mt20"><button class="btn btn-ghost btn-block" id="dayRedo">↺ 重出今日题</button></div>
+    <div class="muted" style="font-size:12px;margin-top:10px">错题已自动收录到「错题库」</div></div>`;
+}
+function bindDailyDone(box){
+  const b=$("#dayRedo");
+  if(b)b.addEventListener("click",()=>{ 
+    const r=API.checkConnections();
+    if(!r.text.ok&&!r.vision.ok){ toast("未配置 API Key——已清空今日题，可在「练习」重新生成（题库兜底）"); }
+    store.del("rad_daily_"+todayStr()); renderDaily($("#quizBody"));
+  });
+}
+
+/* 每日一练「上一题」可能误 disabled 的修正 */
+function fixOptionDisabled(){ /* 不用 */ }
+
+/* ---------- 模拟考试 ---------- */
+function renderExamSetup(B){
+  B.innerHTML=`<div class="mt8">
+    <div class="card exam-desc">
+      <div class="r1"><div>
+        <div class="ed-sub">模拟考试</div>
+        <div class="ed-meta">全真三段式：单选 → 共用题干 → 多选<br>答题完成后自动收录错题至错题库</div></div>
+        <span class="tag rose">${icon("gamepad-2")} 分科</span></div>
+      <div class="divider"></div>
+      ${DB.examSubjects.map((s,i)=>`<div class="exam-sector" data-s="${i}">
+        <div class="es-ic ic-exam" style="background:var(--rose-soft);color:var(--rose)">${s.tag==='single'?icon("text"):s.tag==='shared'?icon("book-open"):icon("clipboard-list")}</div>
+        <div><div class="es-t">${s.name}</div><div class="es-d">${s.pct} · 题库 ${s.total} 题 · 考 ${s.count} 题</div></div>
+        <div class="es-n">${icon("chevron-right")}</div></div>`).join("")}
+    </div>
+    <button class="btn btn-primary btn-block mt16" id="examStart">${icon("gamepad-2")} 开始考试</button>
+    <div class="muted" style="font-size:12px;text-align:center;margin-top:10px">选择上方科目后再开始，卷面按所选科目规则组卷</div></div>`;
+  let sel=0;
+  $$("#quizBody .exam-sector").forEach((el,i)=>el.addEventListener("click",()=>{
+    sel=i;
+    $$("#quizBody .exam-sector").forEach(x=>x.style.background="");
+    el.style.background="var(--grad-soft)";
+  }));
+  $("#examStart").addEventListener("click",()=>startExam(sel));
+}
+function buildExam(si){
+  const s=DB.examSubjects[si];
+  const items=[]; let n=0;
+  while(n < Math.min(s.count, 140)){
+    if(s.groups){ s.groups.forEach(g=>{ g.items.forEach(it=>{ items.push({t:it.s,o:it.o,a:it.a,qtype:"shared",g:g.g}); n++; }); }); break; }
+    const q=s.pool[n % s.pool.length];
+    items.push(q.qtype && q.qtype!=="single" ? q : {t:q.t,o:q.o,a:Array.isArray(q.a)?q.a:q.a,qtype:s.tag, multi:Array.isArray(q.a)});
+    n++;
+  }
+  return items;
+}
+function startExam(si){
+  confirmSheet("开始「"+DB.examSubjects[si].name+"」模拟考试？","卷面按所选科目规则组卷，完成后自动收录错题。",()=>{
+    S.exam={si, items:buildExam(si), idx:0, correct:0, ans:{}, running:true};
+    renderExamItem();
+  });
+}
+function renderExamItem(){
+  const B=$("#quizBody"); const e=S.exam; const q=e.items[e.idx];
+  if(!q){ return finishExam(); }
+  const letters=["A","B","C","D","E"];
+  const shared = q.qtype==="shared"||q.g;
+  const multi = Array.isArray(q.a);
+  B.innerHTML=`<div class="mt8 card">
+    <div class="quiz-item-head"><span class="q-round">${DB.examSubjects[e.si].name} · 第 ${e.idx+1}/${e.items.length} 题</span>
+      <span class="qtype-tag ${multi?'multi':shared?'shared':'single'}">${multi?"多选":shared?"共用题干":"单选"}</span></div>
+    ${q.g?`<div class="q-group">${q.g}</div>`:""}
+    <div class="q-stem">${q.t}</div>
+    <div id="examOpts">${letters.map((k,i)=>`<button class="dr-opt" data-o="${i}"><span class="k">${k}</span>${q.o[i]}</button>`).join("")}</div>
+    <div class="dr-foot"><button class="btn btn-line" id="exPrev" ${e.idx===0?'disabled':''}>上一题</button>
+      <button class="btn btn-primary" id="exNext">${e.idx>=e.items.length-1?"交卷":"下一题"}</button></div></div>`;
+  const opts=$$("#examOpts .dr-opt");
+  const sel=e.ans[e.idx];
+  if(sel!==undefined){ opts.forEach(b=>b.disabled=true); if(Array.isArray(sel)){ sel.forEach(x=>opts[x]&&opts[x].classList.add("correct")); } else opts[sel]&&opts[sel].classList.add("correct"); }
+  opts.forEach(b=>b.addEventListener("click",()=>{
+    const o=+b.dataset.o;
+    if(multi){ if(!e.ans[e.idx]) e.ans[e.idx]=[]; const arr=e.ans[e.idx]; const at=arr.indexOf(o); at>=0?arr.splice(at,1):arr.push(o); b.classList.toggle("correct"); b.disabled=true; }
+    else { e.ans[e.idx]=o; opts.forEach(x=>x.disabled=true); opts.forEach(x=>{ if(+x.dataset.o===o)x.classList.add("correct"); }); }
+    // 多选减少错选风险：允许逐个点，点后即锁定以保持简单
+  }));
+  $("#exPrev").addEventListener("click",()=>{ if(e.idx>0){e.idx--;renderExamItem();} });
+  $("#exNext").addEventListener("click",()=>{
+    const a=e.ans[e.idx]; if(a===undefined){ toast(multi?"请选择（可多选）":"请选择一个答案"); return; }
+    const right = Array.isArray(q.a) ? arrEq(a,q.a) : a===q.a;
+    if(right)e.correct++;
+    if(Array.isArray(q.a)&&!right){ addWrong({sub:DB.examSubjects[e.si].name,t:q.t,o:q.o,a:q.a,ex:q.ex||"",multi:true,you:a}); }
+    else if(!Array.isArray(q.a)&&!right){ addWrong({sub:DB.examSubjects[e.si].name,t:q.t,o:q.o,a:q.a,ex:q.ex||"",you:a}); }
+    e.idx++; renderExamItem();
+  });
+}
+function arrEq(a,b){ if(a.length!==b.length)return false; const s=(x)=>[...x].sort().join(","); return s(a)===s(b); }
+function finishExam(){
+  const e=S.exam; const s=DB.examSubjects[e.si];
+  const total=e.items.length; const right=e.correct;
+  const rec={sub:s.name,date:todayStr(),score:right,total,pct:Math.round(right/total*100)};
+  const recs=store.get("rad_exam_records",[]); recs.unshift(rec); store.set("rad_exam_records",recs);
+  S.exam.running=false;
+  $("#quizBody").innerHTML=`<div class="card" style="text-align:center;padding:34px 20px">
+    <div style="width:64px;height:64px;margin:0 auto 14px;border-radius:22px;background:var(--grad-soft);color:var(--rose);display:flex;align-items:center;justify-content:center">${icon("check-circle")}</div>
+    <div style="font-size:20px;font-weight:800">考试完成</div>
+    <div style="font-size:34px;font-weight:800;color:var(--rose);margin:10px 0">${rec.score}/${rec.total}</div>
+    <div style="color:var(--ink-soft)">正确率 ${rec.pct}% · 已收录错题</div>
+    <div class="mt20"><button class="btn btn-ghost btn-block" id="examAgain">再来一次</button></div></div>`;
+  $("#examAgain").addEventListener("click",()=>{ S.quizTab="exam"; renderQuiz(); });
+  toast("考试记录已保存到「历史」，错题已入错题库");
+}
+function confirmSheet(title,desc,onOk){
+  openSheet(`<div class="sheet-head"><h3>${title}</h3><button class="sheet-close" id="sheetX">${icon("x")}</button></div>
+    <div class="muted" style="font-size:13.5px">${desc}</div>
+    <button class="btn btn-primary btn-block mt20" id="sheetOk">开始考试</button>`);
+  $("#sheetOk").addEventListener("click",()=>{ closeSheet(); onOk(); });
+  $("#sheetX").addEventListener("click",closeSheet);
+}
+
+/* ---------- 错题库 ---------- */
+function renderWrong(B){
+  const w=getWrong(); const letters=["A","B","C","D","E"];
+  B.innerHTML=`<div class="mt8">
+    <div class="card"><div class="quiz-item-head" style="margin-bottom:4px"><div style="font-weight:800;font-size:16px">错题库</div>
+      <span class="tag bad">${icon("book-open")} ${w.length} 题</span></div>
+      <div class="muted" style="font-size:12px">每日一练与模拟考试的错误题目自动收录</div></div>
+    ${w.length?`<button class="btn btn-line btn-block mt12" id="clearWrong">${icon("trash-2")} 清空错题</button>`:""}
+    <div class="mt8">${w.length?w.map((q,i)=>`
+      <div class="card mt12"><div class="book-item">
+        <div class="bi-no">${i+1}</div>
+        <div class="bi-t">
+          <div class="book-meta"><span class="tag rose">${q.sub}</span>${q.multi?'<span class="tag lav">多选</span>':''}</div>
+          <div style="font-weight:700;font-size:14px">${q.t}</div>
+          <div class="muted mt8" style="font-size:13px;line-height:1.7">
+            你的答案：<b style="color:var(--bad)">${fmtYou(q)}</b> &nbsp;·&nbsp; 正确答案：<b style="color:var(--ok)">${fmtAns(q,letters)}</b></div>
+          ${q.ex?`<div class="q-explain">${q.ex}</div>`:""}
+        </div></div></div>`).join("")
+      :`<div class="empty"><div class="e-ic">${icon("check-circle")}</div><div class="e-t">错题库是空的</div><div class="e-d">继续做题，错题会自动收录到这里<br>方便你集中复盘</div></div>`}
+  </div>`;
+  const cw=document.getElementById("clearWrong"); if(cw)cw.addEventListener("click",()=>{ store.set("rad_wrong_book",[]); renderQuiz(); toast("已清空错题"); });
+}
+function fmtYou(q){ const letters=["A","B","C","D","E"]; return Array.isArray(q.you)?q.you.map(x=>letters[x]).join("、"):letters[q.you]; }
+function fmtAns(q,letters){ return Array.isArray(q.a)?q.a.map(x=>letters[x]).join("、"):letters[q.a]; }
+
+/* ---------- 体位摆放 ---------- */
+const AREA_MARKS={
+  "头颅":[100,30],"颈椎":[100,46],"肩关节":[70,60],"胸部":[100,84],"胸椎":[100,102],
+  "肘关节":[50,116],"腕关节":[45,168],"手":[45,188],"腰椎":[100,126],"腹部":[100,142],
+  "骨盆":[100,168],"髋关节":[78,180],"膝关节":[78,238],"踝关节":[78,296],"足":[76,318]
+};
+function bodySVG(activeArea){
+  const pts={head:[100,30],neck:[100,50]};
+  const m=AREA_MARKS;
+  // 简易人体线段
+  const fig=`
+    <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".7">
+      <circle cx="100" cy="26" r="15"/>
+      <path d="M70 58 h60 M100 41 V60"/>
+      <path d="M70 60 L50 110 L45 172"/>
+      <path d="M130 60 L150 110 L155 172"/>
+      <circle cx="45" cy="180" r="4"/><circle cx="155" cy="180" r="4"/>
+      <path d="M82 170 L78 238 L78 300"/>
+      <path d="M118 170 L122 238 L122 300"/>
+      <path d="M78 300 L60 312"/><path d="M122 300 L140 312"/>
+    </g>`;
+  return `<svg viewBox="0 0 200 330" fill="currentColor">${fig}
+    ${Object.keys(m).map(k=>{ const c=m[k], active=k===activeArea;
+      return active
+        ? `<circle cx="${c[0]}" cy="${c[1]+10}" r="11" fill="var(--rose)" opacity=".18"/><circle cx="${c[0]}" cy="${c[1]}" r="6" fill="var(--rose)" stroke="#fff" stroke-width="1.5"/>`
+        : `<circle cx="${c[0]}" cy="${c[1]}" r="4.5" fill="var(--rose)" stroke="#fff" stroke-width="1.4"/>`;
+    }).join("")}
+  </svg>`;
+}
+function renderPos(){
+  const box=$("#view-pos"); box.style.display="block"; box.style.display="";
+  box.innerHTML=`
+    <div class="search-box mb0">${icon("search")}<input id="posSearch" placeholder="搜索体位，如：膝关节侧位 / 舟骨"/></div>
+    <div class="pos-tabs mt12">
+      <button data-p="body" class="on">人体图</button>
+      <button data-p="all">全部部位</button>
+    </div>
+    <div class="pos-master mt12" style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft)">
+      <span class="tag rose">${icon("check")} 已掌握</span> ${masteredCount()} / ${posTotalCount()} 个标准体位
+    </div>
+    <div id="posBody" class="mt12"></div>`;
+  const tabs=$$("#view-pos .pos-tabs button");
+  tabs.forEach(b=>b.addEventListener("click",()=>{ S.posTab=b.dataset.p; tabs.forEach(x=>x.classList.toggle("on",x===b)); renderPosInner(); }));
+  const si=$("#posSearch");
+  si.addEventListener("input",()=>{ const v=si.value.trim(); if(v) renderPosSearch(v); });
+  renderPosInner();
+}
+function renderPosInner(){
+  const B=$("#posBody");
+  if(S.posTab==="all"){ B.innerHTML=`<div class="pos-grid">${DB.posOrder.map(a=>{ const g=DB.posAreas[a]; return `<button class="pos-cell" data-a="${a}"><div class="pc-t">${a} <span>${icon("chevron-right")}</span></div><div class="pc-n">${g.pos.length} 个标准体位</div></button>`; }).join("")}</div>`;
+    $$("#posBody .pos-cell").forEach(c=>c.addEventListener("click",()=>openAreaSheet(c.dataset.a))); return; }
+  B.innerHTML=`<div class="pos-body-card" style="color:var(--rose)">${bodySVG(null)}
+    ${Object.keys(AREA_MARKS).map(a=>{ const c=AREA_MARKS[a]; return `<div class="pos-bubble" data-a="${a}" style="left:${c[0]/2-5}%;top:${c[1]/3.3-3}%"><div class="p-dot"></div><div class="p-lbl">${a.length>2?a.slice(0,2):a}</div></div>`; }).join("")}
+  </div><button class="btn btn-ghost btn-block mt12" id="posAll">查看全部 ${DB.posOrder.length} 个部位</button>`;
+  $$("#posBody .pos-bubble").forEach(b=>b.addEventListener("click",()=>openAreaSheet(b.dataset.a)));
+  $("#posAll").addEventListener("click",()=>{ S.posTab="all"; renderPosInner(); });
+}
+function renderPosSearch(q){
+  const B=$("#posBody");
+  const hits=[];
+  DB.posOrder.forEach(a=>DB.posAreas[a].pos.forEach(p=>{ if(p.name.includes(q)) hits.push({a,...p}); }));
+  B.innerHTML = hits.length
+    ? `<div class="card"><div class="quiz-item-head" style="margin-bottom:4px"><div style="font-weight:800">搜索结果</div><span class="tag rose">${hits.length} 个</span></div></div>`+ hits.map((p,i)=>`<div class="card mt12"><div class="book-item">
+        <div class="bi-no" style="background:var(--rose-soft);color:var(--rose)">${i+1}</div>
+        <div class="bi-t"><div class="book-meta"><span class="tag rose">${p.a}</span><span class="tag lavender" style="background:var(--peach);color:var(--warn)">标准体位</span></div>
+        <div style="font-weight:700;font-size:14px">${p.name}</div><button class="btn btn-sm btn-line mt12" data-open="${p.a}" data-in="${p.i}">查看详情</button></div></div></div>`).join("")
+    : `<div class="empty"><div class="e-ic">${icon("search")}</div><div class="e-t">未找到相关体位</div><div class="e-d">换个关键词试试，如「膝关节」「舟骨」「胸部」</div></div>`;
+  $$("#posBody [data-open]").forEach(b=>b.addEventListener("click",()=>openPosDetail(b.dataset.open,+b.dataset.in)));
+}
+function openAreaSheet(area){
+  const g=DB.posAreas[area];
+  openSheet(`<div class="sheet-head"><h3>${area}</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
+    <div class="muted" style="font-size:13px;margin-bottom:10px">${g.pos.length} 个标准体位 · 点按查看详解</div>
+    <div class="card-btnlist">${g.pos.map((p,i)=>`<button data-p="${i}"><span style="font-size:18px;color:var(--warn)">${icon("person-standing")}</span> ${p.name} ${isMastered(area+'::'+i)?`<span style="color:var(--ok)">${icon("check-circle")}</span>`:''} <span style="margin-left:auto;color:var(--ink-soft)">${icon("chevron-right")}</span></button>`).join("")}</div>`);
+  $$(".sheet [data-p]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.p; openPosDetail(area,i); }));
+  bindSheetClose();
+}
+function openPosDetail(area,i){
+  const p=DB.posAreas[area].pos[i];
+  const key=area+"::"+i;
+  const master=isMastered(key);
+  const kv=[["摄影目的",p.aim],["患者体位",p.post],["探测器 / 暗盒",p.det],["中心线",p.cr],["SID",p.sid],["照射野",p.field],["曝光条件",p.expo],["标准影像",p.standard],["常见错误",p.errors]];
+  openSheet(`<div class="sheet-head"><h3>${p.name}</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
+    <div class="tag rose mb0">${area} · 标准体位</div>
+    <div class="mt16">${posDiagram(p.name,area)}</div>
+    <div class="mt16 card">
+      ${kv.map(([k,v])=>v?`<div class="pos-detail-kv"><div class="k">${k}</div><div class="v">${v}</div></div>`:"").join("")}
+    </div>
+    <button class="btn btn-block mt16 ${master?'':'btn-primary'}" id="posMaster">${icon(master?"check-circle":"book-open")} ${master?"已掌握（点击取消）":"标记已掌握 · 提交"}</button>`);
+  const mk=$("#posMaster");
+  if(mk) mk.addEventListener("click",()=>{
+    const on=toggleMastered(key);
+    mk.innerHTML = on ? icon("check-circle")+" 已掌握（点击取消）" : icon("book-open")+" 标记已掌握 · 提交";
+    mk.classList.toggle("btn-primary",!on); mk.classList.toggle("btn-line",on);
+    const pm=$(".pos-master"); // 同步顶部已掌握进度
+    if(pm) pm.innerHTML = `<span class="tag rose">${icon("check")} 已掌握</span> ${masteredCount()} / ${posTotalCount()} 个标准体位`;
+    toast(on ? "已标记「"+p.name+"」，计入学习统计与打卡" : "已取消「"+p.name+"」已掌握");
+  });
+  bindSheetClose();
+}
+function posDiagram(name,area){
+  // 简洁投照示意图：探测器 + 中心线 + 体位
+  return `<svg viewBox="0 0 300 150" style="width:100%;border-radius:16px;background:var(--cream)">
+    <rect x="248" y="20" width="6" height="110" rx="3" fill="var(--rose)" opacity=".55"/><text x="258" y="15" font-size="9" fill="var(--ink-soft)">探测器</text>
+    <path d="M30 75 L256 75" stroke="var(--rose)" stroke-width="1.4" stroke-dasharray="6 4"/>
+    <text x="120" y="64" font-size="10" fill="var(--ink-soft)">X 射线 · 中心线</text>
+    <g transform="translate(40,48)">${bodyGlyph(area)}</g>
+    <text x="150" y="140" font-size="9" fill="var(--ink-soft)">${name}</text>
+  </svg>`;
+}
+function bodyGlyph(area){
+  return `<svg width="52" height="54" viewBox="0 0 40 44"><g fill="none" stroke="var(--ink-soft)" stroke-width="1.6" stroke-linecap="round"><circle cx="20" cy="7" r="5.2"/><path d="M15 15 h10 M20 12 V18"/><path d="M15 18 l-4 12 M25 18 l4 12"/><path d="M16 30 L12 42 M24 30 L28 42"/></g></svg>`;
+}
+
+/* ---------- 历史 ---------- */
+function renderHistory(){
+  const box=$("#view-history"); box.style.display="block"; box.style.display="";
+  const hist=store.get("rad_read_hist",[]);
+  const exams=store.get("rad_exam_records",[]);
+  box.innerHTML=`<div class="quiz-tabs"><button data-h="read" class="on">阅片记录</button><button data-h="exam">考试记录</button></div>
+    <div id="hisBody"></div>`;
+  S.hisTab=S.hisTab||"read";
+  $$("#view-history .quiz-tabs button").forEach(b=>b.addEventListener("click",()=>{ S.hisTab=b.dataset.h; $$("#view-history .quiz-tabs button").forEach(x=>x.classList.toggle("on",x===b)); renderHisBody(); }));
+  renderHisBody();
+}
+function renderHisBody(){
+  const B=$("#hisBody"); B.innerHTML="";
+  if(S.hisTab==="exam"){ const exc=store.get("rad_exam_records",[]);
+    B.innerHTML=exc.length?exc.map(e=>`<div class="hist-card" style="margin-top:12px"><div class="hc-t"><span>${e.sub} · 模拟考试</span><span class="tag ${e.pct>=60?'ok':'bad'}">${e.pct}%</span></div>
+      <div class="muted" style="font-size:12px;margin-top:5px">${e.date} · 得分 ${e.score}/${e.total}</div></div>`).join("")
+      :emptyHTML("history","暂无考试记录","完成一次「模拟考试」后，成绩会显示在这里"); return; }
+  if(hist.length){ B.innerHTML=hist.map(h=>`<div class="hist-card"><div class="hc-t"><span>${h.type} · AI 阅片</span><span class="tag ai">${h.time}</span></div><div class="muted" style="font-size:12px;margin-top:5px">${h.desc}</div></div>`).join(""); return; }
+  B.innerHTML=emptyHTML("scan-line","还没有阅片记录","去 AI 阅片上传第一张影像吧～","ai");
+  const g=B.querySelectorAll("[data-go]"); g.forEach(x=>x.addEventListener("click",()=>go(x.dataset.go)));
+}
+function emptyHTML(ic,t,d,goTo){
+  return `<div class="empty"><div class="e-ic">${icon(ic)}</div><div class="e-t">${t}</div><div class="e-d">${d}</div>
+    ${goTo?`<button class="btn btn-soft btn-sm mt16" data-go="${goTo}">去上传</button>`:""}</div>`;
+}
+
+/* ---------- 我的 ---------- */
+function renderMine(){
+  const box=$("#view-mine"); box.style.display="block"; box.style.display="";
+  const chk=API.checkConnections();
+  box.innerHTML=`
+    <div class="card">
+      <div class="mine-avatar"><div class="av">放</div>
+        <div><div class="nm">放射学习助手</div><div class="sb">本地运行 · 数据存于本机</div></div>
+        <span class="tag rose" style="margin-left:auto">${icon("gem")} 永久免费</span></div>
+      <div class="mine-status">
+        <div class="ms"><div class="v">${num(QUIZ_STATS.total)}</div><div class="l">累计答题</div></div>
+        <div class="ms"><div class="v">${rate()}%</div><div class="l">正确率</div></div>
+        <div class="ms"><div class="v">${QUIZ_STATS.streak}</div><div class="l">连续打卡</div></div>
+      </div>
+    </div>
+    <div class="card mt16">
+      <div class="mine-row" data-s="api">
+        <div class="mr-ic" style="background:var(--ai-soft);color:var(--ai-ink)">${icon("settings")}</div>
+        <div class="mr-t">模型配置<div class="mr-d">文本 / 视觉 双通道 API Key ${chk.text.ok||chk.vision.ok?"已配置":"未配置"}</div></div>
+        <div class="tag ${chk.text.ok||chk.vision.ok?'ok':'warn'}">${chk.text.ok||chk.vision.ok?"已配置":"未配置"}</div>
+        <span class="mr-arrow">${icon("chevron-right")}</span>
+      </div>
+      <div class="mine-row" data-s="selftest">
+        <div class="mr-ic" style="background:var(--mint);color:var(--ok)">${icon("shield-check")}</div>
+        <div class="mr-t">连接自检<div class="mr-d">测试文本 / 视觉模型连通性</div></div>
+        <span class="mr-arrow">${icon("chevron-right")}</span>
+      </div>
+      <div class="mine-row" data-s="data">
+        <div class="mr-ic" style="background:var(--peach);color:var(--warn)">${icon("database")}</div>
+        <div class="mr-t">数据管理<div class="mr-d">错题库 ${getWrong().length} · 考试记录 ${store.get('rad_exam_records',[]).length}</div></div>
+        <span class="mr-arrow">${icon("chevron-right")}</span>
+      </div>
+    </div>
+    <div class="card mt16">
+      <div class="mine-row" data-s="about">
+        <div class="mr-ic" style="background:var(--lav);color:#6d5bb0">${icon("info")}</div>
+        <div class="mr-t">关于<div class="mr-d">版本 ${window.APP_VERSION||"1.0"} · 纯前端</div></div>
+        <span class="mr-arrow">${icon("chevron-right")}</span>
+      </div>
+    </div>
+    <div class="card mt16">
+      <div class="li-row"><div><div class="li-t">主题（女生版 / 男生版）</div><div class="li-d">顶部按钮亦可随时切换</div></div>
+        <button class="switch ${document.documentElement.getAttribute('data-theme')==='female'?'':'on'}" id="swTheme"><i></i></button></div>
+      <div class="li-row"><div><div class="li-t">今日题目</div><div class="li-d">重出今日练习题目（需谨慎，会覆盖当天记录）</div></div>
+        <button class="btn btn-sm btn-line" id="mRedo">重出</button></div>
+      <div class="li-row"><div><div class="li-t">恢复初始</div><div class="li-d">清空本机全部学习数据</div></div>
+        <button class="btn btn-sm btn-line" id="mReset" style="color:var(--bad)">清空</button></div>
+    </div>`;
+  bindMine(box);
+}
+function bindMine(box){
+  box.querySelectorAll("[data-s]").forEach(r=>r.addEventListener("click",()=>constRun(r.dataset.s)));
+  const sw=$("#swTheme"); if(sw)sw.addEventListener("click",()=>toggleTheme(sw));
+  const rr=$("#mRedo"); if(rr)rr.addEventListener("click",()=>{ store.del("rad_daily_"+todayStr()); toast("今日题目已重置，可到「练习」重新开始"); });
+  const rs=$("#mReset"); if(rs)rs.addEventListener("click",()=>{
+    confirmSheet("确认清空全部数据？","将删除答题统计、错题库、考试记录、API 配置与主题设置，且不可恢复。",()=>{
+      ["rad_stats","rad_wrong_book","rad_exam_records","rad_read_hist","rad_api"].forEach(store.del);
+      QUIZ_STATS={total:0,correct:0,streak:1,last:""}; saveStats(); renderMine(); toast("已清空全部数据");
+    });
+  });
+}
+function constRun(s){
+  if(s==="api") openAPIConfig();
+  else if(s==="selftest") openSelfTest();
+  else if(s==="data") openDataMgr();
+  else if(s==="about") openSheet(`<div class="sheet-head"><h3>关于</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
+    <div class="card"><div class="li-row"><div class="li-t">放射学习助手</div></div>
+      <div class="muted" style="font-size:13px;line-height:1.7">面向医学影像（放射）学习的单页应用原型。版本 ${window.APP_VERSION||"1.0"} · 纯前端本地运行，AI 能力需自配 API Key（未配置时自动降级为门禁提示）。</div></div>`), bindSheetClose();
+}
+function openAPIConfig(){
+  const c=API.loadConfig();
+  openSheet(`
+    <div class="sheet-head"><h3>模型配置</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
+    <div class="api-config">
+      <div style="font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px">${icon("text")} 文本模型通道</div>
+      <div class="ac-field mt8"><div class="ac-l">服务商</div><input class="input" id="txtPro" value="${c.textProvider||""}" placeholder="如 OpenRouter / DeepSeek"/></div>
+      <div class="ac-field"><div class="ac-l">模型名</div><input class="input" id="txtModel" value="${c.textModel||""}" placeholder="如 gpt-4o-mini"/></div>
+      <div class="ac-field"><div class="ac-l">API Key</div><input class="input" id="txtKey" type="password" value="${c.textKey||""}" placeholder="sk-…"/></div>
+      <div class="divider"></div>
+      <div style="font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px">${icon("eye")} 视觉模型通道</div>
+      <div class="ac-field mt8"><div class="ac-l">服务商</div><input class="input" id="visPro" value="${c.visionProvider||""}" placeholder="如 Volcano Engine / OpenAI"/></div>
+      <div class="ac-field"><div class="ac-l">模型名</div><input class="input" id="visModel" value="${c.visionModel||""}" placeholder="如 doubao-vision-pro"/></div>
+      <div class="ac-field"><div class="ac-l">API Key</div><input class="input" id="visKey" type="password" value="${c.visionKey||""}" placeholder="…"/></div>
+      <div class="muted" style="font-size:12px">配置仅存本机 localStorage，不会上传；用于演示 AI 讲解与阅片门禁流程。</div>
+      <button class="btn btn-primary btn-block mt16" id="apiSave">保存配置</button>
+      <button class="btn btn-line btn-block mt8" id="apiTest">测试连接</button>
+    </div>`);
+  $("#apiSave").addEventListener("click",()=>{
+    const nc={textProvider:gv("txtPro"),textModel:gv("txtModel"),textKey:gv("txtKey"),visionProvider:gv("visPro"),visionModel:gv("visModel"),visionKey:gv("visKey")};
+    API.saveConfig(nc); toast("配置已保存"); closeSheet(); renderMine();
+  });
+  $("#apiTest").addEventListener("click",()=>{
+    const nc={textProvider:gv("txtPro"),textModel:gv("txtModel"),textKey:gv("txtKey"),visionProvider:gv("visPro"),visionModel:gv("visModel"),visionKey:gv("visKey")};
+    API.saveConfig(nc);
+    openSelfTest(); toast("已按当前表单测试");
+  });
+  bindSheetClose();
+  function gv(id){ const el=document.getElementById(id); return el?el.value.trim():""; }
+}
+function openSelfTest(){
+  const c=API.checkConnections();
+  openSheet(`<div class="sheet-head"><h3>连接自检</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
+    <div class="card">
+      <div class="li-row"><div><div class="li-t">${icon("text")} 文本模型</div><div class="li-d">${c.text.provider?c.text.provider+" · ":"未指定服务商 "}${c.text.model||"未指定模型"}</div></div>
+        <span class="tag ${c.text.ok?'ok':'warn'}">${c.text.ok?"连通":"未配置"}</span></div>
+      <div class="li-row"><div><div class="li-t">${icon("eye")} 视觉模型</div><div class="li-d">${c.vision.provider?c.vision.provider+" · ":"未指定服务商 "}${c.vision.model||"未指定模型"}</div></div>
+        <span class="tag ${c.vision.ok?'ok':'warn'}">${c.vision.ok?"连通":"未配置"}</span></div>
+      <div class="divider"></div>
+      <div class="muted" style="font-size:12.5px;line-height:1.7">：Key 均未填写时提示「未配置」，不会发起真实请求；原型中任一通道连通即可启用 AI 讲解/阅片（返回演示结果）。</div>
+      <button class="btn btn-line btn-block mt16" id="stGoApi">去配置</button></div>`);
+  bindSheetClose();
+  $("#stGoApi").addEventListener("click",()=>{ closeSheet(); go("mine"); openAPIConfig(); });
+}
+function openDataMgr(){
+  openSheet(`<div class="sheet-head"><h3>数据管理</h3><button class="sheet-close" data-x>${icon("x")}</button></div>
+    <div class="card-btnlist">
+      <button id="dmWrong">${icon("book-open")} 错题库（${getWrong().length} 题）</button>
+      <button id="dmExam">${icon("clipboard-list")} 考试记录（${store.get('rad_exam_records',[]).length} 条）</button>
+      <button id="dmClear" style="color:var(--bad)">${icon("trash-2")} 清空全部本地数据</button>
+    </div>`);
+  bindSheetClose();
+  $("#dmWrong").addEventListener("click",()=>{ closeSheet(); S.quizTab="wrong"; go("quiz"); });
+  $("#dmExam").addEventListener("click",()=>{ closeSheet(); S.hisTab="exam"; go("history"); });
+  $("#dmClear").addEventListener("click",()=>{ closeSheet(); const s=document.getElementById("mReset"); if(s){s.click();} });
+}
+
+/* ---------- Theme 切换 ---------- */
+function applyTheme(mode){
+  document.documentElement.setAttribute("data-theme", mode);
+  const male = mode==="male";
+  const btn=$("#themeToggle"); if(btn)btn.innerHTML = male?"♀ 女生版":"♂ 男生版";
+  const sw=$("#swTheme"); if(sw)sw.classList.toggle("on",male);
+  const mc=document.querySelector('meta[name="theme-color"]'); if(mc)mc.setAttribute("content", male?"#081319":"#0B1220");
+  try{ localStorage.setItem("rad_theme",male?"male":"female"); }catch(e){}
+}
+function toggleTheme(sw){
+  const cur=document.documentElement.getAttribute("data-theme");
+  const next = cur==="male"?"female":"male";
+  applyTheme(next);
+  if(sw)sw.classList.toggle("on",next==="male");
+  toast(cur==="male"?"已切换为女生版 🌸 暖粉":"已切换为男生版 🔷 青绿");
+}
+
+/* ---------- 弹层 ---------- */
+function openSheet(html){
+  closeSheet();
+  const mask=document.createElement("div");
+  mask.className="modal-mask";
+  mask.id="sheetMask";
+  mask.innerHTML=`<div class="sheet">${html}</div>`;
+  mask.addEventListener("click",e=>{ if(e.target===mask) closeSheet(); });
+  document.body.appendChild(mask);
+}
+function closeSheet(){ const m=document.getElementById("sheetMask"); if(m) m.remove(); }
+function bindSheetClose(){ const b=document.querySelector("#sheetMask [data-x]"); if(b)b.addEventListener("click",closeSheet); }
+
+/* ---------- 路由 ---------- */
+function go(v){
+  const map={home:renderHome, ai:renderAI, dr:renderDR, quiz:renderQuiz, pos:renderPos, history:renderHistory, mine:renderMine};
+  if(!map[v]) return;
+  // 切换视图与导航
+  $$(".view").forEach(x=>x.classList.remove("active"));
+  $$(".tab").forEach(x=>x.classList.toggle("active",x.dataset.v===v));
+  $("#view-"+v).classList.add("active");
+  // 渲染内容（其它容器空闲放空）
+  $$(".view").forEach(x=>{ if(x.id!=="view-"+v) x.innerHTML=""; });
+  map[v]();
+}
+
+/* ---------- 初始化 ---------- */
+function init(){
+  patchStaticIcons();
+  $("#themeToggle").addEventListener("click",()=>toggleTheme());
+  $$(".tab").forEach(t=>t.addEventListener("click",()=>go(t.dataset.v)));
+  // 恢复主题
+  const saved = (()=>{ try{ return localStorage.getItem("rad_theme")||"female"; }catch(e){ return "female"; } })();
+  applyTheme(saved);
+  go("home");
+}
+document.addEventListener("DOMContentLoaded",init);
+})();
+</script>
+</body>
+</html>
