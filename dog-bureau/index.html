@@ -81,6 +81,7 @@
     min-height: 100vh; overflow-x: hidden;
     /* 科技感渐变底：从深蓝中心向上/向外泛光 */
     background-image:
+      radial-gradient(ellipse 86% 44% at 50% -8%, var(--world, rgba(0,212,255,.09)), transparent 62%),
       radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,212,255,.08), transparent 60%),
       radial-gradient(ellipse 60% 30% at 100% 0%, rgba(184,107,255,.06), transparent 50%),
       radial-gradient(ellipse 50% 25% at 0% 100%, rgba(255,140,66,.05), transparent 50%);
@@ -139,6 +140,7 @@
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude; padding:1px; }
   .greet > * { position: relative; z-index: 1; }
+  .greet > div:first-child { max-width: 70%; }
   .greet h1 { font-size: 28px; font-weight: 800; letter-spacing: -.03em;
     background: linear-gradient(135deg, #ffffff 0%, #00d4ff 80%);
     -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -387,6 +389,107 @@
     box-shadow: none; }
   .btn.danger { background: linear-gradient(135deg, #ff4d6d, #cc3a55); color: #fff;
     box-shadow: 0 0 0 1px rgba(255,77,109,.4), 0 0 20px rgba(255,77,109,.25); }
+  /* ============ GALAXY MAP — 星系导航 ============ */
+  .sec-hint { font-size: 11px; font-weight: 500; color: var(--text-tertiary); letter-spacing: 0; margin-left: 6px; }
+  .galaxy { position: relative; height: min(120vw, 416px); margin: 12px -2px 2px; overflow: hidden;
+    border-radius: var(--radius-card); border: 1px solid var(--border);
+    background:
+      radial-gradient(ellipse 60% 46% at 50% 52%, rgba(0,212,255,.13), transparent 62%),
+      radial-gradient(ellipse 42% 34% at 16% 12%, rgba(184,107,255,.13), transparent 58%),
+      radial-gradient(ellipse 40% 32% at 88% 88%, rgba(255,140,66,.10), transparent 58%),
+      linear-gradient(175deg, #071224 0%, #060d1b 58%, #050a15 100%); }
+  .galaxy::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.75;
+    background-image:
+      radial-gradient(1.5px 1.5px at 11% 18%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 27% 62%, #bff, transparent),
+      radial-gradient(1px 1px at 44% 26%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 63% 74%, #fff, transparent),
+      radial-gradient(1px 1px at 79% 21%, #cff, transparent),
+      radial-gradient(1.5px 1.5px at 91% 55%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 82%, #fff, transparent),
+      radial-gradient(1px 1px at 35% 92%, #bff, transparent),
+      radial-gradient(1.5px 1.5px at 55% 8%, #fff, transparent),
+      radial-gradient(1px 1px at 68% 44%, #fff, transparent);
+    animation: twinkle 6.5s ease-in-out infinite; }
+  .galaxy::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(circle at 50% 52%, rgba(0,212,255,.10), transparent 38%);
+    animation: corePulse 4.6s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.75} 50%{opacity:.3} }
+  @keyframes corePulse { 0%,100%{opacity:.55} 50%{opacity:1} }
+
+  .gx-orbits { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .gx-orbits ellipse { fill:none; stroke: rgba(0,212,255,.14); stroke-width:.7; stroke-dasharray:2 4.5; }
+
+  .gx-links { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .gx-links line { stroke: rgba(0,212,255,.42); stroke-width:1; stroke-dasharray:2 5;
+    animation: flow 3.4s linear infinite; }
+  .gx-links line.hot { stroke: rgba(0,255,136,.45); animation-duration:2.6s; }
+  @keyframes flow { to { stroke-dashoffset: -14; } }
+
+  .gx-core { position:absolute; left:50%; top:52%; transform:translate(-50%,-50%);
+    width:104px; height:104px; display:grid; place-items:center; background:none; border:none;
+    padding:0; cursor:pointer; z-index:4; }
+  .gx-core .c-ring { position:absolute; border-radius:50%; border:1px dashed rgba(0,212,255,.4); }
+  .gx-core .c-ring.r1 { inset:6px; animation: spin 16s linear infinite; }
+  .gx-core .c-ring.r2 { inset:-2px; border-style:solid; border-color: rgba(184,107,255,.22);
+    animation: spin 26s linear infinite reverse; }
+  .gx-core .c-dot { width:64px; height:64px; border-radius:50%; display:grid; place-items:center;
+    font-size:26px; line-height:1;
+    background: radial-gradient(circle at 34% 28%, #1e4568, #071020 72%);
+    border:1px solid rgba(0,212,255,.55);
+    box-shadow: 0 0 26px rgba(0,212,255,.42), inset 0 0 18px rgba(0,212,255,.22);
+    animation: coreGlow 5s ease-in-out infinite; }
+  .gx-core .c-lbl { position:absolute; bottom:-16px; font-size:10px; font-weight:700; color: var(--text-secondary);
+    letter-spacing:.08em; white-space:nowrap; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes coreGlow { 0%,100%{box-shadow:0 0 22px rgba(0,212,255,.35), inset 0 0 16px rgba(0,212,255,.2)}
+    50%{box-shadow:0 0 38px rgba(0,212,255,.6), inset 0 0 22px rgba(0,212,255,.32)} }
+
+  .planet { position:absolute; transform:translate(-50%,-50%); width:74px;
+    background:none; border:none; padding:0; cursor:pointer; z-index:3;
+    display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .pl-orb { position:relative; width:50px; height:50px; border-radius:50%; display:grid; place-items:center;
+    color: var(--c);
+    background: radial-gradient(circle at 36% 30%, color-mix(in srgb, var(--c) 26%, #0b1a2c), #070f1d 74%);
+    border:1px solid color-mix(in srgb, var(--c) 48%, transparent);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent),
+                inset 0 0 12px color-mix(in srgb, var(--c) 16%, transparent);
+    animation: bobY 4.8s ease-in-out infinite; animation-delay: var(--d, 0s);
+    transition: box-shadow .2s; }
+  .planet:active .pl-orb { scale: .9; }
+  .planet:active { opacity:.85; }
+  .pl-halo { position:absolute; inset:-8px; border-radius:50%;
+    border:1px solid color-mix(in srgb, var(--c) 26%, transparent);
+    animation: haloPulse 3.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+  .pl-name { font-size:11px; font-weight:700; color:#eaf4ff; white-space:nowrap;
+    text-shadow: 0 1px 6px rgba(3,9,18,.95), 0 0 12px rgba(3,9,18,.9); }
+  .pl-sub { font-size:10px; font-weight:700; color: var(--c); line-height:1;
+    text-shadow: 0 1px 6px rgba(3,9,18,.95); }
+  @keyframes bobY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes haloPulse { 0%,100%{opacity:.35; transform:scale(.92)} 50%{opacity:.9; transform:scale(1.06)} }
+
+  /* ============ WARP — 跃迁动画 ============ */
+  .warp { position:fixed; inset:0; z-index:80; pointer-events:none; display:grid; place-items:center;
+    background: radial-gradient(circle at 50% 50%, rgba(0,212,255,.28), rgba(3,8,16,.94) 62%);
+    animation: warpFade .82s ease-out forwards; }
+  .warp .wring { position:absolute; width:36px; height:36px; border-radius:50%;
+    border:2px solid rgba(120,240,255,.95);
+    box-shadow: 0 0 32px rgba(0,220,255,.75), inset 0 0 24px rgba(0,220,255,.6);
+    animation: wring .62s cubic-bezier(.22,.72,.32,1) forwards; }
+  .warp .wring.w2 { animation-delay:.09s; border-color: rgba(184,107,255,.8); }
+  .warp .streak { position:absolute; left:50%; top:50%; width:2px; height:58px; margin-left:-1px;
+    transform-origin: 50% 0; border-radius:2px;
+    background: linear-gradient(180deg, transparent, rgba(160,242,255,.95), transparent);
+    animation: streak .6s ease-in forwards; animation-delay: var(--sd, 0s); }
+  @keyframes wring { 0%{opacity:.95; transform:scale(.35)} 70%{opacity:.8} 100%{opacity:0; transform:scale(15)} }
+  @keyframes streak { 0%{opacity:0; transform:rotate(var(--a)) translateY(8px) scaleY(.35)}
+    55%{opacity:.9} 100%{opacity:0; transform:rotate(var(--a)) translateY(42vh) scaleY(1.7)} }
+  @keyframes warpFade { 0%{opacity:0} 14%{opacity:1} 100%{opacity:0} }
+
+  /* 进入模块世界的入场动画 */
+  #screen.to-world { animation: worldIn .52s cubic-bezier(.2,.7,.3,1); }
+  @keyframes worldIn { 0%{opacity:0; transform:scale(.955) translateY(10px)} 100%{opacity:1; transform:none} }
+
   .link-danger { color: var(--danger); background:none; border:none; font-size: 14px; font-weight: 600; cursor:pointer; }
 
   /* ---------- ATLAS 解剖图谱 ---------- */
@@ -770,12 +873,55 @@ function renderHome(){
   const hour = now.getHours();
   const hi = hour<5?"夜深了":hour<11?"早上好":hour<13?"中午好":hour<18?"下午好":"晚上好";
 
-  // overview rings
-  const rings = CONFIG.overview.map(o=>{
-    const r=o.calc(data);
-    return `<div class="ring" data-open="${o.key}"><div class="dial">${ringSVG(r.value,o.color)}<span class="mid" style="color:${o.color}">${icon(o.icon,23)}</span></div>
-      <div class="pct">${r.value}%</div><div class="lbl">${o.label}</div><div class="sub">${r.sub}</div></div>`;
-  }).join("");
+  // ---- 星系导航：模块 = 轨道上的星球，中心 = 时间管理局核心 ----
+  const mods = CONFIG.modules;
+  const orbits = mods.map((m,i)=>{
+    const a = (-90 + i*360/mods.length) * Math.PI/180;
+    return { m, x: 50 + 36*Math.cos(a), y: 52 + 34*Math.sin(a) };
+  });
+  const pctOf = key => {
+    const o = CONFIG.overview.find(o=>o.key===key);
+    if(o){ const r=o.calc(data); return `${r.value}%`; }
+    const n = (data[key]||[]).length;
+    return n ? `${n} 条` : "";
+  };
+  const links = orbits.map(p=>
+    `<line x1="50" y1="52" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}"${p.m.key==="hot"?' class="hot"':''}/>`
+  ).join("");
+  const planets = orbits.map((p,i)=>`
+    <button class="planet" data-open="${p.m.key}"
+      style="left:${p.x.toFixed(1)}%;top:${p.y.toFixed(1)}%;--c:${p.m.color};--d:${(i*0.52).toFixed(2)}s">
+      <span class="pl-orb"><span class="pl-halo"></span>${icon(p.m.icon,22)}</span>
+      <span class="pl-name">${esc(p.m.name)}</span>
+      <span class="pl-sub">${pctOf(p.m.key)}</span>
+    </button>`).join("");
+  const galaxy = `<div class="galaxy">
+    <svg class="gx-orbits" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <ellipse cx="50" cy="52" rx="36" ry="34"/>
+      <ellipse cx="50" cy="52" rx="24.5" ry="23"/>
+    </svg>
+    <svg class="gx-links" viewBox="0 0 100 100" preserveAspectRatio="none">${links}</svg>
+    <button class="gx-core" data-open="insight" aria-label="全局洞察">
+      <span class="c-ring r1"></span><span class="c-ring r2"></span>
+      <span class="c-dot">
+        <svg viewBox="0 0 48 48" width="42" height="42" fill="none"
+             stroke="#8feaff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 17.5 Q9.5 9 9 6.5 Q13.5 10.5 17.5 13"/>
+          <path d="M36 17.5 Q38.5 9 39 6.5 Q34.5 10.5 30.5 13"/>
+          <ellipse cx="24" cy="27.5" rx="14" ry="12"/>
+          <circle cx="19.2" cy="25" r="1.8" fill="#8feaff" stroke="none"/>
+          <circle cx="28.8" cy="25" r="1.8" fill="#8feaff" stroke="none"/>
+          <ellipse cx="24" cy="31" rx="2.9" ry="2.1" fill="#ffb27a" stroke="none"/>
+          <path d="M24 33.1 v2.3"/>
+          <path d="M20.2 36.2 q3.8 2.8 7.6 0"/>
+          <path d="M10 28 q-2.8 3 0 6.2"/>
+          <path d="M38 28 q2.8 3 0 6.2"/>
+        </svg>
+      </span>
+      <span class="c-lbl">时间管理局</span>
+    </button>
+    ${planets}
+  </div>`;
 
   // pinned tasks (置顶) — 跨模块收集 item.pinned；就地交互，不跳转
   const pins=[];
@@ -809,9 +955,9 @@ function renderHome(){
 
   $("#screen").innerHTML = `
     <div class="greet"><div><h1>${hi}</h1><p>欢迎回到${CONFIG.owner}</p></div></div>
+    <div class="sec-title">星系导航 <span class="sec-hint">点一颗星，跳进那个世界</span></div>
+    ${galaxy}
     <div class="quote"><span class="tag">${icon("quote",13)} 今日一句</span><div class="txt">${esc(q)}</div></div>
-    <div class="sec-title">今日概览</div>
-    <div class="card rings">${rings}</div>
     <div class="sec-title">置顶任务</div>
     <div class="pin-list">${pinned}</div>
     <div class="sec-title">快速记录</div>
@@ -930,7 +1076,10 @@ function confirmCalUncheck(item, ds){
 }
 
 function wireHome(){
-  $("#screen").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>go(el.dataset.open));
+  $("#screen").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>{
+    const isNode = el.classList.contains("planet") || el.classList.contains("gx-core");
+    if(isNode) warpTo(el.dataset.open); else go(el.dataset.open);
+  });
   $("#screen").querySelectorAll("[data-quick]").forEach(el=>el.onclick=()=>{
     const k = el.dataset.quick;
     const t = modOf(k)?.type;
@@ -1415,8 +1564,35 @@ function confirmDelete(key,id){
 }
 
 /* ---------- router / nav ---------- */
-function go(v){ view=v; closeDrawer(); render(); window.scrollTo({top:0}); }
+function go(v){
+  view=v; closeDrawer(); render(); window.scrollTo({top:0});
+  // 进入新世界的入场动画
+  const s=$("#screen");
+  s.classList.remove("to-world"); void s.offsetWidth;
+  if(v!=="home") s.classList.add("to-world");
+}
+
+/* 跃迁：点击星球 → 时空隧道 → 落地新世界 */
+let warping=false;
+function warpTo(key){
+  if(warping || view===key) return;
+  warping=true;
+  const o=document.createElement("div"); o.className="warp";
+  let st="";
+  for(let i=0;i<16;i++) st+=`<i class="streak" style="--a:${i*22.5}deg;--sd:${(i%4)*0.045}s"></i>`;
+  o.innerHTML=`<div class="wring"></div><div class="wring w2"></div>${st}`;
+  document.body.appendChild(o);
+  setTimeout(()=>go(key), 360);
+  setTimeout(()=>{ o.remove(); warping=false; }, 920);
+}
+
 function render(){
+  // 每个模块 = 一个独立“世界”，换一层环境光
+  const wm = (view==="home"||view==="insight") ? null : modOf(view);
+  document.documentElement.style.setProperty(
+    "--world",
+    wm ? `color-mix(in srgb, ${wm.color} 17%, transparent)` : "rgba(0,212,255,.09)"
+  );
   // top title
   if(view==="home"){ $("#topTitle").firstChild.textContent="我的工作台"; $("#topSub").textContent=CONFIG.slogan; }
   else if(view==="insight"){ $("#topTitle").firstChild.textContent="洞察"; $("#topSub").textContent="统计与复盘"; }
