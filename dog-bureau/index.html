@@ -894,7 +894,7 @@ const store = {
     CONFIG.modules.forEach(m => { if(!Array.isArray(d[m.key])) d[m.key] = structuredClone(m.seed||[]); });
     return d;
   },
-  save(){ localStorage.setItem(CONFIG.storageKey, JSON.stringify(data)); },
+  save(){ try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(data)); } catch(e){} },
 };
 let data = store.load();
 let view = "home";            // home | insight | <moduleKey>
