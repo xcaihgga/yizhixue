@@ -1,0 +1,3133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F4EC">
+<title>AI 中医病历书写台 · 西医输入一键成文 · 离线可用</title>
+<style>
+:root{
+  --bg:#F7F4EC; --bg2:#FBF9F3; --card:#FFFFFF;
+  --ink:#2E3A36; --ink2:#57655F; --ink3:#8C998F;
+  --green:#5E8C81; --green-d:#46706A; --green-d2:#3F6A61; --green-l:#E7F0EC; --green-l2:#F2F7F4;
+  --sand:#EADCC8; --sand-d:#C8AE8C; --sand-l:#F6EEE1;
+  --line:#E7E1D4; --line2:#F0EBE0;
+  --danger:#B0827A; --danger-l:#F7EDEA;
+  --shadow:0 2px 14px rgba(58,74,66,.06), 0 1px 2px rgba(58,74,66,.04);
+  --shadow-lg:0 12px 40px rgba(58,74,66,.12);
+  --r:16px; --r-sm:10px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 600px at 88% -8%, #F2EFE3 0%, rgba(242,239,227,0) 60%),
+    radial-gradient(900px 500px at 5% 0%, #EAF1ED 0%, rgba(234,241,237,0) 55%),
+    var(--bg);
+  color:var(--ink);
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.72;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.35}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+::selection{background:#D8E7E0}
+.app{max-width:1280px;margin:0 auto;padding:0 22px 64px}
+
+/* ---------- 顶栏 ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px 2px 18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.logo{
+  width:46px;height:46px;border-radius:14px;flex:0 0 auto;
+  background:linear-gradient(150deg,#6E9A8F,#4E7A70);
+  color:#FBF8F0;font-family:"Songti SC","STSong",Georgia,serif;font-size:24px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 16px rgba(78,122,112,.24);letter-spacing:0
+}
+.brand h1{font-family:"Songti SC","STSong",Georgia,serif;font-size:21px;letter-spacing:1.5px;font-weight:600}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--ink3);letter-spacing:.6px}
+.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.save-badge{font-size:12px;color:var(--green-d2);background:var(--green-l);border:1px solid #D6E6DF;padding:5px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+.save-badge i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.save-badge.off{color:#9A6B4F;background:#F8EDE3;border-color:#EAD7C4}
+.save-badge.off i{background:#C08A63}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 15px;border-radius:10px;font-size:13.5px;font-weight:500;
+  border:1px solid transparent;transition:.18s ease;white-space:nowrap;line-height:1.4
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(94,140,129,.22)}
+.btn-primary:hover{background:var(--green-d2)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink2)}
+.btn-ghost:hover{border-color:#CFDED7;color:var(--green-d2);background:var(--green-l2)}
+.btn-sand{background:var(--sand-l);border-color:#EADCC8;color:#8A6E4F}
+.btn-sand:hover{background:#F2E6D5}
+.btn-danger-ghost{background:#fff;border-color:#EADDD8;color:var(--danger)}
+.btn-danger-ghost:hover{background:var(--danger-l)}
+.btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- 标签页 ---------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;margin:2px 0 20px;
+  background:rgba(255,255,255,.66);border:1px solid var(--line);border-radius:14px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;padding:9px 16px;border-radius:10px;color:var(--ink2);font-size:14px;
+  transition:.16s;white-space:nowrap;display:flex;align-items:center;gap:7px
+}
+.tab em{font-style:normal;font-size:11.5px;background:#EFEBE0;color:#8A8577;border-radius:20px;padding:1px 6px}
+.tab:hover{background:#F3F1E7;color:var(--ink)}
+.tab.on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(94,140,129,.2)}
+.tab.on em{background:rgba(255,255,255,.24);color:#fff}
+
+/* ---------- 卡片 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.card-hd h3{font-size:15.5px;letter-spacing:.3px;display:flex;align-items:center;gap:9px}
+.card-hd h3::before{content:"";width:3px;height:15px;border-radius:2px;background:var(--green);display:inline-block}
+.card-hd.flex-1 h3{flex:1}
+.card-bd{padding:18px 20px}
+.card-bd.tight{padding:14px 16px}
+.sub{font-size:12.5px;color:var(--ink3);font-weight:400;letter-spacing:.2px}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;right:-24px;top:-24px;width:78px;height:78px;border-radius:50%;background:var(--green-l2)}
+.kpi>*{position:relative;z-index:1}
+.kpi span{display:block;font-size:12.5px;color:var(--ink3);letter-spacing:.4px}
+.kpi b{font-family:"Songti SC","STSong",Georgia,serif;font-size:30px;font-weight:600;line-height:1.25;letter-spacing:.5px}
+.kpi b i{font-style:normal;font-size:13px;color:var(--ink3);margin-left:2px;font-family:inherit}
+.kpi small{display:block;font-size:11.5px;color:var(--ink3)}
+
+/* ---------- 表单 ---------- */
+.grid-work{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:18px;align-items:start}
+.field{margin-bottom:15px}
+.field label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--ink2);margin-bottom:6px;letter-spacing:.3px}
+.field label b{font-weight:600;color:var(--ink)}
+.field label i{font-style:normal;font-size:11px;color:#A8A192}
+textarea,input[type=text],input[type=search],select{
+  width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:13.5px;line-height:1.75;color:var(--ink);
+  transition:.16s;resize:vertical;outline:none
+}
+textarea:focus,input:focus,select:focus{background:#fff;border-color:#A9C6BC;box-shadow:0 0 0 3px rgba(94,140,129,.1)}
+textarea::placeholder,input::placeholder{color:#B5B0A3}
+select{appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238C998F' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:11.5px;color:var(--ink3);margin-top:5px;line-height:1.6}
+.hint.warn{color:#A9825F}
+
+/* ---------- 书写台 ---------- */
+.work-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line2);background:linear-gradient(180deg,#FCFBF6,#fff)}
+.work-bar .grow{flex:1;min-width:200px}
+.work-bar select{font-size:14px;font-weight:500}
+.quality{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-l2);border:1px solid #DFEBE5;border-radius:12px;margin-bottom:16px}
+.q-ring{width:56px;height:56px;flex:0 0 auto;position:relative}
+.q-ring svg{transform:rotate(-90deg)}
+.q-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:"Songti SC",serif}
+.q-txt{flex:1;min-width:0;font-size:12.5px;color:var(--ink2);line-height:1.6}
+.q-txt strong{color:var(--ink);font-size:13px}
+.q-issues{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.q-issue{font-size:11.5px;background:#fff;border:1px solid #E6D9C9;color:#966F4C;border-radius:20px;padding:2px 9px}
+.q-issue.ok{background:#fff;border-color:#CFE0D8;color:var(--green-d2)}
+
+/* 预览 */
+.preview-wrap{position:sticky;top:14px}
+.paper{
+  background:#FFFDF8;border:1px solid #EBE4D5;border-radius:12px;
+  padding:26px 26px 30px;min-height:420px;max-height:min(72vh,760px);overflow:auto;
+  box-shadow:inset 0 0 24px rgba(203,188,158,.07);
+  font-family:"Songti SC","STSong",Georgia,"Noto Serif CJK SC",serif;
+  font-size:13.5px;line-height:1.95;color:#333B36;
+  white-space:pre-wrap;word-break:break-word
+}
+.paper .pv-title{text-align:center;font-size:17px;letter-spacing:5px;font-weight:600;margin:0 0 6px;color:#2C3A34}
+.paper .pv-sub{text-align:center;font-size:11.5px;color:#8C998F;letter-spacing:1px;margin-bottom:18px;font-family:inherit}
+.paper .pv-empty{color:#A8A192;font-family:inherit}
+.paper-line{margin:0 0 8px}
+.paper-line .k{color:#5E8C81;font-weight:600}
+.preview-ft{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 4px 0;flex-wrap:wrap}
+.meta{font-size:12px;color:var(--ink3)}
+
+/* ---------- chips / 筛选 ---------- */
+.filters{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.chip{
+  padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-size:12.5px;color:var(--ink2);transition:.16s;white-space:nowrap
+}
+.chip:hover{border-color:#CFDED7;color:var(--green-d2)}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(94,140,129,.18)}
+.chip.on em{color:#fff;opacity:.8}
+.chip em{font-style:normal;font-size:11px;color:#A8A192;margin-left:4px}
+.search-box{position:relative;flex:1;min-width:180px}
+.search-box input{padding-left:34px;background:#fff}
+.search-box::before{content:"⌕";position:absolute;left:12px;top:50%;transform:translateY(-52%);color:#A8A192;font-size:16px}
+.sel-mini{width:auto;min-width:120px;background:#fff}
+
+/* ---------- 模板卡片 ---------- */
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.tpl-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:17px 18px 15px;box-shadow:var(--shadow);transition:.18s;display:flex;flex-direction:column;gap:9px;position:relative;overflow:hidden}
+.tpl-card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(58,74,66,.1);border-color:#D8E4DC}
+.tpl-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tpl-top h4{font-size:15px;line-height:1.5;letter-spacing:.2px}
+.tpl-score{flex:0 0 auto;font-family:"Songti SC",serif;font-size:17px;color:var(--green-d2);font-weight:600}
+.tpl-score span{font-size:11px;color:var(--ink3);font-family:inherit;font-weight:400}
+.tpl-meta{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;background:#F4F1E7;color:#7E8578;border:1px solid #EBE6D8}
+.tag.g{background:var(--green-l);color:var(--green-d2);border-color:#D8E6DF}
+.tag.s{background:var(--sand-l);color:#96794F;border-color:#EDE0CC}
+.tpl-src{font-size:11px;color:#A8A192;line-height:1.6;border-top:1px dashed #EDE7D9;padding-top:8px;margin-top:auto}
+.tpl-acts{display:flex;gap:8px;margin-top:2px}
+.tpl-acts .btn{flex:1}
+
+/* ---------- 病历列表 ---------- */
+.rec-list{display:flex;flex-direction:column;gap:10px}
+.rec{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 1px 6px rgba(58,74,66,.04);transition:.16s}
+.rec:hover{border-color:#D8E4DC;box-shadow:0 6px 18px rgba(58,74,66,.07)}
+.rec-main{flex:1;min-width:0}
+.rec-main h4{font-size:14px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-sub{font-size:12px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:10px}
+.rec-side{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge{font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid transparent;white-space:nowrap}
+.st-draft{background:#F5F2E8;color:#8B8267;border-color:#EAE3D1}
+.st-review{background:#FBF0E2;color:#A5764B;border-color:#F0DEC8}
+.st-arch{background:var(--green-l);color:var(--green-d2);border-color:#D5E5DD}
+.score-pill{font-family:"Songti SC",serif;font-size:15px;color:var(--green-d2);min-width:32px;text-align:right}
+
+/* ---------- 空态 ---------- */
+.empty{text-align:center;padding:44px 20px;color:var(--ink3)}
+.empty .ico{width:56px;height:56px;border-radius:50%;background:var(--green-l2);border:1px dashed #CDDED6;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#A9C0B7}
+.empty h4{font-size:14.5px;color:var(--ink2);margin-bottom:5px}
+.empty p{font-size:12.5px;margin:0 0 14px}
+
+/* ---------- 图表 ---------- */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.chart-hd{padding:15px 18px 4px}
+.chart-hd h4{font-size:14.5px;display:flex;align-items:center;gap:8px}
+.chart-hd h4::before{content:"";width:3px;height:13px;background:var(--sand-d);border-radius:2px}
+.chart-hd p{margin:3px 0 0;font-size:11.5px;color:var(--ink3)}
+.chart-bd{padding:6px 12px 14px;overflow:hidden}
+.chart-bd svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);padding:0 18px 10px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+/* ---------- 规范速查 ---------- */
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.rule-list{counter-reset:r;list-style:none;padding:0;margin:0}
+.rule-list li{counter-increment:r;position:relative;padding:9px 0 9px 34px;border-bottom:1px dashed #EFEADE;font-size:13px;color:var(--ink2);line-height:1.7}
+.rule-list li:last-child{border-bottom:none}
+.rule-list li::before{content:counter(r);position:absolute;left:0;top:10px;width:22px;height:22px;border-radius:50%;background:var(--green-l2);color:var(--green-d2);font-size:11.5px;display:flex;align-items:center;justify-content:center;border:1px solid #DCE9E3}
+.rule-list li b{color:var(--ink);font-weight:600}
+.mini-list{list-style:none;padding:0;margin:0;font-size:12.5px;color:var(--ink2)}
+.mini-list li{padding:6px 0;border-bottom:1px dashed #F0EBE0;display:flex;gap:8px}
+.mini-list li:last-child{border-bottom:none}
+.mini-list li span{color:var(--green-d2);font-weight:600;flex:0 0 auto}
+
+/* ---------- 模态框 ---------- */
+.mask{position:fixed;inset:0;background:rgba(46,58,54,.34);backdrop-filter:blur(3px);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:760px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden;animation:pop .18s ease}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line2)}
+.modal-hd h3{font-size:15px}
+.modal-bd{padding:18px 20px;overflow:auto}
+.modal-ft{padding:14px 20px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:10px;background:#FCFBF6;flex-wrap:wrap}
+.modal-bd .paper{max-height:none;min-height:0;border:none;box-shadow:none;background:#fff;padding:0}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;opacity:0;transition:.24s}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.toast-item{background:rgba(46,58,54,.93);color:#F7F4EC;padding:9px 18px;border-radius:999px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.16);display:flex;align-items:center;gap:8px;max-width:80vw}
+.toast-item.ok{background:rgba(70,112,103,.95)}
+.toast-item.warn{background:rgba(168,122,86,.95)}
+
+/* ---------- 概览 ---------- */
+.overview{display:grid;grid-template-columns:1.35fr .65fr;gap:16px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.q-card{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:linear-gradient(160deg,#FCFDFB,#F7F9F6);text-align:left;transition:.16s}
+.q-card:hover{border-color:#CDDFD7;background:#fff;box-shadow:0 6px 16px rgba(58,74,66,.07)}
+.q-card b{display:block;font-size:13.5px;margin-bottom:2px}
+.q-card span{font-size:11.5px;color:var(--ink3)}
+
+
+/* ---------- 资料清单 ---------- */
+.docs{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.doc{display:flex;gap:7px;font-size:12.5px;color:var(--ink2);padding:8px 0;border-bottom:1px dashed #F0EBE0;line-height:1.6;align-items:baseline}
+.doc b{font-weight:600;color:var(--ink);flex:0 0 auto}
+.doc span{color:var(--ink3);font-size:11.5px}
+.doc .dot{color:var(--sand-d);flex:0 0 auto;font-size:10px}
+@media (max-width:760px){.docs{grid-template-columns:1fr}}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1080px){
+  .grid-work{grid-template-columns:1fr}
+  .preview-wrap{position:static}
+  .overview{grid-template-columns:1fr}
+  .chart-grid,.guide-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .app{padding:0 14px 48px}
+  .topbar{padding:16px 0 12px}
+  .brand h1{font-size:18px;letter-spacing:1px}
+  .brand p{font-size:11px}
+  .logo{width:40px;height:40px;font-size:21px;border-radius:12px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{padding:13px 14px}
+  .kpi b{font-size:24px}
+  .tabs{margin-bottom:14px;border-radius:12px}
+  .tab{padding:8px 13px;font-size:13px}
+  .card-bd{padding:15px 14px}
+  .card-hd{padding:14px 14px}
+  .paper{padding:18px 15px 22px;font-size:13px;max-height:none;line-height:1.9}
+  .tpl-grid{grid-template-columns:1fr}
+  .rec{flex-wrap:wrap;gap:10px}
+  .rec-side{width:100%;justify-content:flex-end;border-top:1px dashed #F0EBE0;padding-top:8px}
+  .rec-main h4{white-space:normal}
+  .work-bar{padding:12px 14px}
+  .work-bar .btn{flex:1}
+  .quick{grid-template-columns:1fr}
+  textarea,input[type=text],input[type=search],select{font-size:16px}
+  .modal-bd{padding:14px}
+  .row2{grid-template-columns:1fr}
+  #toast{bottom:18px}
+}
+/* ---------- 智能生成 ---------- */
+.gen-card{margin-bottom:16px;border-color:#DCE9E3;background:linear-gradient(180deg,#FBFDFA,#fff)}
+.gen-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:16px;align-items:start}
+.gen-left label{display:block;font-size:12px;color:var(--ink3);margin-bottom:5px}
+.gen-left textarea{min-height:158px;background:#fff;line-height:1.8}
+.gen-panel{display:flex;flex-direction:column;gap:10px}
+.gen-panel>div>select{width:100%;background:#fff}
+.gen-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.gen-acts .btn-primary{min-width:126px}
+.gen-tip{font-size:11.5px;color:#A8A192;line-height:1.7;display:block;margin-bottom:4px}
+.gen-result{margin-top:14px;border:1px solid #DCE9E3;background:#F3F8F5;border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--ink2);line-height:1.8}
+.gen-result b{color:var(--green-d2)}
+.gen-result .ev{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.gen-result .ev span{background:#fff;border:1px solid #DCE9E3;border-radius:20px;padding:2px 9px;font-size:11.5px;color:var(--green-d2)}
+.gen-result .warnline{color:#A5764B;margin-top:7px;font-size:11.5px}
+.gen-result .synsel{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gen-result .synsel select{width:auto;min-width:190px;background:#fff;padding:6px 28px 6px 10px;font-size:12.5px}
+.gen-result .ops{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+/* ---------- 病种库 ---------- */
+.kb-card .kb-def{font-size:12px;color:var(--ink3);line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kb-card .kb-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;font-size:11.5px;color:#A8A192}
+.kb-dept{display:flex;flex-wrap:wrap;gap:6px}
+.kb-sec{margin-bottom:15px}
+.kb-sec h5{font-size:12.5px;color:var(--green-d2);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.kb-sec h5::before{content:"";width:3px;height:11px;background:var(--sand-d);border-radius:2px}
+.kb-sec p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.85}
+.kb-table{width:100%;border-collapse:collapse;font-size:11.5px;display:block;overflow-x:auto}
+.kb-table th{background:var(--green-l2);color:var(--green-d2);font-weight:600;text-align:left;padding:7px 8px;border:1px solid #E1ECE6;white-space:nowrap}
+.kb-table td{padding:7px 8px;border:1px solid #EFEADE;vertical-align:top;line-height:1.65;color:var(--ink2);min-width:74px}
+.kb-table tr:nth-child(even) td{background:#FCFBF6}
+.kb-note{font-size:11.5px;color:#A8A192;line-height:1.7;margin-top:10px}
+.kb-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.rx-scroll{max-height:340px;overflow:auto;padding-right:4px}
+.rx-item{display:flex;gap:8px;font-size:11.5px;line-height:1.65;padding:5px 0;border-bottom:1px dashed #EFEADE}
+.rx-item b{color:var(--green-d2);flex:0 0 auto;min-width:104px}
+.rx-item span{color:var(--ink2)}
+.rx-dept{font-size:11px;color:#A8A192;margin:8px 0 2px;letter-spacing:.5px}
+.kb-card{display:flex;flex-direction:column;gap:7px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;box-shadow:var(--shadow);transition:.16s}
+.kb-card:hover{border-color:#CFDED7;box-shadow:0 8px 24px rgba(58,74,66,.09);transform:translateY(-1px)}
+.kb-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kb-top h4{font-family:"Songti SC","STSong",Georgia,serif;font-size:17px;letter-spacing:1px}
+.kb-alias{font-size:11.5px;color:#A8A192;line-height:1.6}
+.kb-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#A8A192}
+.kb-meta span::before{content:"";display:inline-block;width:3px;height:3px;border-radius:50%;background:#CFC8B6;margin-right:5px;vertical-align:middle}
+.kb-desc{font-size:13px;line-height:1.9;margin:0 0 12px;color:var(--ink)}
+.gen-res-hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.gen-conf{font-size:11.5px;color:#96794F}
+.gen-ev{margin-top:6px;font-size:12px;line-height:1.8}
+.gen-note{margin-top:8px;font-size:11.5px;color:#A8A192}
+.gen-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.gen-row label{font-size:12px;color:var(--ink3);white-space:nowrap}
+.gen-row select{flex:1;min-width:200px;background:#fff;font-size:12.5px;padding:8px 30px 8px 10px}
+.rx-item{display:block}
+.rx-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.rx-hd b{color:var(--green-d2);font-size:12px}
+.rx-hd span{font-size:10.5px;color:#A8A192}
+.rx-line{font-size:11.5px;color:var(--ink2);line-height:1.7}
+.rx-line em{font-style:normal;color:#A8A192;margin-right:6px}
+.rx-line.herb{color:#6E7D74}
+@media (max-width:1080px){.gen-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">医</div>
+      <div>
+        <h1>AI 中医病历书写台</h1>
+        <p>粘贴西医内容 → 自动出中医病历 · 多科室 · 全离线</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="save-badge" id="saveBadge"><i></i><span id="saveTxt">本机自动保存</span></span>
+      <button class="btn btn-ghost btn-sm" id="btnRestore">恢复示例数据</button>
+      <button class="btn btn-danger-ghost btn-sm" id="btnClearAll">一键清空</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-view="work">书写台</button>
+    <button class="tab" data-view="kb">中医病种库<em id="tabKbCount">0</em></button>
+    <button class="tab" data-view="tpl">模板库<em id="tabTplCount">10</em></button>
+    <button class="tab" data-view="rec">病历<em id="tabRecCount">0</em></button>
+    <button class="tab" data-view="overview">概览</button>
+    <button class="tab" data-view="chart">数据看板</button>
+    <button class="tab" data-view="guide">规范速查</button>
+  </nav>
+
+  <main>
+    <!-- ============ 概览 ============ -->
+    <section class="view" id="view-overview">
+      <div class="kpis">
+        <div class="kpi"><span>规范模板</span><b id="kpiTpl">10<i>套</i></b><small id="kpiTplSub">覆盖 6 个神经内科病种</small></div>
+        <div class="kpi"><span>已存病历</span><b id="kpiRec">0<i>份</i></b><small id="kpiRecSub">尚未保存病历</small></div>
+        <div class="kpi"><span>平均质评</span><b id="kpiScore">—<i>分</i></b><small>按规范条文自动评分</small></div>
+        <div class="kpi"><span>待审病历</span><b id="kpiReview">0<i>份</i></b><small id="kpiReviewSub">无待审任务</small></div>
+      </div>
+
+      <div class="overview">
+        <div class="card">
+          <div class="card-hd"><h3>最近书写</h3><span class="sub" id="recentSub">最近保存的 5 份</span></div>
+          <div class="card-bd" id="recentList"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>快捷入口</h3></div>
+          <div class="card-bd">
+            <div class="quick">
+              <button class="q-card" data-go="work"><b>粘贴西医内容生成</b><span>贴病历摘要 → 点生成 → 出中医病历</span></button>
+              <button class="q-card" data-go="kb"><b>按中医病种写</b><span>选病种和证型，直接出病名描述</span></button>
+              <button class="q-card" data-go="tpl"><b>翻模板库</b><span>脑病、内科、骨伤针推多科室模板</span></button>
+              <button class="q-card" data-go="rec"><b>管我的病历</b><span>检索、改状态、导出备份</span></button>
+            </div>
+            <div style="margin-top:14px;padding:12px 14px;background:var(--sand-l);border:1px solid #EDE0CC;border-radius:12px;font-size:12.5px;color:#8A6E4F;line-height:1.75">
+              <b style="color:#7A5F42">一句话用法</b><br>
+              把西医病历/诊断粘到书写台顶部，点「生成病历」，系统按内置病种库匹配中医病名、证型、治法、方药和针灸；生成后逐项核对改写，再保存。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 书写台 ============ -->
+    <section class="view" id="view-work">
+      <div class="card" style="margin-bottom:16px">
+        <div class="work-bar">
+          <button class="btn btn-primary btn-sm" id="btnNewRec">＋ 新建病历</button>
+          <div class="grow">
+            <label style="font-size:11.5px;color:var(--ink3);display:block;margin-bottom:4px">当前模板（切换只换骨架，不自动填内容）</label>
+            <select id="tplSelect"></select>
+          </div>
+          <button class="btn btn-sand btn-sm" id="btnFillDemo">填入示例</button>
+          <button class="btn btn-ghost btn-sm" id="btnResetForm">清空表单</button>
+          <button class="btn btn-primary btn-sm" id="btnSaveRec">保存病历</button>
+        </div>
+      </div>
+
+      <div class="card gen-card">
+        <div class="card-hd">
+          <h3>粘贴西医内容 · 一键生成中医病历</h3>
+          <span class="sub">离线规则引擎，不联网也能用</span>
+        </div>
+        <div class="card-bd">
+          <div class="gen-grid">
+            <div class="gen-left">
+              <label for="wmInput">西医病历 / 诊断 / 检查摘要</label>
+              <textarea id="wmInput" placeholder="例：患者男，63岁，右侧肢体无力伴言语不清2天。头颅CT示左侧基底节区脑梗死。高血压12年。查体：BP 160/95mmHg，右上肢肌力2级。舌暗淡苔白腻，脉弦滑。"></textarea>
+            </div>
+            <div class="gen-panel">
+              <div>
+                <label class="gen-tip">记录类型</label>
+                <select id="genTypeSel">
+                  <option value="auto">自动（按内容判断）</option>
+                  <option value="入院记录">入院记录</option>
+                  <option value="门诊病历">门诊病历</option>
+                </select>
+              </div>
+              <div>
+                <label class="gen-tip">识别不到诊断时，可指定中医病种</label>
+                <select id="genKbSel"></select>
+              </div>
+              <div class="gen-acts">
+                <button class="btn btn-primary" id="btnGenerate">生成病历</button>
+                <button class="btn btn-ghost btn-sm" id="btnGenClear">清空输入</button>
+                <button class="btn btn-ghost btn-sm" id="btnKbDesc">病名描述</button>
+              </div>
+              <div class="gen-tip">生成结果只作底稿：识别依据会显示出来，证型可当场改，再逐项核对后保存。</div>
+            </div>
+          </div>
+          <div class="gen-result" id="genResult" hidden></div>
+        </div>
+      </div>
+
+      <div class="grid-work">
+        <div class="card">
+          <div class="card-hd">
+            <h3>病历内容</h3>
+            <span class="sub">字段按《中医病历书写基本规范》项目顺序排列</span>
+          </div>
+          <div class="card-bd">
+            <div class="quality" id="qualityBox">
+              <div class="q-ring" id="qRing"></div>
+              <div class="q-txt">
+                <strong id="qTitle">质评：—</strong>
+                <div id="qDesc">选择模板后自动评分</div>
+                <div class="q-issues" id="qIssues"></div>
+              </div>
+            </div>
+            <div id="formArea"></div>
+          </div>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="card">
+            <div class="card-hd">
+              <h3>实时成文</h3>
+              <span class="sub" id="pvMeta">—</span>
+            </div>
+            <div class="card-bd tight">
+              <div class="paper" id="paper"></div>
+              <div class="preview-ft">
+                <span class="meta" id="pvCount">0 字</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost btn-sm" id="btnCopy">复制全文</button>
+                  <button class="btn btn-ghost btn-sm" id="btnDownload">下载 TXT</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 中医病种库 ============ -->
+    <section class="view" id="view-kb" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-bd" style="padding-bottom:6px">
+          <div class="filters kb-dept" id="kbDeptChips"></div>
+          <div class="filters" style="margin-bottom:8px">
+            <div class="search-box"><input type="search" id="kbSearch" placeholder="搜病名、别名、证型、方剂、药物、症状…"></div>
+            <button class="btn btn-ghost btn-sm" id="kbReset">重置</button>
+          </div>
+          <div class="hint" style="margin:0 0 6px">点病种卡片看病名释义、病因病机、证型方药和针灸；也可以直接用该病种写病历。</div>
+        </div>
+      </div>
+      <div id="kbGrid" class="tpl-grid"></div>
+      <div id="kbEmpty"></div>
+    </section>
+
+    <!-- ============ 模板库 ============ -->
+    <section class="view" id="view-tpl" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-bd" style="padding-bottom:6px">
+          <div class="filters" id="tplDiseaseChips"></div>
+          <div class="filters" style="margin-bottom:8px">
+            <div class="search-box"><input type="search" id="tplSearch" placeholder="搜病种、证型、方名、标签…"></div>
+            <select class="sel-mini" id="tplTypeSel" style="width:auto"></select>
+            <select class="sel-mini" id="tplSortSel" style="width:auto">
+              <option value="score">评分从高到低</option>
+              <option value="scoreAsc">评分从低到高</option>
+              <option value="name">按病种排序</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="tplGrid" class="tpl-grid"></div>
+      <div id="tplEmpty"></div>
+    </section>
+
+    <!-- ============ 病历 ============ -->
+    <section class="view" id="view-rec" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-bd" style="padding-bottom:8px">
+          <div class="filters" id="recStatusChips"></div>
+          <div class="filters" style="margin-bottom:0">
+            <div class="search-box"><input type="search" id="recSearch" placeholder="搜标题、患者、病种…"></div>
+            <select class="sel-mini" id="recSortSel" style="width:auto">
+              <option value="dateDesc">最近保存在前</option>
+              <option value="dateAsc">最早保存在前</option>
+              <option value="scoreDesc">质评从高到低</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" id="btnExport">导出数据</button>
+            <button class="btn btn-ghost btn-sm" id="btnImport">导入数据</button>
+            <input type="file" id="importFile" accept=".json" hidden>
+          </div>
+        </div>
+      </div>
+      <div id="recList" class="rec-list"></div>
+      <div id="recEmpty"></div>
+    </section>
+
+    <!-- ============ 数据看板 ============ -->
+    <section class="view" id="view-chart" hidden>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-hd"><h4>模板评分榜</h4><p>全部模板的规范度综合评分，虚线为平均值（只显示前 12 套）</p></div>
+          <div class="chart-bd" id="chartRank"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd"><h4>配比对比</h4><p>各病种「模板数」与「已存病历数」对照</p></div>
+          <div class="legend">
+            <span><i style="background:#7FA79C"></i>模板数</span>
+            <span><i style="background:#D9C3A4"></i>已存病历</span>
+          </div>
+          <div class="chart-bd" id="chartMix"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd"><h4>状态漏斗</h4><p>从已建病历到完成归档的流转情况</p></div>
+          <div class="chart-bd" id="chartFunnel"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd"><h4>阅读效果</h4><p>病历质评随保存日期的变化，含 85 分合格参考线</p></div>
+          <div class="chart-bd" id="chartTrend"></div>
+        </div>
+      </div>
+      <p class="meta" style="text-align:center;margin-top:14px">评分依据：字段完整度 60 分（规范必备项）＋ 书写规范 40 分（主诉字数、舌脉、方药剂数、诊断证型等）</p>
+    </section>
+
+    <!-- ============ 规范速查 ============ -->
+    <section class="view" id="view-guide" hidden>
+      <div class="guide-grid">
+        <div class="card">
+          <div class="card-hd"><h3>入院记录项目顺序</h3><span class="sub">《中医病历书写基本规范》第十九条</span></div>
+          <div class="card-bd">
+            <ol class="rule-list">
+              <li><b>患者一般情况</b>：姓名、性别、年龄、民族、婚姻、出生地、职业、入院时间、记录时间、发病节气、病史陈述者</li>
+              <li><b>主诉</b>：主要症状（体征）＋持续时间</li>
+              <li><b>现病史</b>：发病情况、症状特点及变化、伴随症状、诊疗经过、一般情况</li>
+              <li><b>既往史</b>：健康与疾病史、传染病史、手术外伤输血史、过敏史</li>
+              <li><b>个人史、婚育史、家族史</b></li>
+              <li><b>中医望、闻、切诊</b>：神色、形态、语声、气息、舌象、脉象</li>
+              <li><b>体格检查</b>及专科情况</li>
+              <li><b>辅助检查</b>：按时间顺序，外院检查注明机构与检查号</li>
+              <li><b>初步诊断</b>：中医病名＋证候诊断、西医诊断，主次分明</li>
+              <li><b>医师签名</b></li>
+            </ol>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>书写时限</h3><span class="sub">超时是病历质控最常见的扣分项</span></div>
+          <div class="card-bd">
+            <ul class="mini-list">
+              <li><span>入院记录</span>入院后 24 小时内完成</li>
+              <li><span>首次病程</span>入院后 8 小时内完成（病例特点＋拟诊讨论＋诊疗计划）</li>
+              <li><span>主治首查</span>入院 48 小时内完成，须含理法方药分析</li>
+              <li><span>日常病程</span>病危随时记、每日至少 1 次；病重至少 2 天 1 次；病情稳定至少 3 天 1 次</li>
+              <li><span>出院记录</span>出院后 24 小时内完成，含出院医嘱与中医调护</li>
+            </ul>
+            <div style="margin-top:14px;padding:12px 14px;background:var(--green-l2);border:1px solid #DCE9E3;border-radius:12px;font-size:12.5px;color:var(--green-d2);line-height:1.75">
+              日常病程记录要反映<b>四诊变化</b>与<b>治法、方药调整依据</b>——这是中医病历区别于西医病历的关键，也是质评最常扣分处。
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>神经内科问诊要点</h3><span class="sub">来自神经内科病历书写培训材料</span></div>
+          <div class="card-bd">
+            <ul class="mini-list">
+              <li><span>主诉</span>宜少于 20 字，能导出第一诊断，不用诊断名或检查结果代替</li>
+              <li><span>现病史六要素</span>起病情况（时间、地点、诱因）、主要症状特点、伴随症状、院外诊疗经过、有鉴别意义的阴性症状、一般情况</li>
+              <li><span>用词要抠</span>“头晕”要分清是旋转感的眩晕还是头昏；“昏迷”要分清意识丧失还是嗜睡无力</li>
+              <li><span>定位线索</span>一侧肢体发作性抽搐提示对侧中央前回；持续麻木无力提示该侧颈胸神经根</li>
+              <li><span>定性线索</span>突然起病多为血管病；急性或亚急性多为炎症；缓慢进展多为肿瘤或变性病</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>各科证型与方药速查</h3><span class="sub">按内置病种库自动汇总</span></div>
+          <div class="card-bd">
+            <div class="search-box" style="margin-bottom:10px"><input type="search" id="guideRxSearch" placeholder="搜病名、证型、方剂、药物…"></div>
+            <div id="guideRx" class="rx-scroll"></div>
+          </div>
+        </div>
+      </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-hd"><h3>本工作台内容来源</h3><span class="sub">通用教材与诊疗规范，界面内注明出处</span></div>
+          <div class="card-bd">
+            <div class="docs">
+              <div class="doc"><i class="dot">●</i><b>中医病历书写基本规范（第1版）</b><span>项目顺序、时限、四诊要求</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历书写基本规范（最新）</b><span>门急诊与住院病历格式、签名修改规则</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历书写手册</b><span>门诊、急诊、入院、首程、出院示例原文</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历及处方书写规范手册</b><span>处方书写与病历对应要求</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历书写规范与质量评价标准（修订版）</b><span>质评扣分点，评分规则参考</span></div>
+              <div class="doc"><i class="dot">●</i><b>住院病历的书写 / 书写规范及范例 / 格式及要求全</b><span>一般项目、既往史、查体顺序</span></div>
+              <div class="doc"><i class="dot">●</i><b>病历模板2-病程记录</b><span>日常病程、查房记录写法</span></div>
+              <div class="doc"><i class="dot">●</i><b>各科病历书写范文（完整版）</b><span>神经科病历范例</span></div>
+              <div class="doc"><i class="dot">●</i><b>神经内科病历书写（培训课件）</b><span>主诉≤20字、现病史六要素、定性定位</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医门诊病历书写模板</b><span>四诊、辨证分析、治法、方药、医嘱字段</span></div>
+              <div class="doc"><i class="dot">●</i><b>针灸治疗病例模板</b><span>中风、眩晕、头痛、面瘫、痿病证型与处方</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医优势病种诊疗方案临床路径（2018版）</b><span>耳眩晕路径、住院日、检查安排</span></div>
+              <div class="doc"><i class="dot">●</i><b>第二批24个专业105个病种中医诊疗方案</b><span>中风病各证型方药与针灸方案</span></div>
+              <div class="doc"><i class="dot">●</i><b>广西眩晕中西医诊疗专家共识</b><span>眩晕五个证型、治法与推荐方</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医内科学（第十版）</b><span>中风、头痛、不寐、颤证、痫病、痿病证治</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医骨伤科学</b><span>颈痹、腰痹、膝痹、肩痹、骨痿证治</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病证诊断疗效标准</b><span>病名与证候诊断依据</span></div>
+              <div class="doc"><i class="dot">●</i><b>卒中相关非运动症状多学科管理专家共识</b><span>神经内科常见合并症处理</span></div>
+            </div>
+            <p class="hint" style="margin-top:12px">说明：模板内容按上述规范的项目顺序组织，方药与证型取自诊疗方案与教材原文；示例中的患者姓名、检查数值均为虚构示例，实际书写时请按真实情况填写。</p>
+          </div>
+        </div>
+      <p class="meta" style="text-align:center;margin-top:14px">内容按《中医病历书写基本规范》《中医内科学（第十版）》《中医骨伤科学》《中医病证诊断疗效标准》及公开诊疗方案整理，供书写参考，须执业医师审核；方药剂量为示例，临床需辨证加减。</p>
+    </section>
+  </main>
+</div>
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="modalTitle">提示</h3><button class="btn btn-ghost btn-sm" id="modalClose">关闭</button></div>
+    <div class="modal-bd" id="modalBody"></div>
+    <div class="modal-ft" id="modalFoot"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ===================== 模板数据（1-5） ===================== */
+const TPL = [
+  {
+    id: 't1',
+    name: '中风病（脑梗死）急性期住院记录',
+    disease: '中风病',
+    type: '入院记录',
+    syn: '风痰阻络证',
+    dept: '脑病科',
+    score: 96,
+    tags: ['中经络', '半夏白术天麻汤', 'NIHSS'],
+    src: '依据《第二批24个专业105个病种中医诊疗方案》中风病（脑梗死）条；项目顺序依《中医病历书写基本规范》第十九条',
+    sections: [
+      { key: 'base', label: '患者一般情况', rows: 3, v: '姓名：李某某　性别：男　年龄：63岁　民族：汉　婚姻：已婚　出生地：山东青岛　职业：退休工人　入院时间：2026-10-18 09:40　记录时间：2026-10-18 14:20　发病节气：寒露　病史陈述者：患者本人及家属（可靠）' },
+      { key: 'chief', label: '主诉', rows: 2, v: '右侧肢体无力伴言语不清2天。' },
+      { key: 'hpi', label: '现病史', rows: 6, v: '患者2天前晨起时无明显诱因出现右侧肢体无力，持物不稳，行走拖步，伴言语含糊不清，无头痛呕吐，无意识障碍及肢体抽搐，无发热。当日于外院查头颅CT示左侧基底节区低密度影，予阿司匹林、阿托伐他汀口服后转诊我院。入院症见：右侧肢体无力，上肢不能抬举过肩，下肢可扶行数步，言语謇涩，口舌歪斜，口角流涎，头晕，纳可，夜寐安，大便偏干，小便调。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 4, v: '望诊：神志清楚，精神倦怠，面色少华，形体偏胖，步入病房，右侧口角低垂。舌质暗淡，舌体胖大，边有齿痕，舌苔白腻，舌下脉络迂曲。闻诊：语声低微，言语謇涩，气息平稳，未闻及异常气味。切诊：脉弦滑。' },
+      { key: 'past', label: '既往史、个人史、家族史', rows: 5, v: '既往高血压病史12年，最高170/100mmHg，长期服苯磺酸氨氯地平5mg每日1次，血压控制欠佳；2型糖尿病史6年，口服二甲双胍0.5g每日3次。否认冠心病、心房颤动病史，否认肝炎、结核等传染病史，否认手术外伤及输血史，否认食物药物过敏史。个人史：生于原籍，久居本地，吸烟30年、每日约20支，偶饮酒。婚育史：已婚，育有1子1女，配偶及子女体健。家族史：父母均有高血压病史，父因脑卒中去世。' },
+      { key: 'exam', label: '体格检查（含神经系统专科）', rows: 6, v: 'T 36.5℃　P 78次/分　R 18次/分　BP 158/92mmHg。神志清楚，查体合作。双肺呼吸音清，未闻及干湿性啰音。心率78次/分，律齐，各瓣膜听诊区未闻及病理性杂音。腹平软，无压痛及反跳痛，肝脾肋下未及。专科情况：神志清，言语謇涩，高级皮层功能粗测正常。双侧瞳孔等大等圆，直径约3.0mm，对光反射灵敏，眼球各向运动充分，未见眼震。右侧鼻唇沟变浅，口角左偏，伸舌右偏。右侧肢体肌张力略低，右上肢肌力2级、右下肢肌力3级，左侧肌力5级。右侧肱二头肌反射、膝腱反射活跃，右侧巴宾斯基征阳性，右侧偏身痛觉减退。NIHSS评分8分。' },
+      { key: 'aux', label: '辅助检查', rows: 3, v: '2026-10-17 外院头颅CT：左侧基底节区及放射冠区低密度影，考虑急性脑梗死。入院后头颅MRI＋DWI：左侧基底节区急性梗死灶。颈动脉超声：双侧颈动脉内中膜增厚伴斑块形成。糖化血红蛋白7.4%；LDL-C 3.6mmol/L。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '中风病（中经络）——风痰阻络证' },
+      { key: 'wmDx', label: '西医诊断', rows: 3, v: '1. 急性缺血性脑卒中（左侧基底节区）　2. 高血压病3级（极高危）　3. 2型糖尿病' },
+      { key: 'basis', label: '中医辨病辨证依据', rows: 5, v: '患者年逾六旬，形体偏胖，平素嗜食肥甘，脾运不健，痰浊内生；肝风内动，挟痰上扰，蒙蔽清窍，流窜经络，气血运行不利，筋脉失养，故见半身不遂、言语謇涩、口舌歪斜。舌暗淡、体胖有齿痕、苔白腻、脉弦滑，皆为风痰阻络之象。病位在脑，涉及肝脾；病性属本虚标实，以风、痰、瘀为主。鉴别：患者神志清楚，无昏仆、二便失禁，故属中经络而非中脏腑；无猝然昏倒、四肢抽搐、口吐涎沫及反复发作史，可与痫病相鉴别。' },
+      { key: 'treat', label: '治法', rows: 2, v: '息风化痰，活血通络。' },
+      { key: 'rx', label: '方药', rows: 4, v: '法半夏10g　炒白术12g　天麻15g　茯苓15g　陈皮10g　胆南星6g　竹茹12g　石菖蒲12g　丹参20g　地龙10g　川牛膝15g　炙甘草6g。7剂，水煎服，每日1剂，分早晚温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 3, v: '醒脑开窍针刺法：内关（双）、水沟、三阴交（双）为主穴，辅以极泉、尺泽、委中（患侧）；风痰阻络加丰隆、合谷。内关施泻法，水沟施雀啄泻法，三阴交沿胫骨内侧缘45°斜刺、提插补法，留针30分钟，每日1次，每周5次。' },
+      { key: 'advice', label: '诊疗计划与调护', rows: 4, v: '1. 脑病科护理常规，一级护理，低盐低脂糖尿病饮食。2. 良肢位摆放，床边被动关节活动，预防肩手综合征及下肢深静脉血栓。3. 监测血压、血糖，血压控制在140/90mmHg以下。4. 完善血常规、凝血功能、心电图、心脏超声等检查。5. 避风寒，畅情志，忌肥甘厚味，不适随诊。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　上级医师：×××' }
+    ]
+  },
+  {
+    id: 't2',
+    name: '中风病首次病程记录（肝阳暴亢证）',
+    disease: '中风病',
+    type: '首次病程记录',
+    syn: '肝阳暴亢证',
+    dept: '脑病科',
+    score: 92,
+    tags: ['8小时内完成', '天麻钩藤饮', '病例特点'],
+    src: '依据《中医病历书写基本规范》第二十三条（一）：病例特点、拟诊讨论、诊疗计划；证治依中风病诊疗方案',
+    sections: [
+      { key: 'base', label: '记录时间与患者', rows: 2, v: '记录时间：2026-10-18 15:10（入院后5小时30分）。患者王某某，男，58岁，因“突发左侧肢体麻木无力伴头胀痛1天”于2026-10-18 09:40入院。' },
+      { key: 'feature', label: '病例特点', rows: 6, v: '1. 患者男性，58岁，急性起病，既往高血压病史10年，服药不规律。2. 主要症状：左侧肢体麻木无力，头胀痛，面红目赤，口苦，心烦易怒，大便三日未行。3. 中医四诊：面色潮红，语气粗促，舌质红、苔黄腻，脉弦有力。4. 查体：BP 172/98mmHg，神志清，左侧鼻唇沟变浅，左上肢肌力3级、左下肢肌力4级，左侧巴宾斯基征阳性。5. 辅助检查：头颅CT未见出血；头颅MRI示右侧放射冠急性梗死。' },
+      { key: 'discuss', label: '拟诊讨论（辨病辨证依据与鉴别诊断）', rows: 7, v: '中医辨病辨证依据：患者平素情志不畅，肝郁化火，肝阳偏亢，遇劳而发，阳亢风动，气血上逆，上扰清窍则头胀痛、面红目赤；横窜经络，筋脉失养则肢体麻木无力；舌红苔黄腻、脉弦有力，为肝阳暴亢、痰热内蕴之征。四诊合参，辨为中风病（中经络）·肝阳暴亢证。西医诊断依据：急性起病、局灶性神经功能缺损、影像学见责任病灶，符合急性缺血性脑卒中。鉴别诊断：与脑出血相鉴别，头颅CT未见高密度影可资鉴别；与痫病相鉴别，无意识丧失及抽搐；与痿病相鉴别，痿病多起病缓慢、呈对称性弛缓性瘫痪，无口舌歪斜及神志改变。' },
+      { key: 'plan', label: '诊疗计划', rows: 6, v: '1. 脑病科护理常规，一级护理，低盐低脂饮食，监测血压、神志、瞳孔及肢体肌力变化。2. 完善血常规、凝血四项、肝肾功能、血脂、心电图、颈动脉超声等检查。3. 中医治疗：平肝潜阳、清热息风，予天麻钩藤饮加减（天麻15g、钩藤15g后下、石决明30g先煎、川牛膝15g、杜仲12g、桑寄生15g、黄芩10g、栀子10g、益母草15g、首乌藤15g、茯神15g）；针刺取内关、水沟、三阴交、太冲、太溪，留针30分钟，每日1次。4. 西医治疗：抗血小板聚集、他汀调脂稳斑、控制血压及脑保护，暂不溶栓。5. 中医调护：避风寒、畅情志、忌恼怒，保持大便通畅。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××' }
+    ]
+  },
+  {
+    id: 't3',
+    name: '中风病恢复期日常病程记录（气虚血瘀证）',
+    disease: '中风病',
+    type: '日常病程记录',
+    syn: '气虚血瘀证',
+    dept: '脑病科',
+    score: 88,
+    tags: ['补阳还五汤', '3天1次', '四诊变化'],
+    src: '依据《中医病历书写基本规范》第二十三条（二）：日常病程记录须反映四诊情况及治法、方药变化及依据',
+    sections: [
+      { key: 'base', label: '记录时间与患者', rows: 1, v: '记录时间：2026-10-26 09:20。患者李某某，男，63岁，中风病（中经络）住院第9天，恢复期。' },
+      { key: 'course', label: '四诊与病情变化', rows: 6, v: '患者神志清，精神较前振作，诉右侧肢体无力较入院时减轻，可扶杖缓行，言语较前清晰，仍感乏力、气短，动则汗出，纳寐一般，大便偏溏，小便调。查体：BP 138/84mmHg，右侧鼻唇沟变浅，右上肢肌力3级、右下肢肌力4级，右侧肢体肌张力略增高，右侧巴宾斯基征阳性。舌质淡暗，边有齿痕，苔薄白，脉细弱。NIHSS评分4分。' },
+      { key: 'adjust', label: '治法方药调整及依据', rows: 5, v: '患者风痰渐化，痰热已减，现值恢复期，气虚血瘀之象显露：乏力、气短、动则汗出、舌淡暗、脉细弱，故治法转为益气活血、化瘀通络，方选补阳还五汤加减：生黄芪30g、当归尾12g、赤芍12g、川芎10g、桃仁10g、红花6g、地龙10g、川牛膝15g、鸡血藤20g。7剂，水煎服，每日1剂。针刺调整为患侧阳明经穴为主，加足三里、气海用补法。' },
+      { key: 'plan', label: '下一步计划', rows: 4, v: '1. 继续康复训练：坐位平衡、床边站立、步行训练及作业治疗，每日1次。2. 复查血常规、肝肾功能，观察他汀及抗血小板药物不良反应。3. 加强良肢位管理与肩关节保护，预防肩痛及异常运动模式。4. 指导家属居家照护与二级预防用药。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××' }
+    ]
+  },
+  {
+    id: 't4',
+    name: '中风后痉挛性瘫痪上级医师查房记录',
+    disease: '中风病',
+    type: '上级医师查房记录',
+    syn: '气虚血瘀兼阴阳两虚',
+    dept: '脑病科',
+    score: 84,
+    tags: ['48小时内首查', '理法方药分析', 'Ashworth'],
+    src: '依据《中医病历书写基本规范》第二十三条（三）：主治医师首次查房于入院48小时内完成，须含理法方药分析',
+    sections: [
+      { key: 'base', label: '查房时间与参加人员', rows: 2, v: '查房时间：2026-10-19 08:30。参加人员：×××副主任医师、薛××主治医师、规培医师1名。患者张某某，女，71岁，中风病（中经络）住院第2天。' },
+      { key: 'round', label: '病情汇报与上级医师分析', rows: 7, v: '床位医师汇报病史及诊疗经过（略）。×××副主任医师查看患者后指出：患者年逾七旬，肝肾已亏，此次中风后患侧肢体拘急僵硬，屈伸不利，肘腕内收、足内翻，属中风后痉挛性瘫痪范畴。查体：左上肢屈肌张力按改良Ashworth量表2级，左下肢伸肌张力1＋级，左腱反射亢进，左踝阵挛阳性。舌质淡暗、苔少，脉沉细。分析：病之本在肝肾阴虚、气血不足，筋脉失于濡养；病之标为痰瘀阻络、阳亢风动，标本相兼顾。治法宜阴阳双补、柔肝舒筋，佐以化痰通络，方以地黄饮子加减：熟地黄15g、山茱萸12g、石斛12g、肉苁蓉12g、巴戟天10g、附子6g先煎、肉桂3g后下、茯苓15g、石菖蒲10g、远志10g、白芍20g、炙甘草10g。' },
+      { key: 'adjust', label: '查房后诊疗意见落实情况', rows: 5, v: '1. 中药按上方调整，5剂，水煎服，每日1剂，观察口干、便秘等反应。2. 针刺改用阴阳调衡透刺法，取极泉、曲池、外关、合谷、血海、阳陵泉、三阴交、太冲，留针30分钟，每日1次，每周5次，4周为1疗程。3. 康复科会诊，加抗痉挛体位、被动牵伸与拮抗肌训练。4. 中药熏洗（伸筋草30g、透骨草30g、桂枝15g、艾叶15g）每日1次，水温不超过40℃。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　查房医师：×××（副主任医师）' }
+    ]
+  },
+  {
+    id: 't5',
+    name: '耳眩晕（梅尼埃病）住院记录',
+    disease: '眩晕',
+    type: '入院记录',
+    syn: '痰浊中阻证',
+    dept: '脑病科',
+    score: 94,
+    tags: ['半夏白术天麻汤合泽泻汤', '前庭检查', '发作期'],
+    src: '依据《中医优势病种诊疗方案临床路径（2018版）》耳眩晕（梅尼埃病）、《广西眩晕中西医诊疗专家共识》痰湿中阻证',
+    sections: [
+      { key: 'base', label: '患者一般情况', rows: 3, v: '姓名：赵某某　性别：女　年龄：46岁　民族：汉　婚姻：已婚　出生地：山东潍坊　职业：教师　入院时间：2026-10-22 10:15　记录时间：2026-10-22 16:00　发病节气：霜降　病史陈述者：患者本人（可靠）' },
+      { key: 'chief', label: '主诉', rows: 2, v: '反复发作性眩晕3年，再发伴恶心呕吐2天。' },
+      { key: 'hpi', label: '现病史', rows: 6, v: '患者3年来反复出现发作性眩晕，每于劳累或情绪波动后诱发，发作时视物旋转，持续约30分钟至2小时，伴耳鸣、耳闷胀感，右耳听力渐降，发作间期如常。2天前晨起翻身时再次发作，视物旋转，不能站立，伴恶心呕吐3次，呕吐物为胃内容物，无黑蒙、无肢体无力及言语不利，无头痛发热。曾于外院按“梅尼埃病”予倍他司汀口服，症状稍缓。入院症见：头晕目眩，如坐舟车，不敢睁眼，胸闷，恶心欲吐，纳呆，倦怠乏力，夜寐不安，大便黏滞。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 4, v: '望诊：神志清，精神萎靡，面色萎黄，闭目卧姿，形体偏胖。舌质淡红，舌体胖大，边有齿痕，苔白厚腻。闻诊：语声低怯，时有嗳气，未闻及异常气味。切诊：脉濡滑。' },
+      { key: 'past', label: '既往史、个人史、家族史', rows: 4, v: '既往体健，否认高血压、糖尿病、冠心病病史，否认头部外伤及耳毒性药物使用史，否认中耳炎及耳部手术史。否认肝炎、结核等传染病史，否认食物药物过敏史。个人史：久居本地，饮食偏嗜肥甘，不嗜烟酒。婚育史：已婚，育有1女，配偶体健，月经规律。家族史：母亲有“头晕”病史，否认家族遗传性疾病。' },
+      { key: 'exam', label: '体格检查（含专科）', rows: 6, v: 'T 36.6℃　P 82次/分　R 18次/分　BP 126/78mmHg。神志清楚，查体合作。双肺呼吸音清，心界不大，心率82次/分，律齐，未闻及杂音。腹平软，无压痛，肝脾肋下未及。专科情况：双耳外耳道通畅，鼓膜完整，标志清晰。自发性眼震（－），Dix-Hallpike试验（－），滚转试验（－）。纯音测听：右耳低频感音神经性听力下降（0.5/1/2kHz平均听阈38dBHL），左耳正常。声导抗：双耳A型图。闭目难立征（＋），直线行走不能完成。' },
+      { key: 'aux', label: '辅助检查', rows: 3, v: '2026-10-22 电耳镜：双耳鼓膜完整。纯音测听＋声导抗：右耳低频感音神经性聋，双耳A型图。头颅MRI＋内听道薄层：未见颅内占位及脑干梗死灶。颈椎正侧位片：颈椎生理曲度变直。血常规、肝肾功能、血脂、血糖未见明显异常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '耳眩晕——痰浊中阻证' },
+      { key: 'wmDx', label: '西医诊断', rows: 3, v: '1. 梅尼埃病（右耳，发作期）　2. 感音神经性听力损失（右耳）' },
+      { key: 'basis', label: '中医辨病辨证依据', rows: 5, v: '患者中年女性，形体偏胖，嗜食肥甘，脾失健运，痰浊内生，痰湿中阻，清阳不升，浊阴上蒙清窍，故头晕目眩、视物旋转；痰浊阻滞中焦，气机升降失常，故胸闷、恶心呕吐、纳呆；舌体胖大、苔白厚腻、脉濡滑，为痰湿内盛之象。四诊合参，辨为耳眩晕·痰浊中阻证。与中风相鉴别：无肢体偏瘫、口舌歪斜、言语不利；与厥证相鉴别：无突然昏倒、不省人事、四肢厥冷。西医方面，发作性眩晕≥2次、每次20分钟至12小时，伴波动性听力下降及耳鸣、耳闷，符合梅尼埃病诊断标准，需与前庭性偏头痛、BPPV、后循环缺血相鉴别。' },
+      { key: 'treat', label: '治法', rows: 2, v: '化痰祛湿，健脾和胃，升清定眩。' },
+      { key: 'rx', label: '方药', rows: 4, v: '法半夏10g　炒白术12g　天麻15g　茯苓20g　陈皮10g　泽泻20g　竹茹12g　石菖蒲12g　生姜6g　大枣10g　炙甘草6g。3剂，水煎服，每日1剂，分2次温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 3, v: '取风池（双）、百会、内关（双）、太冲（双）、丰隆（双）、中脘、阴陵泉（双）。风池平补平泻，百会、内关施泻法，丰隆、中脘、阴陵泉健脾化痰，留针30分钟，每日1次。另予耳穴贴压：肾、肝、脾、内耳、神门，王不留行籽贴压，每日按压3次。' },
+      { key: 'advice', label: '诊疗计划与调护', rows: 4, v: '1. 脑病科护理常规，二级护理，发作期卧床休息，防跌倒坠床。2. 低盐饮食（每日食盐＜5g），忌肥甘厚味及浓茶咖啡。3. 完善前庭功能检查、心电图、腹部超声；必要时内耳钆造影MRI。4. 西医予倍他司汀改善内耳微循环，发作期对症止吐。5. 缓解期行前庭康复操训练，避风寒，畅情志，勿劳累。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　上级医师：×××' }
+    ]
+  }
+];
+/* ===================== 模板数据（6-10） ===================== */
+TPL.push(
+  {
+    id: 't6',
+    name: '眩晕（肝阳上亢证）门诊初诊病历',
+    disease: '眩晕',
+    type: '门诊病历',
+    syn: '肝阳上亢证',
+    dept: '脑病科门诊',
+    score: 90,
+    tags: ['天麻钩藤饮', '门诊初诊', '血压'],
+    src: '依据《中医病历书写手册》门诊初诊病历示例结构；证治依《广西眩晕中西医诊疗专家共识》肝阳上亢证',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：孙某某　性别：男　年龄：54岁　科别：脑病科　时间：2026-10-20 09:30　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '头晕胀痛反复1年，加重3天。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者1年来反复头晕胀痛，多于情绪激动或熬夜后发作，自服“降压药”可缓解。3天前因工作劳累再发，头晕且胀，两侧太阳穴为重，伴耳鸣、口苦、心烦易怒、夜寐多梦，无恶心呕吐，无肢体麻木无力，无一过性黑蒙。刻下症：头晕胀痛，面红目赤，口苦咽干，急躁易怒，纳可，大便干，小便黄。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：面色潮红，形体壮实，精神略显焦躁；舌质红，苔黄，舌下脉络未见明显迂曲。闻诊：语声洪亮，气息略粗。切诊：脉弦数。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 162/96mmHg。神志清，双肺呼吸音清，心率84次/分、律齐。神经系统检查：双侧瞳孔等大等圆、对光反射灵敏，眼球运动充分，未见眼震；四肢肌力5级，肌张力正常，双侧病理征阴性；指鼻试验、跟膝胫试验稳准。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '2026-10-19 头颅CT平扫：未见异常。颈动脉超声：双侧颈动脉内中膜增厚。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '眩晕——肝阳上亢证' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '1. 高血压病2级（高危）　2. 椎动脉型颈椎病待排' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者平素性情急躁，肝郁化火，肝阳偏亢，上扰清窍，故头晕胀痛、耳鸣；阳亢化火，故面红目赤、口苦咽干、便干溲黄；舌红苔黄、脉弦数，为肝阳上亢、火热内扰之象。' },
+      { key: 'treat', label: '治法', rows: 2, v: '平肝潜阳，清火息风。' },
+      { key: 'rx', label: '方药', rows: 4, v: '天麻15g　钩藤15g（后下）　石决明30g（先煎）　川牛膝15g　杜仲12g　桑寄生15g　黄芩10g　栀子10g　益母草15g　首乌藤15g　茯神15g。7剂，水煎服，每日1剂，分2次温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 2, v: '风池（双）、百会、内关（双）、太冲（双）、行间（双）、侠溪（双）、太溪（双），毫针泻法，留针30分钟，隔日1次。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 监测血压，每日早晚各1次并记录；降压药遵嘱服用，不可自行停药。2. 低盐饮食，忌辛辣烟酒，忌恼怒熬夜。3. 建议完善动态血压、颈椎MRI。4. 若出现肢体麻木无力、言语不清、剧烈头痛，立即就诊。5. 7剂后复诊。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't7',
+    name: '头痛（瘀血头痛）门诊病历',
+    disease: '头痛',
+    type: '门诊病历',
+    syn: '瘀血头痛',
+    dept: '脑病科门诊',
+    score: 86,
+    tags: ['通窍活血汤', '外伤史', '痛有定处'],
+    src: '依据《中医内科学》（第十版）头痛·瘀血头痛（通窍活血汤）；病历结构依门诊病历书写示例',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：周某某　性别：女　年龄：41岁　科别：脑病科　时间：2026-10-24 15:20　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '头部刺痛反复2年，加重1周。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者2年前骑车摔倒致头部碰伤，此后反复出现头部刺痛，痛处固定于右侧颞顶部，每于夜间及情绪不畅时加重，偶伴恶心，无呕吐，无肢体抽搐及意识障碍。1周前因工作熬夜后再发，疼痛持续约2小时，自服“布洛芬”可暂缓。刻下症：头部刺痛，痛有定处，入夜尤甚，健忘，夜寐差，纳可，二便调。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：面色晦暗，口唇色暗；舌质紫暗，边有瘀点，苔薄白。闻诊：语声正常，无异常气味。切诊：脉细涩。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 118/76mmHg。神志清，查体合作。右侧颞部轻压痛，未及包块。神经系统检查未见阳性体征，双侧病理征阴性，脑膜刺激征阴性。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '2026-10-24 头颅MRI平扫：未见颅内占位及出血灶；双侧额叶少许缺血灶。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '头痛——瘀血头痛' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '1. 紧张型头痛　2. 头部外伤后头痛' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者有头部外伤史，瘀血内停，阻滞脉络，气血不通，不通则痛，故头痛如刺、痛有定处；瘀血不去，新血不生，心神失养，故健忘、夜寐差；舌紫暗有瘀点、脉细涩，皆瘀血内阻之征。' },
+      { key: 'treat', label: '治法', rows: 2, v: '活血化瘀，通窍止痛。' },
+      { key: 'rx', label: '方药', rows: 4, v: '川芎15g　赤芍15g　桃仁10g　红花10g　当归12g　白芷10g　石菖蒲10g　地龙10g　全蝎3g（研末冲服）　延胡索12g　夜交藤20g　炙甘草6g。7剂，水煎服，每日1剂。' },
+      { key: 'acu', label: '针灸治疗', rows: 2, v: '百会、四神聪、太阳（双）、风池（双）、合谷（双）、血海（双）、膈俞（双）、阿是穴。毫针泻法，阿是穴可加刺络拔罐，每周2次。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 忌辛辣刺激之品，戒烟酒，避免熬夜及长时间伏案。2. 保持情绪舒畅，适度有氧运动。3. 若头痛突然加剧、伴呕吐或肢体无力，立即急诊。4. 7剂后复诊，必要时复查头颅影像。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't8',
+    name: '口僻（面瘫·风寒袭络证）门诊病历',
+    disease: '面瘫',
+    type: '门诊病历',
+    syn: '风寒袭络证',
+    dept: '脑病科门诊',
+    score: 89,
+    tags: ['针灸为主', '急性期', 'House-Brackmann'],
+    src: '依据《针灸治疗》面瘫辨证与处方（攒竹、鱼腰、阳白、四白、颧髎、颊车、地仓、合谷、昆仑）；病历结构依门诊病历书写示例',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：刘某某　性别：男　年龄：35岁　科别：脑病科　时间：2026-10-23 10:05　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '左侧口眼歪斜2天。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者2天前夜间开窗睡眠，晨起洗漱时发现左侧口角漏水，左眼闭合不全，面部板滞麻木，伴左耳后疼痛，无耳痛流脓，无耳鸣听力下降，无肢体无力及言语不利，无头痛发热。刻下症：左侧额纹变浅，左眼闭合露睛、流泪，左侧鼻唇沟变浅，口角右偏，鼓腮漏气，进食时食物滞留于左侧齿颊间，纳可，二便调。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：左侧面部肌肉板滞，额纹消失，眼裂增宽，露睛流泪，鼻唇沟变浅，口角下垂歪向右侧；舌质淡红，苔薄白。闻诊：语声清晰，无异常气味。切诊：脉浮紧。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 124/78mmHg。神志清。左侧不能皱眉、蹙额、闭目、露齿、鼓颊；左耳后乳突区轻压痛，外耳道通畅，鼓膜完整。面部感觉对称，四肢肌力5级，肌张力正常，双侧病理征阴性。House-Brackmann分级：Ⅳ级。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '2026-10-23 头颅CT平扫：未见明显异常（排除中枢性病变）。血常规、血糖未见异常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '口僻——风寒袭络证' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '周围性面神经麻痹（左侧，急性期）' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者正气不足，脉络空虚，卫外不固，夜间开窗，风寒之邪乘虚侵袭面部经络，气血痹阻，经筋失养，筋肉失于约束，故口眼歪斜、眼睑闭合不全。舌淡红、苔薄白、脉浮紧，为风寒外袭之象。与中枢性面瘫相鉴别：患者额纹消失、闭目不全，为周围性损害；且无肢体偏瘫、无病理征，头颅CT未见异常。' },
+      { key: 'treat', label: '治法', rows: 2, v: '祛风通络，疏调经筋。' },
+      { key: 'rx', label: '方药', rows: 3, v: '炙麻黄6g　桂枝10g　白芷10g　防风10g　羌活10g　当归12g　川芎10g　白芍15g　僵蚕10g　全蝎3g（研末冲服）　炙甘草6g。7剂，水煎服，每日1剂。' },
+      { key: 'acu', label: '针灸治疗', rows: 4, v: '取攒竹、鱼腰、阳白、四白、颧髎、颊车、地仓（均患侧），合谷（双）、昆仑（双）；风寒加风池（双）。急性期面部穴位浅刺、轻刺激、取穴宜少，远端合谷、昆仑行泻法；留针20分钟，每日1次。恢复期加足三里用补法，可加艾灸。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 面部避风寒，外出戴口罩、眼罩，勿用冷水洗脸。2. 左眼闭合不全，日间滴人工泪液、夜间涂眼膏保护角膜。3. 每日行皱眉、鼓腮、露齿等面肌功能训练3组。4. 忌辛辣烟酒，注意休息。5. 每日或隔日复诊，2周后评估。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't9',
+    name: '不寐（肝火扰心证）门诊病历',
+    disease: '不寐',
+    type: '门诊病历',
+    syn: '肝火扰心证',
+    dept: '脑病科门诊',
+    score: 82,
+    tags: ['龙胆泻肝汤', 'PSQI', '情志调摄'],
+    src: '依据《中医内科学》（第十版）不寐·肝火扰心（龙胆泻肝汤）；病历结构依门诊病历书写示例',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：陈某某　性别：女　年龄：38岁　科别：脑病科　时间：2026-10-30 16:10　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '入睡困难伴心烦3个月，加重10天。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者3个月前因工作压力增大出现入睡困难，卧床1至2小时方能入睡，睡后易醒，每晚睡眠约4小时，伴心烦、易怒、口苦、头胀。10天前因家事烦扰加重，甚至通宵不寐，日间头昏乏力，注意力不集中。曾自服“安神补脑液”效果不佳。刻下症：入睡困难，心烦易怒，口苦口干，胸胁胀满，目赤，纳可，大便干结，小便黄。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：面红，目睛略赤，精神焦虑；舌质红，苔黄，舌边偏红。闻诊：语声急促，时有叹息。切诊：脉弦数。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 132/84mmHg。神志清，甲状腺未及肿大。心肺腹查体未见异常。神经系统检查未见阳性体征。PSQI评分15分（睡眠质量差）。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '血常规、甲状腺功能、血糖未见异常；心电图：窦性心律，大致正常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '不寐——肝火扰心证' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '非器质性失眠症（慢性）' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者情志不遂，肝郁化火，火性炎上，扰乱心神，故入睡困难、心烦易怒；肝火上炎，故口苦目赤、头胀；肝气郁结，故胸胁胀满；舌红苔黄、脉弦数，为肝火内盛之象。' },
+      { key: 'treat', label: '治法', rows: 2, v: '清肝泻火，镇心安神。' },
+      { key: 'rx', label: '方药', rows: 4, v: '龙胆草6g　黄芩10g　栀子10g　泽泻12g　车前子12g（包煎）　当归12g　生地黄15g　柴胡10g　酸枣仁20g　珍珠母30g（先煎）　首乌藤20g　生甘草6g。7剂，水煎服，每日1剂，晚饭后及睡前1小时分服。' },
+      { key: 'acu', label: '针灸治疗', rows: 2, v: '百会、四神聪、安眠（双）、神门（双）、内关（双）、太冲（双）、行间（双）。毫针泻法，留针30分钟，每日1次或隔日1次；睡前可加耳穴贴压（神门、心、肝、皮质下）。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 规律作息，固定起床时间，午睡不超过30分钟；睡前1小时不看手机。2. 忌咖啡、浓茶及辛辣之品，晚餐不宜过饱。3. 每日步行30分钟，睡前可练八段锦“摇头摆尾去心火”。4. 调畅情志，必要时心理科会诊。5. 7剂后复诊评估睡眠日记。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't10',
+    name: '颤证（风阳内动证）住院记录',
+    disease: '颤证',
+    type: '入院记录',
+    syn: '风阳内动证',
+    dept: '脑病科',
+    score: 91,
+    tags: ['天麻钩藤饮合镇肝息风汤', 'UPDRS', '肝肾阴虚'],
+    src: '依据《中医内科学》（第十版）颤证·风阳内动（天麻钩藤饮合镇肝息风汤）；项目顺序依《中医病历书写基本规范》第十九条',
+    sections: [
+      { key: 'base', label: '患者一般情况', rows: 3, v: '姓名：高某某　性别：男　年龄：69岁　民族：汉　婚姻：已婚　出生地：山东青岛　职业：退休教师　入院时间：2026-10-27 14:30　记录时间：2026-10-27 20:10　发病节气：霜降　病史陈述者：患者本人及配偶（可靠）' },
+      { key: 'chief', label: '主诉', rows: 2, v: '双手震颤伴行动迟缓3年，加重1个月。' },
+      { key: 'hpi', label: '现病史', rows: 6, v: '患者3年前无明显诱因出现右手静止性震颤，多于安静时明显、活动时减轻，逐渐累及左手，伴动作迟缓、走路拖步、起步困难、书写变小。于外院诊为“帕金森病”，予多巴丝肼片125mg每日3次口服，症状部分缓解。1个月前因情绪波动后震颤加重，持筷进食困难，转身缓慢，时有头晕、耳鸣、腰膝酸软、夜尿2至3次，大便干。入院症见：双手震颤，头摇肢颤，动作迟缓，表情呆板，头晕耳鸣，腰膝酸软，心烦少寐，纳可，大便干结。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 4, v: '望诊：神志清楚，面容呆板呈“面具脸”，形体消瘦，步态慌张，书写字迹细小；舌质红，舌体瘦，苔少而干，舌下脉络略迂曲。闻诊：语声低微，言语缓慢，气息尚匀。切诊：四肢拘急，脉弦细数。' },
+      { key: 'past', label: '既往史、个人史、家族史', rows: 4, v: '既往高血压病史8年，服缬沙坦80mg每日1次，血压控制可。否认糖尿病、脑血管病、头部外伤史，否认一氧化碳中毒及锰接触史，否认吩噻嗪类药物长期服用史。否认肝炎、结核等传染病史，否认食物药物过敏史。个人史：久居本地，不吸烟，偶饮酒。婚育史：已婚，育有2子，均体健。家族史：否认类似疾病及遗传病史。' },
+      { key: 'exam', label: '体格检查（含专科）', rows: 6, v: 'T 36.4℃　P 76次/分　R 18次/分　BP 142/84mmHg。神志清，查体合作。双肺呼吸音清，心率76次/分、律齐。腹平软，无压痛。专科情况：面具脸，瞬目减少，言语缓慢、音调低。双手静止性震颤，频率约4至6Hz，呈“搓丸样”，左侧为著。四肢肌张力齿轮样增高，双上肢为著。双下肢肌力5级。指鼻试验、跟膝胫试验尚稳准。后拉试验（＋），慌张步态，步幅小，双上肢摆臂减少。双侧病理征阴性。UPDRS-Ⅲ评分32分。' },
+      { key: 'aux', label: '辅助检查', rows: 3, v: '2026-10-27 头颅MRI：双侧基底节区腔隙性缺血灶，脑萎缩，未见占位。经颅超声：中脑黑质区回声增强。血常规、肝肾功能、电解质未见明显异常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '颤证——风阳内动证' },
+      { key: 'wmDx', label: '西医诊断', rows: 3, v: '1. 帕金森病（Hoehn-Yahr 2.5期）　2. 高血压病2级（高危）　3. 脑梗死病史（腔隙性）' },
+      { key: 'basis', label: '中医辨病辨证依据', rows: 5, v: '患者年近七旬，肝肾阴虚，精血亏耗，水不涵木，肝阳偏亢，阳动化风，风阳内动，筋脉失养，故见头摇肢颤、动作迟缓；肾精不足，髓海空虚，故头晕耳鸣、腰膝酸软；阴虚火旺，心神不宁，故心烦少寐；舌红体瘦、苔少而干、脉弦细数，为肝肾阴虚、风阳内动之象。病位在筋脉，与肝、肾、脾密切相关；病性为本虚标实，本虚为肝肾阴虚，标实为风、火、痰、瘀。与瘛疭相鉴别：瘛疭多见于热病过程中，四肢抽搐、颈项强直，常伴高热；与痉病相鉴别：痉病以项背强急、四肢抽搐、甚至角弓反张为主症。' },
+      { key: 'treat', label: '治法', rows: 2, v: '镇肝息风，舒筋止颤，佐以滋补肝肾。' },
+      { key: 'rx', label: '方药', rows: 4, v: '天麻15g　钩藤15g（后下）　生石决明30g（先煎）　生龙骨30g（先煎）　生牡蛎30g（先煎）　代赭石20g（先煎）　怀牛膝20g　生白芍20g　玄参15g　天冬12g　龟甲15g（先煎）　杜仲12g　桑寄生15g　炙甘草6g。7剂，水煎服，每日1剂，分2次温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 3, v: '取百会、四神聪、风池（双）、太冲（双）、太溪（双）、合谷（双）、阳陵泉（双）、足三里（双）。风池、太冲用平补平泻，太溪、足三里用补法，留针30分钟，每日1次，每周5次。' },
+      { key: 'advice', label: '诊疗计划与调护', rows: 4, v: '1. 脑病科护理常规，二级护理，防跌倒，病室设置扶手，夜间如厕需陪护。2. 多巴丝肼片按原方案服用，记录“开-关”现象及异动情况，避免与高蛋白饮食同服。3. 完善统一帕金森病评定量表、认知功能评估、平衡功能评估。4. 康复训练：步态训练、节律性听觉提示、姿势转换训练，每日1次。5. 饮食宜富含纤维，多饮水，保持大便通畅；避风寒，慎起居，调情志。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　上级医师：×××' }
+    ]
+  }
+);
+
+/* ===================== 中医病种知识库 ===================== */
+const KB = [];
+const KB_DEPTS = ['全部', '脑病科', '心病科', '肺病科', '脾胃病科', '肝病科', '肾病科', '内分泌科', '骨伤科', '风湿病科', '妇科', '皮肤科', '儿科', '耳鼻喉科', '肿瘤科', '针灸推拿科'];
+KB.push(
+  {
+    id: 'zhongfeng', name: '中风病', alias: '卒中、脑血管意外', dept: '脑病科', type: '入院记录',
+    wm: ['脑梗死', '脑梗塞', '缺血性脑卒中', '脑出血', '脑栓塞', '脑卒中'],
+    sig: ['半身不遂', '偏瘫', '肢体无力', '言语不清', '口舌歪斜', '口角歪斜'],
+    def: `中风病是以猝然昏仆、不省人事、半身不遂、口舌歪斜、言语謇涩或不语、偏身麻木为主症的病证，起病急骤、变化迅速，如风之善行数变。`,
+    cause: `病位在脑，与心、肝、脾、肾密切相关。基本病机为阴阳失调、气血逆乱；本虚为肝肾阴虚、气血不足，标实为风、火、痰、瘀。`,
+    chief: '右侧肢体无力伴言语不清2天。',
+    hpi: `患者2天前晨起时无明显诱因出现右侧肢体无力，持物不稳，行走拖步，伴言语含糊不清，无头痛呕吐，无意识障碍及肢体抽搐。外院头颅CT示左侧基底节区低密度影，予阿司匹林、阿托伐他汀后转诊。入院症见：右侧肢体无力，言语謇涩，口舌歪斜，口角流涎，头晕，纳可，大便偏干。`,
+    exam: `T 36.5℃　P 78次/分　BP 158/92mmHg。神志清，言语謇涩，右侧鼻唇沟变浅，口角左偏，伸舌右偏；右上肢肌力2级、右下肢肌力3级，右侧巴宾斯基征阳性，右侧偏身痛觉减退。NIHSS评分8分。`,
+    aux: `头颅CT：左侧基底节区低密度影；头颅MRI＋DWI：左侧基底节区急性梗死灶；颈动脉超声：双侧颈动脉内中膜增厚伴斑块形成。LDL-C 3.6mmol/L，HbA1c 7.4%。`,
+    wmDx: `1. 急性缺血性脑卒中（左侧基底节区）　2. 高血压病3级（极高危）　3. 2型糖尿病`,
+    adv: `1. 脑病科护理常规，一级护理，低盐低脂糖尿病饮食。2. 监测血压、血糖及神志、瞳孔、肢体肌力变化。3. 良肢位摆放，床边被动关节活动，预防深静脉血栓。4. 尽早介入康复训练。5. 避风寒，畅情志，忌肥甘厚味。`,
+    src: `《中医内科学》（第十版）中风病；国家中医药管理局中风病中医诊疗方案`,
+    synd: [
+      { name: '风痰阻络证', points: `半身不遂，口舌歪斜，言语謇涩，偏身麻木，头晕目眩，痰多而黏，舌暗淡、苔白腻，脉弦滑。`, treat: '息风化痰，活血通络', formula: '半夏白术天麻汤加减', herbs: `法半夏10g　炒白术12g　天麻15g　茯苓15g　陈皮10g　胆南星6g　竹茹12g　石菖蒲12g　丹参20g　地龙10g　川牛膝15g　炙甘草6g`, acu: `内关、水沟、三阴交为主，辅极泉、尺泽、委中；风痰加丰隆、合谷，留针30分钟，每日1次`, kw: ['头晕', '痰多', '苔白腻', '脉弦滑', '言语謇涩', '口角流涎'] },
+      { name: '肝阳暴亢证', points: `半身不遂，偏身麻木，舌强语謇，口舌歪斜，眩晕头痛，面红目赤，口苦咽干，心烦易怒，舌红、苔薄黄，脉弦有力。`, treat: '平肝潜阳，清热息风', formula: '天麻钩藤饮加减', herbs: `天麻15g　钩藤15g（后下）　石决明30g（先煎）　川牛膝15g　杜仲12g　桑寄生15g　黄芩10g　栀子10g　益母草15g　首乌藤15g　茯神15g`, acu: `内关、水沟、三阴交、太冲、太溪，平补平泻，留针30分钟`, kw: ['面红', '口苦', '易怒', '苔薄黄', '脉弦有力', '头胀痛'] },
+      { name: '气虚血瘀证', points: `半身不遂，口舌歪斜，言语謇涩，面色㿠白，气短乏力，自汗，手足肿胀，舌暗淡、苔薄白，脉沉细。`, treat: '益气活血，化瘀通络', formula: '补阳还五汤加减', herbs: `生黄芪30g　当归尾12g　赤芍12g　川芎10g　桃仁10g　红花6g　地龙10g　川牛膝15g　鸡血藤20g`, acu: `患侧阳明经为主，取肩髃、曲池、手三里、足三里、气海，补法，留针30分钟`, kw: ['气短', '乏力', '自汗', '舌暗淡', '脉沉细', '手足肿胀'] },
+      { name: '阴虚风动证', points: `半身不遂，口舌歪斜，言语謇涩，眩晕耳鸣，手足心热，咽干口燥，舌红少苔，脉弦细数。`, treat: '滋阴息风', formula: '镇肝息风汤加减', herbs: `生白芍20g　天冬12g　玄参15g　龟甲15g（先煎）　生龙骨30g（先煎）　生牡蛎30g（先煎）　代赭石20g（先煎）　怀牛膝20g　天麻15g　钩藤15g（后下）`, acu: `太溪、三阴交、太冲、风池，补泻兼施，留针30分钟`, kw: ['耳鸣', '手足心热', '咽干', '舌红少苔', '脉弦细数'] }
+    ]
+  },
+  {
+    id: 'xuanyun', name: '眩晕', alias: '头晕、耳眩晕', dept: '脑病科', type: '门诊病历',
+    wm: ['眩晕症', '梅尼埃病', '耳眩晕', '椎基底动脉供血不足', '前庭神经炎', '高血压'],
+    sig: ['眩晕', '头晕', '视物旋转', '恶心呕吐', '耳鸣'],
+    def: `眩是目眩，晕是头晕，二者常并见，故称眩晕。轻者闭目即止，重者如坐车船、旋转不定、不能站立，或伴恶心、呕吐、汗出。`,
+    cause: `病位在清窍，与肝、脾、肾密切相关。肝阳上亢、痰湿中阻、瘀血阻窍、气血亏虚、肾精不足为主要病机。`,
+    chief: '头晕目眩反复发作1年，加重3天。',
+    hpi: `患者1年来反复出现头晕目眩，每因劳累或情志不遂诱发，发作时视物旋转、恶心欲吐，闭目卧床可稍缓解。3天前症状加重，伴耳鸣、口苦、胸闷，纳差，夜寐不安。`,
+    exam: `BP 150/90mmHg。神志清，眼球各向运动充分，可见水平性眼震，闭目直立试验阳性。心肺腹查体未见异常，神经系统未见定位体征。`,
+    aux: `头颅CT未见出血及占位；颈椎X线示生理曲度变直；纯音测听示双耳高频听力下降。`,
+    wmDx: `1. 周围性眩晕（梅尼埃病？）　2. 高血压病2级`,
+    adv: `1. 发作期卧床休息，避免头部剧烈转动。2. 低盐饮食，避免一次性大量饮水。3. 监测血压，规律服药。4. 避免劳累、熬夜及情绪波动。5. 反复发作建议耳鼻喉科、神经内科进一步评估。`,
+    src: `《中医内科学》（第十版）眩晕；《中医病证诊断疗效标准》眩晕`,
+    synd: [
+      { name: '肝阳上亢证', points: `眩晕耳鸣，头目胀痛，口苦，失眠多梦，遇劳或恼怒加重，颜面潮红，急躁易怒，舌红、苔黄，脉弦或数。`, treat: '平肝潜阳，清火息风', formula: '天麻钩藤饮加减', herbs: `天麻15g　钩藤15g（后下）　石决明30g（先煎）　栀子10g　黄芩10g　川牛膝15g　杜仲12g　桑寄生15g　益母草15g　首乌藤20g　茯神15g`, acu: `百会、风池、太冲、太溪、侠溪，泻法为主，留针30分钟`, kw: ['面红', '口苦', '易怒', '脉弦', '头胀痛'] },
+      { name: '痰湿中阻证', points: `头晕头重，视物旋转，胸闷恶心，呕吐痰涎，食少多寐，舌苔白腻，脉濡滑。`, treat: '化痰祛湿，健脾和胃', formula: '半夏白术天麻汤加减', herbs: `法半夏10g　炒白术12g　天麻15g　茯苓15g　陈皮10g　泽泻15g　竹茹12g　石菖蒲12g　炙甘草6g`, acu: `百会、风池、中脘、丰隆、阴陵泉，平补平泻`, kw: ['头重', '胸闷', '恶心', '苔白腻', '脉濡滑'] },
+      { name: '瘀血阻窍证', points: `眩晕时作，头痛固定不移，健忘，失眠，心悸，舌暗有瘀斑，脉涩或细涩。`, treat: '祛瘀生新，活血通窍', formula: '通窍活血汤加减', herbs: `桃仁10g　红花6g　赤芍12g　川芎10g　麝香0.1g（冲服）　老葱3根　生姜9g　红枣5枚`, acu: `百会、四神聪、血海、膈俞、合谷，平补平泻`, kw: ['头痛固定', '舌紫暗', '脉涩', '健忘'] },
+      { name: '气血亏虚证', points: `眩晕动则加剧，劳累即发，面色少华，神疲乏力，心悸少寐，舌淡、苔薄白，脉细弱。`, treat: '补益气血，调养心脾', formula: '归脾汤加减', herbs: `党参15g　黄芪30g　炒白术12g　当归12g　龙眼肉12g　酸枣仁20g　远志10g　茯神15g　木香6g　炙甘草6g`, acu: `百会、气海、足三里、三阴交、心俞，补法`, kw: ['面色少华', '乏力', '心悸', '脉细弱', '劳累加重'] }
+    ]
+  },
+  {
+    id: 'toutong', name: '头痛', alias: '头风、偏头痛', dept: '脑病科', type: '门诊病历',
+    wm: ['偏头痛', '紧张性头痛', '血管性头痛', '头痛'],
+    sig: ['头痛', '头胀', '偏头痛', '头部胀痛'],
+    def: `头痛是指因外感六淫、内伤杂病致使头部脉络拘急或失养，清窍不利，以头部疼痛为主要表现的病证。`,
+    cause: `病位在头，与肝、脾、肾相关。外感多因风邪上扰，内伤多因肝阳上亢、痰浊上蒙、瘀血阻络、气血亏虚、肾精不足。`,
+    chief: '反复头痛3年，加重1周。',
+    hpi: `患者3年来反复出现头痛，多于劳累或情绪紧张时发作，呈胀痛或跳痛，持续数小时至1天，伴头晕、心烦。1周前因熬夜加重，头痛连及两侧太阳穴，恶心欲吐，纳可，夜寐差。`,
+    exam: `BP 138/86mmHg。神志清，颈软，双侧瞳孔等大等圆，对光反射灵敏。心肺腹未见异常，神经系统未见阳性体征。`,
+    aux: `头颅CT未见占位及出血；颈椎X线示生理曲度变直。血常规、肝肾功能未见异常。`,
+    wmDx: `1. 紧张性头痛　2. 颈椎病`,
+    adv: `1. 规律作息，保证睡眠，避免熬夜。2. 记录头痛日记，识别诱因。3. 避免长时间低头，注意颈部姿势。4. 忌烟酒及浓茶咖啡。5. 头痛突然加重或伴肢体无力、言语不清时立即就诊。`,
+    src: `《中医内科学》（第十版）头痛；《中医病证诊断疗效标准》头风`,
+    synd: [
+      { name: '风寒头痛证', points: `头痛连及项背，常有拘急收紧感，遇风尤甚，恶风畏寒，舌淡红、苔薄白，脉浮紧。`, treat: '疏风散寒止痛', formula: '川芎茶调散加减', herbs: `川芎12g　荆芥10g　防风10g　白芷10g　羌活10g　细辛3g　薄荷6g（后下）　甘草6g`, acu: `风池、百会、太阳、列缺，泻法`, kw: ['遇风加重', '恶风', '畏寒', '脉浮紧'] },
+      { name: '肝阳头痛证', points: `头昏胀痛，两侧为重，心烦易怒，夜寐不宁，口苦面红，舌红、苔黄，脉弦数。`, treat: '平肝潜阳息风', formula: '天麻钩藤饮加减', herbs: `天麻15g　钩藤15g（后下）　石决明30g（先煎）　栀子10g　黄芩10g　川牛膝15g　杜仲12g　桑寄生15g　首乌藤20g　茯神15g`, acu: `百会、风池、太冲、太溪、行间，泻法`, kw: ['头胀', '面红', '口苦', '易怒', '脉弦数'] },
+      { name: '痰浊头痛证', points: `头痛昏蒙，胸脘满闷，纳呆呕恶，舌苔白腻，脉滑或弦滑。`, treat: '健脾燥湿，化痰降逆', formula: '半夏白术天麻汤加减', herbs: `法半夏10g　炒白术12g　天麻15g　茯苓15g　陈皮10g　竹茹12g　生姜9g　炙甘草6g`, acu: `百会、风池、中脘、丰隆、足三里`, kw: ['头痛昏蒙', '胸闷', '纳呆', '苔白腻', '脉滑'] },
+      { name: '瘀血头痛证', points: `头痛经久不愈，痛处固定不移，痛如锥刺，昼轻夜重，舌紫暗或有瘀斑，苔薄白，脉细涩。`, treat: '活血化瘀，通窍止痛', formula: '通窍活血汤加减', herbs: `桃仁10g　红花6g　赤芍12g　川芎12g　麝香0.1g（冲服）　老葱3根　生姜9g　红枣5枚`, acu: `百会、太阳、血海、膈俞、合谷，平补平泻`, kw: ['痛处固定', '痛如锥刺', '舌紫暗', '脉细涩'] }
+    ]
+  },
+  {
+    id: 'koupi', name: '口僻', alias: '面瘫、吊线风', dept: '脑病科', type: '门诊病历',
+    wm: ['面神经麻痹', '面瘫', '周围性面神经炎', '贝尔面瘫'],
+    sig: ['口眼歪斜', '口角流涎', '眼睑闭合不全', '额纹消失'],
+    def: `口僻是以口眼歪斜为主要表现的一种病证，俗称“吊线风”，相当于西医学的面神经麻痹。`,
+    cause: `多因正气不足，脉络空虚，风邪乘虚入中面部经络，气血痹阻，筋脉失养而致。病位在面部经络，与肝、胆、胃相关。`,
+    chief: '左侧口眼歪斜2天。',
+    hpi: `患者2天前晨起洗脸时发现左侧口角漏水，左眼闭合不全，伴左耳后疼痛，无肢体无力及言语不清。发病前有受凉吹风史。刻下：左侧额纹消失，眼睑闭合不全，口角右歪，纳可，二便调。`,
+    exam: `神志清，左侧额纹消失，左眼睑闭合不全，Bell征阳性，左侧鼻唇沟变浅，口角右偏，示齿时口角右歪。四肢肌力5级，双侧病理征阴性。`,
+    aux: `头颅CT未见异常；面神经肌电图示左侧面神经传导速度减慢。`,
+    wmDx: `左侧周围性面神经麻痹（贝尔面瘫）`,
+    adv: `1. 注意面部保暖，外出戴口罩、眼罩，避免吹风。2. 左眼闭合不全者滴人工泪液，夜间涂眼膏保护角膜。3. 每日做蹙额、闭眼、鼓腮、示齿训练。4. 忌辛辣，保持心情舒畅。5. 2周内复诊评估，必要时加用激素。`,
+    src: `《中医内科学》（第十版）口僻；针灸治疗学面瘫`,
+    synd: [
+      { name: '风寒袭络证', points: `突然口眼歪斜，眼睑闭合不全，伴耳后疼痛，恶风寒，舌淡红、苔薄白，脉浮紧。`, treat: '祛风散寒，通络和营', formula: '牵正散加减', herbs: `白附子6g　僵蚕10g　全蝎3g　羌活10g　防风10g　川芎10g　当归12g　炙甘草6g`, acu: `攒竹、阳白、四白、颊车、地仓、合谷、翳风，平补平泻，留针20分钟`, kw: ['受凉', '耳后疼痛', '恶风', '脉浮紧'] },
+      { name: '风痰阻络证', points: `口眼歪斜，眼睑闭合不全，口角流涎，胸闷，舌淡、苔白腻，脉弦滑。`, treat: '祛风化痰，通络止痉', formula: '二陈汤合牵正散加减', herbs: `法半夏10g　陈皮10g　茯苓15g　白附子6g　僵蚕10g　全蝎3g　胆南星6g　甘草6g`, acu: `阳白、四白、颊车、地仓、丰隆、合谷，平补平泻`, kw: ['口角流涎', '胸闷', '苔白腻', '脉弦滑'] },
+      { name: '气血不足证', points: `口眼歪斜日久不愈，面肌萎缩，神疲乏力，面色少华，舌淡、苔薄白，脉细弱。`, treat: '益气养血，通络止痉', formula: '补阳还五汤加减', herbs: `生黄芪30g　当归尾12g　赤芍12g　川芎10g　桃仁10g　红花6g　地龙10g　僵蚕10g　全蝎3g`, acu: `阳白、颊车、地仓、足三里、三阴交，补法`, kw: ['日久不愈', '面肌萎缩', '乏力', '脉细弱'] }
+    ]
+  },
+  {
+    id: 'bumei', name: '不寐', alias: '失眠、睡眠障碍', dept: '脑病科', type: '门诊病历',
+    wm: ['失眠', '失眠症', '睡眠障碍', '非器质性失眠'],
+    sig: ['入睡困难', '早醒', '多梦', '睡眠'],
+    def: `不寐是以经常不能获得正常睡眠为特征的一类病证，主要表现为入睡困难、睡眠不深、易醒、早醒、多梦，甚则彻夜不眠。`,
+    cause: `病位在心，与肝、脾、肾相关。基本病机为阳盛阴衰、阴阳失交；实证多为肝火、痰热，虚证多为心脾两虚、心肾不交、心胆气虚。`,
+    chief: '入睡困难伴心烦3个月，加重10天。',
+    hpi: `患者3个月前因工作压力增大出现入睡困难，卧床1至2小时方能入睡，睡后易醒，每晚睡眠约4小时，伴心烦、易怒、口苦。10天前因家事烦扰加重，甚至通宵不寐，日间头昏乏力。曾自服“安神补脑液”效果不佳。`,
+    exam: `BP 132/84mmHg。神志清，甲状腺未及肿大。心肺腹查体未见异常，神经系统未见阳性体征。PSQI评分15分。`,
+    aux: `血常规、甲状腺功能、血糖未见异常；心电图：窦性心律，大致正常。`,
+    wmDx: `非器质性失眠症（慢性）`,
+    adv: `1. 规律作息，固定起床时间，午睡不超过30分钟。2. 睡前1小时不看手机，卧室光线宜暗。3. 忌咖啡、浓茶及辛辣，晚餐不宜过饱。4. 每日步行30分钟。5. 7剂后复诊，评估睡眠日记。`,
+    src: `《中医内科学》（第十版）不寐`,
+    synd: [
+      { name: '肝火扰心证', points: `不寐多梦，甚则彻夜不眠，急躁易怒，头晕头胀，目赤口苦，舌红、苔黄，脉弦数。`, treat: '清肝泻火，镇心安神', formula: '龙胆泻肝汤加减', herbs: `龙胆草6g　黄芩10g　栀子10g　泽泻12g　车前子12g（包煎）　当归12g　生地黄15g　柴胡10g　酸枣仁20g　珍珠母30g（先煎）　首乌藤20g`, acu: `百会、四神聪、神门、内关、太冲、行间，泻法`, kw: ['易怒', '口苦', '目赤', '苔黄', '脉弦数'] },
+      { name: '痰热扰心证', points: `心烦不寐，胸闷脘痞，口苦目眩，头重，舌红、苔黄腻，脉滑数。`, treat: '清化痰热，和中安神', formula: '黄连温胆汤加减', herbs: `黄连6g　法半夏10g　陈皮10g　茯苓15g　竹茹12g　枳实10g　酸枣仁20g　远志10g　甘草6g`, acu: `百会、神门、中脘、丰隆、内关，平补平泻`, kw: ['胸闷', '脘痞', '苔黄腻', '脉滑数'] },
+      { name: '心脾两虚证', points: `不易入睡，多梦易醒，心悸健忘，神疲食少，面色少华，舌淡、苔薄白，脉细弱。`, treat: '补益心脾，养血安神', formula: '归脾汤加减', herbs: `党参15g　黄芪30g　炒白术12g　当归12g　龙眼肉12g　酸枣仁20g　远志10g　茯神15g　木香6g　炙甘草6g`, acu: `心俞、脾俞、神门、三阴交、足三里，补法`, kw: ['心悸', '健忘', '食少', '面色少华', '脉细弱'] },
+      { name: '心胆气虚证', points: `虚烦不寐，触事易惊，终日惕惕，胆怯心悸，气短自汗，舌淡、苔薄白，脉弦细。`, treat: '益气镇惊，安神定志', formula: '安神定志丸合酸枣仁汤加减', herbs: `党参15g　茯神15g　远志10g　石菖蒲12g　龙齿30g（先煎）　酸枣仁20g　知母10g　川芎10g　炙甘草6g`, acu: `心俞、胆俞、神门、内关、丘墟，补法`, kw: ['易惊', '胆怯', '气短', '自汗', '脉弦细'] }
+    ]
+  },
+  {
+    id: 'chanzheng', name: '颤证', alias: '震颤、帕金森病', dept: '脑病科', type: '入院记录',
+    wm: ['帕金森病', '帕金森综合征', '震颤', '特发性震颤'],
+    sig: ['震颤', '手抖', '动作迟缓', '面具脸', '慌张步态'],
+    def: `颤证是以头部或肢体摇动、颤抖为主要临床表现的一种病证，轻者仅头摇或手足微颤，重者头部震摇、肢体颤动不止，甚则生活不能自理。`,
+    cause: `病位在筋脉，与肝、肾、脾相关。基本病机为肝风内动、筋脉失养；本虚为肝肾阴虚、气血不足，标实为风、火、痰、瘀。`,
+    chief: '双手震颤伴行动迟缓3年，加重1个月。',
+    hpi: `患者3年前无明显诱因出现右手静止性震颤，安静时明显、活动时减轻，逐渐累及左手，伴动作迟缓、走路拖步、起步困难、书写变小。外院诊为“帕金森病”，予多巴丝肼片125mg每日3次，症状部分缓解。1个月前情绪波动后震颤加重，持筷困难，转身缓慢，伴头晕耳鸣、腰膝酸软、夜尿2至3次、大便干。`,
+    exam: `T 36.4℃　P 76次/分　BP 142/84mmHg。面具脸，瞬目减少，言语缓慢、音调低。双手静止性震颤，频率约4至6Hz，呈“搓丸样”，左侧为著。四肢肌张力齿轮样增高。后拉试验阳性，慌张步态，步幅小。双侧病理征阴性。UPDRS-Ⅲ评分32分。`,
+    aux: `头颅MRI：双侧基底节区腔隙性缺血灶，脑萎缩，未见占位。经颅超声：中脑黑质区回声增强。`,
+    wmDx: `1. 帕金森病（Hoehn-Yahr 2.5期）　2. 高血压病2级（高危）`,
+    adv: `1. 脑病科护理常规，二级护理，防跌倒，病室设扶手。2. 多巴丝肼按原方案服用，记录“开-关”现象，避免与高蛋白饮食同服。3. 康复训练：步态、节律性听觉提示、姿势转换训练。4. 饮食富含纤维，多饮水，保持大便通畅。5. 避风寒，慎起居，调情志。`,
+    src: `《中医内科学》（第十版）颤证`,
+    synd: [
+      { name: '风阳内动证', points: `头摇肢颤，不能自主，头晕头胀，面红目赤，急躁易怒，舌红、苔薄黄，脉弦有力。`, treat: '镇肝息风，舒筋止颤', formula: '天麻钩藤饮合镇肝息风汤加减', herbs: `天麻15g　钩藤15g（后下）　石决明30g（先煎）　生龙骨30g（先煎）　生牡蛎30g（先煎）　代赭石20g（先煎）　怀牛膝20g　生白芍20g　玄参15g　龟甲15g（先煎）　杜仲12g`, acu: `百会、四神聪、风池、太冲、太溪、合谷、阳陵泉`, kw: ['头摇', '面红', '易怒', '脉弦有力'] },
+      { name: '痰热风动证', points: `头摇肢颤，胸闷脘痞，口苦，痰多，舌红、苔黄腻，脉弦滑数。`, treat: '清热化痰，息风止颤', formula: '导痰汤合羚角钩藤汤加减', herbs: `法半夏10g　陈皮10g　茯苓15g　胆南星6g　枳实10g　羚羊角粉0.6g（冲服）　钩藤15g（后下）　菊花10g　生地黄15g`, acu: `百会、风池、丰隆、中脘、太冲`, kw: ['胸闷', '痰多', '口苦', '苔黄腻', '脉滑数'] },
+      { name: '气血亏虚证', points: `头摇肢颤，面色㿠白，神疲乏力，心悸健忘，食少便溏，舌淡、苔薄白，脉细弱。`, treat: '益气养血，濡养筋脉', formula: '人参养荣汤加减', herbs: `党参15g　黄芪30g　炒白术12g　当归12g　熟地黄15g　白芍15g　川芎10g　茯苓15g　远志10g　五味子6g　炙甘草6g`, acu: `百会、足三里、三阴交、心俞、脾俞，补法`, kw: ['乏力', '心悸', '健忘', '食少', '脉细弱'] },
+      { name: '髓海不足证', points: `头摇肢颤，腰膝酸软，头晕耳鸣，健忘呆滞，舌淡、苔薄白，脉沉细。`, treat: '填精补髓，育阴息风', formula: '龟鹿二仙膏合大定风珠加减', herbs: `龟甲15g（先煎）　鹿角胶10g（烊化）　熟地黄15g　枸杞子15g　山茱萸12g　生白芍20g　阿胶10g（烊化）　生牡蛎30g（先煎）　五味子6g`, acu: `百会、四神聪、肾俞、太溪、三阴交，补法`, kw: ['腰膝酸软', '耳鸣', '健忘', '脉沉细'] }
+    ]
+  }
+);
+KB.push(
+  {
+    id: 'xianbing', name: '痫病', alias: '癫痫、羊癫疯', dept: '脑病科', type: '入院记录',
+    wm: ['癫痫', '癫痫发作', '痫病', '全面性强直阵挛发作'],
+    sig: ['抽搐', '意识丧失', '口吐涎沫', '两眼上翻', '二便失禁'],
+    def: `痫病是由先天或后天因素致脏腑功能失调、气机逆乱、元神失控，以突然意识丧失、仆倒、不省人事、两目上视、口吐涎沫、四肢抽搐，或口中怪叫、移时苏醒、醒后一如常人为主要表现的发作性疾病。`,
+    cause: `病位在脑，涉及肝、脾、肾、心。基本病机为气机逆乱、元神失控；风、痰、火、瘀蒙蔽清窍为主要病理因素。`,
+    chief: '反复发作性意识丧失伴四肢抽搐5年，加重1个月。',
+    hpi: `患者5年来反复出现发作性意识丧失，发作前有头晕、胸闷先兆，随即仆倒、两目上视、四肢抽搐、口吐涎沫，持续1至3分钟自行苏醒，醒后神疲乏力，对发作过程不能回忆。每月发作1至2次。1个月来因熬夜发作增至3次。长期服丙戊酸钠。`,
+    exam: `神志清，心肺腹未见异常，神经系统未见定位体征。舌淡红、苔白腻，脉弦滑。`,
+    aux: `脑电图：发作间期见散在棘慢波；头颅MRI未见占位。丙戊酸钠血药浓度52μg/mL。`,
+    wmDx: `癫痫（全面性强直-阵挛发作）`,
+    adv: `1. 神经内科护理常规，留陪护，防跌倒、防舌咬伤。2. 按时服药，不可自行减停。3. 避免熬夜、闪光刺激及情绪激动。4. 记录发作时间、形式及持续时间。5. 发作超过5分钟或连续发作立即急救。`,
+    src: `《中医内科学》（第十版）痫病`,
+    synd: [
+      { name: '风痰闭阻证', points: `发病前多有头晕、胸闷、乏力等先兆，发则猝然仆倒、意识丧失、两目上视、四肢抽搐、口吐涎沫，舌淡红、苔白腻，脉弦滑。`, treat: '涤痰息风，开窍定痫', formula: '定痫丸加减', herbs: `天麻15g　川贝母6g　胆南星6g　法半夏10g　陈皮10g　茯神15g　远志10g　石菖蒲12g　僵蚕10g　全蝎3g　琥珀粉1.5g（冲服）`, acu: `百会、水沟、内关、后溪、申脉、丰隆，发作期用泻法`, kw: ['头晕先兆', '胸闷', '苔白腻', '脉弦滑', '口吐涎沫'] },
+      { name: '痰火扰神证', points: `猝然仆倒，四肢抽搐，口吐涎沫，平时急躁易怒，心烦失眠，口苦咽干，舌红、苔黄腻，脉弦滑数。`, treat: '清肝泻火，豁痰开窍', formula: '龙胆泻肝汤合涤痰汤加减', herbs: `龙胆草6g　黄芩10g　栀子10g　法半夏10g　胆南星6g　竹茹12g　石菖蒲12g　枳实10g　钩藤15g（后下）`, acu: `百会、风池、太冲、丰隆、内关，泻法`, kw: ['易怒', '心烦', '口苦', '苔黄腻', '脉滑数'] },
+      { name: '心脾两虚证', points: `反复发作，神疲乏力，心悸气短，失眠多梦，面色少华，舌淡、苔薄白，脉细弱。`, treat: '补益心脾，益气安神', formula: '归脾汤加减', herbs: `党参15g　黄芪30g　炒白术12g　当归12g　酸枣仁20g　远志10g　茯神15g　龙眼肉12g　炙甘草6g`, acu: `心俞、脾俞、足三里、三阴交、神门，补法`, kw: ['乏力', '心悸', '失眠', '面色少华', '脉细弱'] },
+      { name: '肝肾阴虚证', points: `痫病日久，头晕目眩，腰膝酸软，健忘失眠，五心烦热，舌红少苔，脉细数。`, treat: '滋补肝肾，育阴潜阳', formula: '左归丸加减', herbs: `熟地黄15g　山药15g　枸杞子15g　山茱萸12g　龟甲15g（先煎）　鳖甲15g（先煎）　生牡蛎30g（先煎）　天麻15g`, acu: `肾俞、肝俞、太溪、三阴交、百会，补法`, kw: ['腰膝酸软', '五心烦热', '舌红少苔', '脉细数'] }
+    ]
+  },
+  {
+    id: 'weibing', name: '痿病', alias: '痿证、肌无力', dept: '脑病科', type: '入院记录',
+    wm: ['吉兰-巴雷综合征', '重症肌无力', '运动神经元病', '脊髓损伤', '肌无力'],
+    sig: ['肢体痿软', '肌无力', '肌肉萎缩', '不能站立', '眼睑下垂'],
+    def: `痿病是指肢体筋脉弛缓、软弱无力，日久因不能随意运动而致肌肉萎缩的一种病证，以下肢痿弱较为多见。`,
+    cause: `病位在筋脉、肌肉，与肝、肾、脾、胃相关。基本病机为气血阴精亏耗、筋脉失养；肺热津伤、湿热浸淫、脾胃虚弱、肝肾亏损、脉络瘀阻为常见证型。`,
+    chief: '双下肢无力进行性加重2个月。',
+    hpi: `患者2个月前无明显诱因出现双下肢无力，初为上楼费力，逐渐发展为行走困难、不能久立，伴双小腿肌肉萎缩、麻木。无发热、头痛及二便失禁。`,
+    exam: `神志清，双下肢近端肌力3级、远端4级，双侧腱反射减弱，病理征阴性。双小腿肌肉轻度萎缩。`,
+    aux: `肌电图：神经源性损害，双下肢运动神经传导速度减慢；脑脊液蛋白-细胞分离现象阳性。`,
+    wmDx: `吉兰-巴雷综合征（恢复期）`,
+    adv: `1. 防跌倒，必要时使用助行器。2. 每日肢体被动及主动训练，防肌肉萎缩与关节挛缩。3. 高蛋白、富含维生素饮食。4. 监测呼吸肌无力表现（气促、吞咽困难）。5. 定期复查肌电图。`,
+    src: `《中医内科学》（第十版）痿病`,
+    synd: [
+      { name: '肺热津伤证', points: `起病较急，肢体痿软无力，尤以下肢多见，伴发热、咳嗽、咽干口渴，舌红、苔黄，脉细数。`, treat: '清热润肺，濡养筋脉', formula: '清燥救肺汤加减', herbs: `桑叶12g　石膏30g（先煎）　麦冬15g　沙参15g　杏仁10g　枇杷叶12g　阿胶10g（烊化）　甘草6g`, acu: `肺俞、尺泽、曲池、足三里、阳陵泉`, kw: ['发热', '咳嗽', '咽干', '舌红', '脉细数'] },
+      { name: '湿热浸淫证', points: `肢体痿软无力，肢体困重，麻木，胸脘痞闷，小便短赤，舌红、苔黄腻，脉濡数。`, treat: '清热利湿，通利筋脉', formula: '四妙丸加减', herbs: `苍术12g　黄柏10g　薏苡仁30g　牛膝15g　萆薢15g　泽泻15g　防己10g`, acu: `阴陵泉、三阴交、足三里、丰隆、阳陵泉`, kw: ['肢体困重', '胸脘痞闷', '小便短赤', '苔黄腻', '脉濡数'] },
+      { name: '脾胃虚弱证', points: `肢体痿软无力，逐渐加重，食少纳呆，腹胀便溏，面色少华，神疲乏力，舌淡、苔薄白，脉细弱。`, treat: '补中益气，健脾升清', formula: '参苓白术散合补中益气汤加减', herbs: `党参15g　黄芪30g　炒白术12g　茯苓15g　山药15g　升麻6g　柴胡6g　当归12g　炙甘草6g`, acu: `脾俞、胃俞、足三里、三阴交、中脘，补法`, kw: ['食少', '腹胀', '便溏', '面色少华', '脉细弱'] },
+      { name: '肝肾亏损证', points: `起病缓慢，下肢痿软无力，腰膝酸软，不能久立，头晕耳鸣，舌红少苔，脉细数。`, treat: '补益肝肾，滋阴清热', formula: '虎潜丸加减', herbs: `熟地黄15g　白芍15g　龟甲15g（先煎）　黄柏10g　知母10g　锁阳12g　牛膝15g　杜仲12g`, acu: `肝俞、肾俞、太溪、三阴交、悬钟，补法`, kw: ['腰膝酸软', '不能久立', '耳鸣', '舌红少苔', '脉细数'] }
+    ]
+  },
+  {
+    id: 'chidai', name: '痴呆', alias: '呆病、认知障碍', dept: '脑病科', type: '门诊病历',
+    wm: ['阿尔茨海默病', '痴呆', '认知障碍', '血管性痴呆'],
+    sig: ['记忆力下降', '反应迟钝', '定向力障碍', '认知功能下降', '健忘'],
+    def: `痴呆是以认知功能减退为主要临床表现的疾病，以记忆力、计算力、定向力、理解判断能力下降，甚则生活不能自理为特征。`,
+    cause: `病位在脑，与心、肝、脾、肾相关。基本病机为髓海空虚、神机失用；本虚为肾精不足、气血亏虚，标实为痰浊、瘀血蒙蔽清窍。`,
+    chief: '记忆力下降2年，加重半年。',
+    hpi: `患者2年来逐渐出现近事记忆力下降，常忘钥匙、忘记刚说过的话，计算力减退。近半年加重，出门易迷路，性格变得沉默，生活尚能自理。`,
+    exam: `神志清，近事记忆减退，计算力下降（100减7连续计算错误），定向力部分障碍。MMSE 20分，MoCA 17分。`,
+    aux: `头颅MRI：脑萎缩，双侧海马萎缩；甲状腺功能、维生素B12正常。`,
+    wmDx: `阿尔茨海默病（中度）`,
+    adv: `1. 家属陪护，防走失，佩戴身份信息卡。2. 规律作息，日间活动、夜间睡眠。3. 认知训练与社交活动。4. 家中移除危险物品，防跌倒。5. 定期评估认知功能与生活能力。`,
+    src: `《中医内科学》（第十版）痴呆`,
+    synd: [
+      { name: '髓海不足证', points: `记忆力下降，反应迟钝，头晕耳鸣，腰膝酸软，齿枯发焦，舌淡、苔薄白，脉沉细。`, treat: '补肾填精，益髓养神', formula: '七福饮加减', herbs: `熟地黄15g　山茱萸12g　枸杞子15g　鹿角胶10g（烊化）　龟甲15g（先煎）　远志10g　石菖蒲12g　酸枣仁20g`, acu: `百会、四神聪、肾俞、太溪、悬钟，补法`, kw: ['腰膝酸软', '耳鸣', '齿枯发焦', '脉沉细'] },
+      { name: '脾肾两虚证', points: `记忆减退，神情呆滞，食少便溏，腰膝酸软，畏寒肢冷，舌淡胖、苔白，脉沉弱。`, treat: '健脾补肾，益气生髓', formula: '还少丹加减', herbs: `熟地黄15g　山药15g　枸杞子15g　肉苁蓉12g　巴戟天12g　党参15g　炒白术12g　茯苓15g`, acu: `脾俞、肾俞、足三里、关元、百会，补法`, kw: ['食少', '便溏', '畏寒肢冷', '舌淡胖', '脉沉弱'] },
+      { name: '痰浊蒙窍证', points: `表情呆钝，智力减退，终日无语，头重如裹，胸闷呕恶，舌淡、苔白腻，脉滑。`, treat: '豁痰开窍，健脾化浊', formula: '涤痰汤加减', herbs: `法半夏10g　陈皮10g　茯苓15g　胆南星6g　竹茹12g　石菖蒲12g　郁金10g　枳实10g`, acu: `百会、丰隆、中脘、阴陵泉、内关`, kw: ['头重如裹', '胸闷', '呕恶', '苔白腻', '脉滑'] },
+      { name: '瘀血内阻证', points: `表情呆滞，言语不利，肌肤甲错，口干不欲饮，舌暗有瘀斑，脉细涩。`, treat: '活血化瘀，开窍醒神', formula: '通窍活血汤加减', herbs: `桃仁10g　红花6g　赤芍12g　川芎12g　石菖蒲12g　郁金10g　老葱3根　生姜9g`, acu: `百会、四神聪、血海、膈俞、合谷`, kw: ['肌肤甲错', '舌暗有瘀斑', '脉细涩', '言语不利'] }
+    ]
+  },
+  {
+    id: 'yuzheng', name: '郁证', alias: '抑郁、焦虑', dept: '脑病科', type: '门诊病历',
+    wm: ['抑郁症', '焦虑症', '抑郁状态', '焦虑状态'],
+    sig: ['情绪低落', '兴趣减退', '焦虑', '烦躁', '失眠'],
+    def: `郁证是由于情志不舒、气机郁滞所致，以心情抑郁、情绪不宁、胸部满闷、胁肋胀痛，或易怒易哭，或咽中如有异物梗塞为主要表现的一类病证。`,
+    cause: `病位在肝，涉及心、脾、肾。基本病机为气机郁滞、脏腑功能失调；初起多为气郁，久则化火、化痰、伤血、伤阴。`,
+    chief: '情绪低落伴胸胁胀满半年。',
+    hpi: `患者半年来因工作变动出现情绪低落，兴趣减退，胸胁胀满，善太息，心烦易怒，入睡困难，食欲下降，体重减轻3kg。`,
+    exam: `神志清，表情忧郁，言语减少。心肺腹未见异常，神经系统未见阳性体征。PHQ-9评分14分，GAD-7评分10分。`,
+    aux: `血常规、甲状腺功能、肝肾功能未见异常。`,
+    wmDx: `抑郁状态（中度）`,
+    adv: `1. 心理疏导，必要时精神科会诊。2. 规律运动，每周3至5次。3. 家属陪伴，关注自伤风险。4. 忌酒，规律作息。5. 2周复诊评估。`,
+    src: `《中医内科学》（第十版）郁证`,
+    synd: [
+      { name: '肝气郁结证', points: `精神抑郁，情绪不宁，胸胁胀痛，善太息，脘闷嗳气，舌淡红、苔薄白，脉弦。`, treat: '疏肝解郁，理气畅中', formula: '柴胡疏肝散加减', herbs: `柴胡10g　香附10g　郁金10g　陈皮10g　枳壳10g　川芎10g　白芍15g　合欢皮15g　炙甘草6g`, acu: `太冲、期门、内关、膻中、肝俞，泻法`, kw: ['胸胁胀痛', '善太息', '嗳气', '脉弦'] },
+      { name: '气郁化火证', points: `情绪急躁易怒，胸胁胀满，口苦而干，目赤，头痛，大便干，舌红、苔黄，脉弦数。`, treat: '疏肝解郁，清肝泻火', formula: '丹栀逍遥散加减', herbs: `牡丹皮10g　栀子10g　柴胡10g　当归12g　白芍15g　白术12g　茯苓15g　薄荷6g（后下）`, acu: `太冲、行间、侠溪、内关、肝俞，泻法`, kw: ['急躁易怒', '口苦', '目赤', '大便干', '脉弦数'] },
+      { name: '痰气郁结证', points: `精神抑郁，胸部闷塞，胁肋胀满，咽中如有物梗塞、吞之不下、咯之不出，舌苔白腻，脉弦滑。`, treat: '行气开郁，化痰散结', formula: '半夏厚朴汤加减', herbs: `法半夏10g　厚朴10g　紫苏叶10g　茯苓15g　陈皮10g　郁金10g　合欢皮15g`, acu: `膻中、内关、丰隆、太冲、天突`, kw: ['咽中如有物', '胸闷', '苔白腻', '脉弦滑'] },
+      { name: '心脾两虚证', points: `多思善疑，心悸胆怯，失眠健忘，食少纳呆，面色少华，舌淡、苔薄白，脉细弱。`, treat: '健脾养心，益气补血', formula: '归脾汤加减', herbs: `党参15g　黄芪30g　炒白术12g　当归12g　酸枣仁20g　远志10g　茯神15g　龙眼肉12g　炙甘草6g`, acu: `心俞、脾俞、神门、三阴交、足三里，补法`, kw: ['心悸', '胆怯', '健忘', '食少', '脉细弱'] }
+    ]
+  },
+  {
+    id: 'xiongbi', name: '胸痹', alias: '冠心病、心绞痛', dept: '心病科', type: '入院记录',
+    wm: ['冠心病', '心绞痛', '心肌缺血', '胸痹'],
+    sig: ['胸闷', '胸痛', '胸痛彻背', '心悸', '气短'],
+    def: `胸痹是以胸部闷痛，甚则胸痛彻背、短气、喘息不得卧为主症的一种病证。轻者仅感胸闷如窒、呼吸欠畅，重者则有胸痛，严重者心痛彻背、背痛彻心。`,
+    cause: `病位在心，与肝、脾、肾相关。基本病机为心脉痹阻；本虚为心气、心阳、心阴不足，标实为血瘀、痰浊、气滞、寒凝。`,
+    chief: '阵发性胸闷胸痛3年，加重1周。',
+    hpi: `患者3年来反复出现活动后胸闷、胸痛，呈压榨样，向左肩背放射，休息3至5分钟可缓解。1周前因劳累发作频繁，每日2至3次，伴气短、心悸。`,
+    exam: `BP 146/90mmHg。心率76次/分，律齐，未闻及病理性杂音。双肺呼吸音清。舌紫暗、苔薄白，脉弦涩。`,
+    aux: `心电图：II、III、aVF导联ST段压低0.1mV；肌钙蛋白正常；冠脉CTA：右冠状动脉中段狭窄约70%。`,
+    wmDx: `1. 冠心病 稳定型心绞痛　2. 高血压病2级`,
+    adv: `1. 心病科护理常规，二级护理，低盐低脂饮食。2. 监测胸痛发作频率、性质及持续时间。3. 随身携带硝酸甘油，胸痛持续15分钟不缓解立即就诊。4. 避免劳累、饱餐、寒冷刺激及情绪激动。5. 规律服药，控制血压、血脂。`,
+    src: `《中医内科学》（第十版）胸痹`,
+    synd: [
+      { name: '心血瘀阻证', points: `胸部刺痛，固定不移，入夜尤甚，甚则胸痛彻背，舌紫暗、苔薄白，脉弦涩。`, treat: '活血化瘀，通脉止痛', formula: '血府逐瘀汤加减', herbs: `桃仁10g　红花6g　当归12g　川芎10g　赤芍12g　丹参20g　郁金10g　枳壳10g　川牛膝15g`, acu: `膻中、内关、血海、膈俞、心俞，平补平泻`, kw: ['刺痛', '固定不移', '入夜尤甚', '舌紫暗', '脉弦涩'] },
+      { name: '痰浊闭阻证', points: `胸闷如窒而痛，气短，肢体沉重，形体肥胖，痰多，舌淡、苔白腻，脉滑。`, treat: '通阳泄浊，豁痰宣痹', formula: '栝蒌薤白半夏汤合涤痰汤加减', herbs: `栝蒌15g　薤白10g　法半夏10g　胆南星6g　陈皮10g　茯苓15g　竹茹12g　石菖蒲12g`, acu: `膻中、内关、中脘、丰隆、足三里`, kw: ['胸闷如窒', '肢体沉重', '痰多', '苔白腻', '脉滑'] },
+      { name: '气阴两虚证', points: `胸闷隐痛，时作时止，心悸气短，倦怠懒言，面色少华，舌红少苔，脉细弱。`, treat: '益气养阴，活血通络', formula: '生脉散合人参养荣汤加减', herbs: `党参15g　黄芪30g　麦冬15g　五味子6g　当归12g　白芍15g　丹参20g　炙甘草6g`, acu: `内关、心俞、足三里、三阴交、气海，补法`, kw: ['隐痛', '气短', '倦怠', '面色少华', '脉细弱'] },
+      { name: '心肾阳虚证', points: `胸闷气短，甚则胸痛彻背，心悸汗出，畏寒肢冷，腰膝酸软，舌淡胖、苔白，脉沉细。`, treat: '温补心肾，振奋心阳', formula: '参附汤合右归饮加减', herbs: `人参10g（另煎）　附子10g（先煎）　肉桂6g　熟地黄15g　山茱萸12g　杜仲12g　桂枝10g　炙甘草6g`, acu: `关元、气海、心俞、肾俞、内关，补法`, kw: ['畏寒肢冷', '腰膝酸软', '汗出', '舌淡胖', '脉沉细'] }
+    ]
+  },
+  {
+    id: 'xinji', name: '心悸', alias: '心慌、心律失常', dept: '心病科', type: '门诊病历',
+    wm: ['心律失常', '房颤', '早搏', '心动过速', '心悸'],
+    sig: ['心悸', '心慌', '胸闷', '脉结代'],
+    def: `心悸是指患者自觉心中悸动、惊惕不安，甚则不能自主的一种病证，临床多呈发作性，每因情志波动或劳累过度而发作。`,
+    cause: `病位在心，与肝、脾、肾相关。基本病机为心神不宁；本虚为气血阴阳亏虚，标实为痰饮、瘀血、火邪扰心。`,
+    chief: '阵发性心慌2年，加重2周。',
+    hpi: `患者2年来反复出现心慌，多于劳累或情绪激动时发作，持续数分钟至半小时，伴胸闷、头晕。2周前发作频繁，每日1至2次。`,
+    exam: `BP 128/80mmHg。心率82次/分，律不齐，可闻及早搏3至5次/分。舌淡红、苔薄白，脉结代。`,
+    aux: `心电图：频发室性早搏；动态心电图：24小时室早4200次；心脏超声未见结构性异常。`,
+    wmDx: `频发室性早搏`,
+    adv: `1. 避免浓茶、咖啡、烟酒。2. 规律作息，避免熬夜及情绪激动。3. 监测脉搏，记录发作时间。4. 必要时心内科评估抗心律失常治疗。5. 定期复查动态心电图。`,
+    src: `《中医内科学》（第十版）心悸`,
+    synd: [
+      { name: '心虚胆怯证', points: `心悸不宁，善惊易恐，坐卧不安，少寐多梦，舌淡、苔薄白，脉细略数。`, treat: '镇惊定志，养心安神', formula: '安神定志丸加减', herbs: `党参15g　茯神15g　远志10g　石菖蒲12g　龙齿30g（先煎）　酸枣仁20g　琥珀粉1.5g（冲服）`, acu: `神门、内关、心俞、胆俞、丘墟`, kw: ['善惊易恐', '坐卧不安', '少寐多梦', '脉细略数'] },
+      { name: '心血不足证', points: `心悸气短，头晕目眩，失眠健忘，面色少华，神疲乏力，舌淡、苔薄白，脉细弱。`, treat: '补血养心，益气安神', formula: '归脾汤加减', herbs: `党参15g　黄芪30g　炒白术12g　当归12g　龙眼肉12g　酸枣仁20g　远志10g　茯神15g　炙甘草6g`, acu: `心俞、脾俞、足三里、三阴交、神门，补法`, kw: ['气短', '头晕目眩', '健忘', '面色少华', '脉细弱'] },
+      { name: '阴虚火旺证', points: `心悸易惊，心烦失眠，五心烦热，口干盗汗，思虑劳心则加重，舌红少津、苔少，脉细数。`, treat: '滋阴降火，养心安神', formula: '天王补心丹合朱砂安神丸加减', herbs: `生地黄15g　天冬12g　麦冬15g　玄参15g　酸枣仁20g　柏子仁12g　远志10g　丹参20g　黄连6g`, acu: `心俞、肾俞、太溪、神门、内关，补泻兼施`, kw: ['五心烦热', '盗汗', '口干', '舌红少津', '脉细数'] },
+      { name: '心阳不振证', points: `心悸不安，胸闷气短，动则尤甚，面色苍白，形寒肢冷，舌淡、苔白，脉虚弱或沉细。`, treat: '温补心阳，安神定悸', formula: '桂枝甘草龙骨牡蛎汤合参附汤加减', herbs: `桂枝10g　炙甘草6g　生龙骨30g（先煎）　生牡蛎30g（先煎）　人参10g（另煎）　附子10g（先煎）`, acu: `心俞、关元、气海、内关、神门，补法`, kw: ['胸闷气短', '形寒肢冷', '面色苍白', '脉虚弱'] }
+    ]
+  },
+  {
+    id: 'xinshuai', name: '心衰病', alias: '心力衰竭、心功能不全', dept: '心病科', type: '入院记录',
+    wm: ['心力衰竭', '心衰', '心功能不全', '慢性心力衰竭'],
+    sig: ['喘促', '水肿', '夜间阵发性呼吸困难', '不能平卧', '乏力'],
+    def: `心衰病是以心悸、气喘、水肿为主症的一种病证，多由心病日久，心气、心阳亏虚，血脉瘀阻，水饮内停所致。`,
+    cause: `病位在心，涉及肺、脾、肾。基本病机为本虚标实：本虚为心气、心阳亏虚，标实为血瘀、水饮。`,
+    chief: '反复喘促、双下肢水肿1年，加重1周。',
+    hpi: `患者1年来反复出现活动后喘促、双下肢水肿，休息可减轻。1周前受凉后加重，夜间不能平卧，需高枕卧位，尿少。`,
+    exam: `BP 142/88mmHg。端坐位，口唇轻度发绀，双肺底可闻及湿啰音，心率96次/分，律齐，双下肢凹陷性水肿（++）。NT-proBNP 3200pg/mL。`,
+    aux: `心脏超声：左室射血分数38%，左室扩大；胸片：肺淤血。`,
+    wmDx: `慢性心力衰竭急性加重（NYHA Ⅳ级）`,
+    adv: `1. 心病科护理常规，一级护理，半卧位，限制钠盐及液体入量。2. 记录24小时出入量、体重。3. 监测血压、心率、血氧。4. 避免受凉、劳累。5. 规范利尿、扩血管及心衰四联治疗。`,
+    src: `《中医内科学》（第十版）心衰病`,
+    synd: [
+      { name: '气虚血瘀证', points: `心悸气短，动则尤甚，胸闷胸痛，神疲乏力，自汗，舌淡暗或有瘀斑，脉沉细或结代。`, treat: '益气活血，化瘀通络', formula: '保元汤合血府逐瘀汤加减', herbs: `黄芪30g　党参15g　桂枝10g　桃仁10g　红花6g　当归12g　川芎10g　丹参20g　炙甘草6g`, acu: `内关、心俞、膻中、气海、足三里，补法`, kw: ['气短', '乏力', '自汗', '舌淡暗', '脉沉细'] },
+      { name: '阳虚水泛证', points: `喘促气急，甚则不能平卧，双下肢水肿，畏寒肢冷，尿少，舌淡胖、苔白滑，脉沉细。`, treat: '温阳利水，泻肺平喘', formula: '真武汤合葶苈大枣泻肺汤加减', herbs: `附子10g（先煎）　茯苓15g　白术12g　白芍15g　葶苈子15g（包煎）　大枣5枚　桂枝10g　泽泻15g`, acu: `关元、气海、肾俞、水分、阴陵泉，补法`, kw: ['不能平卧', '水肿', '畏寒肢冷', '尿少', '舌淡胖'] },
+      { name: '气阴两虚证', points: `心悸气短，动则加重，乏力，口干，五心烦热，自汗盗汗，舌红少苔，脉细数。`, treat: '益气养阴，活血利水', formula: '生脉散加减', herbs: `人参10g（另煎）　麦冬15g　五味子6g　黄芪30g　丹参20g　茯苓15g　泽泻15g`, acu: `内关、心俞、太溪、三阴交、足三里，补法`, kw: ['口干', '五心烦热', '盗汗', '舌红少苔', '脉细数'] }
+    ]
+  }
+);
+KB.push(
+  {
+    id: 'kesou', name: '咳嗽', alias: '急慢性支气管炎、上呼吸道感染', dept: '肺病科', type: '门诊病历',
+    wm: ['急性支气管炎', '慢性支气管炎', '上呼吸道感染', '支气管炎', '咳嗽'],
+    sig: ['咳嗽', '咳痰', '咽痒', '气急'],
+    def: `咳嗽是指外感或内伤等因素致肺失宣肃、肺气上逆，以咳嗽或咳痰为主要表现的病证。有声无痰为咳，有痰无声为嗽，临床多痰声并见。`,
+    cause: `病位在肺，与肝、脾、肾相关。外感多为六淫外袭犯肺，内伤多为脏腑功能失调、内及于肺。基本病机为肺失宣肃、肺气上逆。`,
+    chief: '咳嗽咳痰反复1个月，加重3天。',
+    hpi: `患者1个月来反复咳嗽，初为干咳，后咳白色黏痰，晨起及夜间为甚，伴咽痒、鼻塞。3天前受凉后加重，咳嗽连声，痰量增多，无发热、胸痛及咯血。曾自服“急支糖浆”效果不佳。刻下：咳嗽气急，咳痰色白，咽痒，纳可，二便调。`,
+    exam: `T 36.8℃　P 84次/分　R 20次/分　BP 126/78mmHg。咽部稍充血，扁桃体无肿大。双肺呼吸音粗，未闻及干湿性啰音。舌淡红、苔薄白，脉浮紧。`,
+    aux: `血常规：WBC 8.6×10⁹/L，N 68%；胸片：双肺纹理增粗，未见实变影。`,
+    wmDx: `急性支气管炎`,
+    adv: `1. 注意保暖，避免受凉及烟雾刺激。2. 多饮温水，饮食清淡，忌辛辣油腻。3. 监测体温及痰色、痰量变化。4. 中药7剂，每日1剂，分2次温服。5. 3至5日复诊，出现高热、胸痛、气促时及时就诊。`,
+    src: `《中医内科学》（第十版）咳嗽`,
+    synd: [
+      { name: '风寒袭肺证', points: `咳嗽声重，气急，咽痒，咳痰稀薄色白，伴鼻塞流清涕、恶寒无汗，舌淡红、苔薄白，脉浮紧。`, treat: '疏风散寒，宣肺止咳', formula: '三拗汤合止嗽散加减', herbs: `麻黄6g　杏仁10g　桔梗10g　紫菀12g　百部12g　白前10g　陈皮10g　荆芥10g　炙甘草6g`, acu: `肺俞、列缺、合谷、风门，泻法，留针20分钟`, kw: ['咳痰稀白', '鼻塞', '流清涕', '恶寒', '脉浮紧'] },
+      { name: '风热犯肺证', points: `咳嗽频剧，气粗，喉痛，咳痰黏稠色黄，鼻流黄涕，口渴，舌尖红、苔薄黄，脉浮数。`, treat: '疏风清热，宣肺止咳', formula: '桑菊饮加减', herbs: `桑叶12g　菊花10g　杏仁10g　连翘12g　薄荷6g（后下）　桔梗10g　芦根20g　前胡10g　甘草6g`, acu: `肺俞、列缺、合谷、曲池，泻法`, kw: ['痰黄黏稠', '喉痛', '口渴', '苔薄黄', '脉浮数'] },
+      { name: '痰热郁肺证', points: `咳嗽气息粗促，痰多黏稠色黄，咯吐不爽，胸胁胀满，面赤身热，舌红、苔黄腻，脉滑数。`, treat: '清热肃肺，豁痰止咳', formula: '清金化痰汤加减', herbs: `黄芩10g　栀子10g　桑白皮15g　瓜蒌15g　浙贝母10g　知母10g　麦冬12g　茯苓15g　桔梗10g　甘草6g`, acu: `肺俞、尺泽、丰隆、鱼际，泻法`, kw: ['痰黄黏稠', '胸胁胀满', '面赤', '苔黄腻', '脉滑数'] },
+      { name: '肺阴亏耗证', points: `干咳少痰，痰中夹血，咽干口燥，午后潮热，颧红盗汗，舌红少苔，脉细数。`, treat: '滋阴润肺，化痰止咳', formula: '沙参麦冬汤加减', herbs: `北沙参15g　麦冬15g　玉竹12g　桑叶12g　天花粉12g　川贝母6g（研末冲服）　地骨皮12g　甘草6g`, acu: `肺俞、太溪、三阴交、列缺，补法`, kw: ['干咳少痰', '咽干', '潮热', '颧红', '舌红少苔'] }
+    ]
+  },
+  {
+    id: 'feizhang', name: '肺胀', alias: '慢性阻塞性肺疾病、肺气肿', dept: '肺病科', type: '入院记录',
+    wm: ['慢性阻塞性肺疾病', 'COPD', '肺气肿', '慢性支气管炎伴肺气肿', '肺心病'],
+    sig: ['喘息', '气短', '咳嗽', '咳痰', '桶状胸', '不能平卧'],
+    def: `肺胀是多种慢性肺系疾病反复发作、迁延不愈，导致肺气胀满、不能敛降，以胸部膨满、憋闷如塞、喘息气促、咳嗽痰多，甚则唇甲紫绀、心悸浮肿为主要表现的病证。`,
+    cause: `病位在肺，涉及脾、肾、心。基本病机为肺气壅滞、肺不敛降；本虚为肺脾肾亏虚，标实为痰浊、水饮、血瘀。`,
+    chief: '反复咳喘20年，加重伴双下肢浮肿1周。',
+    hpi: `患者20年来反复咳嗽咳痰，每于冬春季节加重，逐年出现活动后气短。1周前受凉后咳喘加重，痰多色白黏稠，动则喘甚，夜间不能平卧，双下肢浮肿，尿少。长期吸氧及吸入噻托溴铵治疗。`,
+    exam: `T 36.9℃　P 96次/分　R 24次/分　BP 138/82mmHg。桶状胸，肋间隙增宽，双肺叩诊过清音，呼吸音减弱，可闻及干湿性啰音。颈静脉充盈，双下肢凹陷性水肿（+）。唇甲轻度紫绀，舌暗、苔白滑，脉沉细。`,
+    aux: `肺功能：FEV1/FVC 52%，FEV1占预计值48%；血气分析：PaO₂ 62mmHg，PaCO₂ 46mmHg；胸片：双肺透亮度增高，肺纹理稀疏，右下肺动脉干增宽。`,
+    wmDx: `1. 慢性阻塞性肺疾病急性加重　2. 慢性肺源性心脏病　3. Ⅱ型呼吸衰竭`,
+    adv: `1. 肺病科护理常规，一级护理，半卧位，持续低流量吸氧（1至2L/min）。2. 监测血氧、呼吸频率及咳痰情况。3. 低盐饮食，记录24小时出入量。4. 遵医嘱抗感染、解痉平喘、化痰。5. 避风寒，戒烟，练习缩唇呼吸及腹式呼吸。`,
+    src: `《中医内科学》（第十版）肺胀；COPD中医诊疗方案`,
+    synd: [
+      { name: '痰浊壅肺证', points: `胸膺满闷，短气喘息，咳嗽痰多，痰黏色白，纳呆，舌淡、苔白腻，脉弦滑。`, treat: '化痰降气，健脾益肺', formula: '苏子降气汤合三子养亲汤加减', herbs: `紫苏子10g　白芥子6g　莱菔子10g　法半夏10g　厚朴10g　陈皮10g　茯苓15g　白术12g　葶苈子12g（包煎）`, acu: `肺俞、膻中、丰隆、中脘、足三里`, kw: ['痰多', '胸闷', '纳呆', '苔白腻', '脉弦滑'] },
+      { name: '痰热郁肺证', points: `咳逆喘息，胸满气粗，痰黄黏稠，面赤，身热，口干，舌红、苔黄腻，脉滑数。`, treat: '清肺化痰，降逆平喘', formula: '桑白皮汤加减', herbs: `桑白皮15g　黄芩10g　栀子10g　浙贝母10g　瓜蒌15g　杏仁10g　苏子10g　葶苈子12g（包煎）`, acu: `肺俞、尺泽、丰隆、定喘，泻法`, kw: ['痰黄', '面赤', '身热', '苔黄腻', '脉滑数'] },
+      { name: '肺肾气虚证', points: `呼吸浅短难续，声低气怯，甚则张口抬肩，倚息不能平卧，腰膝酸软，舌淡、苔白，脉沉细弱。`, treat: '补肺纳肾，降气平喘', formula: '平喘固本汤加减', herbs: `党参15g　黄芪30g　五味子6g　熟地黄15g　山茱萸12g　紫苏子10g　法半夏10g　沉香3g（后下）　蛤蚧粉3g（冲服）`, acu: `肺俞、肾俞、气海、关元、太溪，补法`, kw: ['气短', '倚息不能平卧', '腰膝酸软', '脉沉细弱'] },
+      { name: '阳虚水泛证', points: `喘促气急，不能平卧，下肢浮肿，甚则一身悉肿，畏寒肢冷，尿少，舌淡胖、苔白滑，脉沉细。`, treat: '温肾健脾，化饮利水', formula: '真武汤合五苓散加减', herbs: `附子10g（先煎）　茯苓15g　白术12g　白芍15g　桂枝10g　泽泻15g　猪苓15g　葶苈子12g（包煎）`, acu: `关元、气海、肾俞、水分、阴陵泉，补法`, kw: ['浮肿', '不能平卧', '畏寒肢冷', '尿少', '舌淡胖'] }
+    ]
+  },
+  {
+    id: 'weitong', name: '胃痛', alias: '胃脘痛、慢性胃炎、胃溃疡', dept: '脾胃病科', type: '门诊病历',
+    wm: ['慢性胃炎', '胃溃疡', '十二指肠溃疡', '功能性消化不良', '胃食管反流', '胃痛'],
+    sig: ['胃痛', '胃脘痛', '上腹痛', '嘈杂', '反酸', '嗳气'],
+    def: `胃痛又称胃脘痛，是以上腹胃脘部近心窝处疼痛为主要表现的病证，常伴嘈杂、反酸、嗳气、恶心等。`,
+    cause: `病位在胃，与肝、脾相关。基本病机为胃气郁滞、失于和降；实证多为寒邪、食滞、肝气犯胃，虚证多为脾胃虚寒、胃阴不足。`,
+    chief: '胃脘胀痛反复2年，加重1周。',
+    hpi: `患者2年来反复出现胃脘胀痛，多于餐后加重，伴嗳气、反酸、嘈杂，情绪紧张时明显。1周前因饮食不节加重，胃脘胀满，痛连两胁，嗳气频作，纳呆。曾服“奥美拉唑”可暂缓。`,
+    exam: `BP 122/78mmHg。腹平软，剑突下轻压痛，无反跳痛，肝脾肋下未及，墨菲征阴性。舌淡红、苔薄白，脉弦。`,
+    aux: `胃镜：慢性非萎缩性胃炎伴糜烂；幽门螺杆菌阳性；腹部超声未见异常。`,
+    wmDx: `1. 慢性胃炎伴糜烂　2. 幽门螺杆菌感染`,
+    adv: `1. 饮食规律，少量多餐，忌辛辣、生冷、浓茶及酒。2. 保持情绪舒畅，避免紧张焦虑。3. 遵医嘱根除幽门螺杆菌。4. 中药7剂，每日1剂，分2次温服。5. 若出现黑便、呕血、体重明显下降，及时复诊。`,
+    src: `《中医内科学》（第十版）胃痛`,
+    synd: [
+      { name: '寒邪客胃证', points: `胃痛暴作，恶寒喜暖，得温痛减，遇寒加重，口淡不渴，喜热饮，舌淡、苔薄白，脉弦紧。`, treat: '温胃散寒，行气止痛', formula: '良附丸合香苏散加减', herbs: `高良姜10g　香附10g　紫苏叶10g　陈皮10g　木香6g　荜茇6g　炙甘草6g`, acu: `中脘、足三里、内关、梁丘，温针灸`, kw: ['暴作', '得温痛减', '遇寒加重', '口淡', '脉弦紧'] },
+      { name: '饮食伤胃证', points: `胃脘胀满疼痛，嗳腐吞酸，恶心呕吐，吐后痛减，大便不爽，舌苔厚腻，脉滑。`, treat: '消食导滞，和胃止痛', formula: '保和丸加减', herbs: `山楂15g　神曲12g　莱菔子10g　法半夏10g　陈皮10g　茯苓15g　连翘10g　炒麦芽15g`, acu: `中脘、足三里、内关、天枢，泻法`, kw: ['嗳腐吞酸', '恶心呕吐', '吐后痛减', '苔厚腻', '脉滑'] },
+      { name: '肝气犯胃证', points: `胃脘胀痛，痛连两胁，遇烦恼则痛作或加重，嗳气、矢气则舒，舌淡红、苔薄白，脉弦。`, treat: '疏肝解郁，理气止痛', formula: '柴胡疏肝散加减', herbs: `柴胡10g　香附10g　枳壳10g　陈皮10g　川芎10g　白芍15g　郁金10g　延胡索10g　炙甘草6g`, acu: `中脘、足三里、内关、太冲、期门，泻法`, kw: ['痛连两胁', '嗳气', '遇烦加重', '脉弦'] },
+      { name: '脾胃虚寒证', points: `胃痛隐隐，绵绵不休，喜温喜按，空腹痛甚、得食则缓，神疲纳呆，手足不温，舌淡、苔白，脉虚弱。`, treat: '温中健脾，和胃止痛', formula: '黄芪建中汤加减', herbs: `黄芪30g　桂枝10g　白芍20g　生姜9g　大枣5枚　饴糖30g（烊化）　炙甘草6g`, acu: `中脘、足三里、脾俞、胃俞、关元，补法或温针灸`, kw: ['隐痛', '喜温喜按', '空腹痛甚', '手足不温', '脉虚弱'] }
+    ]
+  },
+  {
+    id: 'xiexie', name: '泄泻', alias: '腹泻、肠炎、肠易激综合征', dept: '脾胃病科', type: '门诊病历',
+    wm: ['急性肠炎', '慢性肠炎', '肠易激综合征', '腹泻', '消化不良'],
+    sig: ['腹泻', '大便稀溏', '腹痛', '里急后重', '水样便'],
+    def: `泄泻是以排便次数增多、粪质稀溏或完谷不化，甚至如水样为主症的病症。感受外邪、饮食所伤、情志失调及脏腑虚弱均可致病。`,
+    cause: `病位在肠，与脾、肝、肾相关。基本病机为脾虚湿盛、传化失常，湿邪内盛为主要病理因素。`,
+    chief: '腹泻反复发作半年，加重5天。',
+    hpi: `患者半年来反复腹泻，每日3至4次，便稀溏，夹黏液，多于进食生冷或情绪紧张后发作。5天前因聚餐后加重，每日6至7次，水样便，伴脐周腹痛、肠鸣，便后痛减，纳差乏力。`,
+    exam: `T 36.7℃　P 82次/分　BP 118/74mmHg。腹平软，脐周轻压痛，肠鸣音活跃（约8次/分）。舌淡、体胖有齿痕、苔白腻，脉濡缓。`,
+    aux: `大便常规：未见白细胞及红细胞；大便培养阴性；血常规未见异常。`,
+    wmDx: `肠易激综合征（腹泻型）`,
+    adv: `1. 饮食清淡易消化，忌生冷、油腻及乳制品。2. 注意腹部保暖，避免受凉。3. 规律作息，调节情绪。4. 中药7剂，每日1剂，分2次温服。5. 记录排便次数与性状，若出现血便、发热、体重下降及时就诊。`,
+    src: `《中医内科学》（第十版）泄泻`,
+    synd: [
+      { name: '寒湿内盛证', points: `泄泻清稀，甚则如水样，腹痛肠鸣，脘闷食少，或兼恶寒发热、头痛，舌淡、苔白腻，脉濡缓。`, treat: '芳香化湿，解表散寒', formula: '藿香正气散加减', herbs: `藿香12g　紫苏叶10g　白芷10g　大腹皮12g　茯苓15g　白术12g　陈皮10g　厚朴10g　桔梗10g`, acu: `天枢、足三里、中脘、阴陵泉，平补平泻`, kw: ['水样便', '肠鸣', '恶寒', '苔白腻', '脉濡缓'] },
+      { name: '湿热伤中证', points: `泄泻急迫，粪色黄褐臭秽，肛门灼热，腹痛，烦热口渴，小便短黄，舌红、苔黄腻，脉滑数。`, treat: '清热利湿，分利止泻', formula: '葛根黄芩黄连汤加减', herbs: `葛根20g　黄芩10g　黄连6g　白头翁12g　秦皮10g　茯苓15g　车前子15g（包煎）　甘草6g`, acu: `天枢、上巨虚、足三里、曲池，泻法`, kw: ['急迫', '黄褐臭秽', '肛门灼热', '口渴', '苔黄腻'] },
+      { name: '脾虚湿盛证', points: `大便时溏时泻，迁延反复，食少，食后脘闷不舒，稍进油腻则便次增多，面色少华，舌淡、苔白，脉细弱。`, treat: '健脾益气，化湿止泻', formula: '参苓白术散加减', herbs: `党参15g　炒白术12g　茯苓15g　山药15g　白扁豆15g　莲子12g　薏苡仁30g　砂仁6g（后下）　炙甘草6g`, acu: `脾俞、胃俞、天枢、足三里、三阴交，补法或艾灸`, kw: ['时溏时泻', '食少', '稍进油腻加重', '面色少华', '脉细弱'] },
+      { name: '肾阳虚衰证', points: `黎明前脐腹作痛，肠鸣即泻，泻后则安，形寒肢冷，腰膝酸软，舌淡、苔白，脉沉细。`, treat: '温肾健脾，固涩止泻', formula: '四神丸加减', herbs: `补骨脂12g　肉豆蔻10g　吴茱萸6g　五味子6g　附子10g（先煎）　党参15g　炒白术12g`, acu: `肾俞、命门、关元、天枢、足三里，补法或温针灸`, kw: ['黎明前', '泻后则安', '形寒肢冷', '腰膝酸软', '脉沉细'] }
+    ]
+  },
+  {
+    id: 'bianmi', name: '便秘', alias: '大便秘结、功能性便秘', dept: '脾胃病科', type: '门诊病历',
+    wm: ['功能性便秘', '习惯性便秘', '便秘', '肠功能紊乱'],
+    sig: ['便秘', '大便干结', '排便困难', '便次减少', '腹胀'],
+    def: `便秘是指大肠传导功能失常，导致大便秘结、排便周期延长，或周期不长但粪质干结、排便艰难，或粪质不硬但便而不畅的病证。`,
+    cause: `病位在大肠，与脾、胃、肝、肾相关。基本病机为大肠传导失常；实秘多为热结、气滞、寒凝，虚秘多为气血阴阳亏虚。`,
+    chief: '大便秘结3年，加重2周。',
+    hpi: `患者3年来排便困难，每3至4日1次，粪质干硬如羊屎，需用力努挣，便后乏力，伴腹胀、口干。2周前症状加重，5日未解，纳可，小便黄。`,
+    exam: `BP 130/82mmHg。腹平软，左下腹可触及条索状粪块，轻压痛，肠鸣音减弱。舌红、苔薄黄，脉弦细。`,
+    aux: `腹部平片未见肠梗阻；结肠镜：未见器质性病变。`,
+    wmDx: `功能性便秘`,
+    adv: `1. 增加膳食纤维及水分摄入，每日饮水1500至2000ml。2. 定时排便，早餐后如厕，勿忍便。3. 每日腹部顺时针按摩及适量运动。4. 中药7剂，每日1剂，分2次温服。5. 忌长期自行使用刺激性泻药。`,
+    src: `《中医内科学》（第十版）便秘`,
+    synd: [
+      { name: '热秘证', points: `大便干结，腹胀腹痛，口干口臭，面赤身热，小便短赤，舌红、苔黄燥，脉滑数。`, treat: '泻热导滞，润肠通便', formula: '麻子仁丸加减', herbs: `火麻仁15g　大黄6g（后下）　枳实10g　厚朴10g　杏仁10g　白芍15g　生地黄15g`, acu: `天枢、支沟、曲池、上巨虚，泻法`, kw: ['腹胀腹痛', '口干口臭', '面赤身热', '苔黄燥', '脉滑数'] },
+      { name: '气秘证', points: `大便不畅，欲解不得，甚则少腹作胀、嗳气频作，胸胁满闷，舌淡红、苔薄白，脉弦。`, treat: '顺气导滞，降逆通便', formula: '六磨汤加减', herbs: `沉香3g（后下）　木香6g　槟榔10g　乌药10g　枳实10g　大黄6g（后下）　柴胡10g`, acu: `天枢、支沟、太冲、期门，泻法`, kw: ['欲解不得', '嗳气', '胸胁满闷', '脉弦'] },
+      { name: '气虚秘证', points: `大便并不干硬，虽有便意但排便困难，用力努挣则汗出气短，便后乏力、面白神疲，舌淡、苔薄白，脉弱。`, treat: '益气润肠，健脾升阳', formula: '黄芪汤加减', herbs: `黄芪30g　火麻仁15g　陈皮10g　党参15g　炒白术15g　升麻6g　炙甘草6g`, acu: `天枢、足三里、气海、脾俞，补法`, kw: ['不干硬', '努挣汗出', '气短', '面白神疲', '脉弱'] },
+      { name: '血虚秘证', points: `大便干结，面色无华，头晕目眩，心悸气短，失眠健忘，舌淡、苔薄白，脉细。`, treat: '养血润燥，滋阴通便', formula: '润肠丸加减', herbs: `当归15g　生地黄15g　火麻仁15g　桃仁10g　枳壳10g　何首乌15g　肉苁蓉12g`, acu: `天枢、足三里、血海、三阴交，补法`, kw: ['面色无华', '头晕目眩', '心悸', '舌淡', '脉细'] }
+    ]
+  },
+  {
+    id: 'xietong', name: '胁痛', alias: '慢性肝炎、胆囊炎、胆结石', dept: '肝病科', type: '门诊病历',
+    wm: ['慢性乙型肝炎', '脂肪肝', '胆囊炎', '胆石症', '肝功能异常', '胁痛'],
+    sig: ['胁痛', '右胁痛', '肝区痛', '口苦', '腹胀'],
+    def: `胁痛是以一侧或两侧胁肋部疼痛为主要表现的病证，多见于肝胆疾病。`,
+    cause: `病位在肝胆，与脾、胃、肾相关。基本病机为肝络失和、不通则痛；实证多为肝郁气滞、肝胆湿热、瘀血阻络，虚证多为肝络失养。`,
+    chief: '右胁隐痛反复1年，加重10天。',
+    hpi: `患者1年来反复右胁隐痛，每因劳累或情志不遂加重，伴口苦、腹胀、乏力。10天前因饮酒后加重，右胁胀痛，痛引后背，厌油腻，纳差，小便黄。既往脂肪肝病史。`,
+    exam: `BP 128/80mmHg。皮肤巩膜未见黄染，腹平软，右胁下轻压痛，肝区叩击痛（±），墨菲征阴性。舌红、苔黄腻，脉弦滑。`,
+    aux: `肝功能：ALT 86U/L，AST 58U/L，GGT 92U/L；腹部超声：中度脂肪肝，胆囊壁增厚；乙肝五项阴性。`,
+    wmDx: `1. 非酒精性脂肪性肝炎　2. 慢性胆囊炎`,
+    adv: `1. 戒酒，低脂饮食，控制体重。2. 规律作息，避免劳累及情绪波动。3. 每周监测体重，3个月复查肝功能及腹部超声。4. 中药7剂，每日1剂，分2次温服。5. 若出现黄疸、右上腹剧痛、发热，及时就诊。`,
+    src: `《中医内科学》（第十版）胁痛`,
+    synd: [
+      { name: '肝郁气滞证', points: `胁肋胀痛，走窜不定，甚则连及胸背，情志不遂则加重，胸闷，善太息，嗳气，舌淡红、苔薄白，脉弦。`, treat: '疏肝理气，和络止痛', formula: '柴胡疏肝散加减', herbs: `柴胡10g　香附10g　枳壳10g　陈皮10g　川芎10g　白芍15g　郁金10g　川楝子6g　炙甘草6g`, acu: `期门、太冲、阳陵泉、内关，泻法`, kw: ['胀痛', '走窜不定', '善太息', '嗳气', '脉弦'] },
+      { name: '肝胆湿热证', points: `胁肋胀痛，触痛明显，口苦口黏，胸闷纳呆，恶心呕吐，小便黄赤，舌红、苔黄腻，脉弦滑数。`, treat: '清热利湿，疏肝利胆', formula: '龙胆泻肝汤加减', herbs: `龙胆草6g　黄芩10g　栀子10g　柴胡10g　茵陈20g　泽泻15g　车前子15g（包煎）　郁金10g　金钱草30g`, acu: `期门、日月、阳陵泉、太冲、阴陵泉，泻法`, kw: ['口苦口黏', '胸闷纳呆', '小便黄赤', '苔黄腻', '脉弦滑数'] },
+      { name: '肝络失养证', points: `胁肋隐痛，绵绵不已，遇劳加重，口干咽燥，心中烦热，头晕目眩，舌红少苔，脉弦细数。`, treat: '养阴柔肝，和络止痛', formula: '一贯煎加减', herbs: `北沙参15g　麦冬15g　当归12g　生地黄15g　枸杞子15g　川楝子6g　白芍15g　女贞子12g`, acu: `期门、肝俞、太溪、三阴交，补法`, kw: ['隐痛', '遇劳加重', '口干咽燥', '舌红少苔', '脉弦细数'] }
+    ]
+  },
+  {
+    id: 'shuizheng', name: '水肿', alias: '肾炎、肾病综合征、水肿', dept: '肾病科', type: '入院记录',
+    wm: ['肾病综合征', '慢性肾小球肾炎', '肾功能不全', '水肿', '低蛋白血症'],
+    sig: ['水肿', '双下肢水肿', '眼睑浮肿', '尿少', '蛋白尿'],
+    def: `水肿是体内水液潦留、泛溢肌肤，以头面、眼睑、四肢、腹背甚至全身浮肿为主要表现的病证，严重者可伴胸水、腹水。`,
+    cause: `病位在肺、脾、肾，与三焦、膀胱相关。基本病机为肺失宣降、脾失传输、肾失开合，水液代谢失常。`,
+    chief: '双下肢水肿反复半年，加重伴眼睑浮肿1周。',
+    hpi: `患者半年来反复出现双下肢水肿，晨轻暮重，按之凹陷，伴乏力、腰酸。1周前水肿加重，延及眼睑及颜面，尿量减少，每日约800ml，尿中泡沫增多。`,
+    exam: `BP 152/94mmHg。颜面及眼睑浮肿，双下肢凹陷性水肿（++），腹软，移动性浊音阴性。舌淡胖、苔白滑，脉沉细。`,
+    aux: `尿常规：蛋白（+++），24小时尿蛋白4.6g；血生化：白蛋白24g/L，肌酐96μmol/L；血脂：总胆固醇7.8mmol/L。`,
+    wmDx: `1. 肾病综合征　2. 高血压病2级`,
+    adv: `1. 肾病科护理常规，二级护理，低盐低脂优质蛋白饮食，限制水钠摄入。2. 记录24小时出入量及体重、血压。3. 监测尿蛋白、白蛋白、肾功能及凝血功能。4. 防感染、防血栓，避免劳累。5. 避风寒，慎起居，忌咸食。`,
+    src: `《中医内科学》（第十版）水肿`,
+    synd: [
+      { name: '风水相搏证', points: `眼睑浮肿，继则四肢及全身皆肿，来势迅速，多有恶寒发热、肢节酸楚、小便不利，舌淡红、苔薄白，脉浮紧。`, treat: '疏风清热，宣肺行水', formula: '越婢加术汤加减', herbs: `麻黄6g　生石膏30g（先煎）　白术12g　生姜9g　大枣5枚　泽泻15g　茯苓15g　连翘12g`, acu: `肺俞、列缺、合谷、水分、阴陵泉`, kw: ['眼睑浮肿', '来势迅速', '恶寒发热', '小便不利', '脉浮紧'] },
+      { name: '脾阳虚衰证', points: `身肿日久，腰以下为甚，按之凹陷不易恢复，脘腹胀满，纳减便溏，面色不华，神疲肢冷，舌淡、苔白腻，脉沉缓。`, treat: '健脾温阳，利水消肿', formula: '实脾饮加减', herbs: `附子10g（先煎）　干姜6g　白术12g　茯苓15g　草果6g　厚朴10g　大腹皮12g　木瓜12g　炙甘草6g`, acu: `脾俞、足三里、水分、阴陵泉、三阴交，补法或艾灸`, kw: ['腰以下为甚', '按之凹陷', '便溏', '神疲肢冷', '脉沉缓'] },
+      { name: '肾阳衰微证', points: `水肿反复不已，面浮身肿，腰以下尤甚，按之凹陷不起，腰部冷痛酸重，尿量减少，畏寒肢冷，舌淡胖、苔白，脉沉细。`, treat: '温肾助阳，化气行水', formula: '济生肾气丸合真武汤加减', herbs: `附子10g（先煎）　桂枝10g　熟地黄15g　山茱萸12g　山药15g　茯苓15g　泽泻15g　车前子15g（包煎）　牛膝15g`, acu: `肾俞、命门、关元、水分、三阴交，补法或艾灸`, kw: ['腰以下尤甚', '腰部冷痛', '尿量减少', '畏寒肢冷', '舌淡胖'] }
+    ]
+  },
+  {
+    id: 'xiaoke', name: '消渴', alias: '糖尿病、血糖升高', dept: '内分泌科', type: '门诊病历',
+    wm: ['2型糖尿病', '1型糖尿病', '糖尿病', '血糖升高', '糖耐量异常'],
+    sig: ['多饮', '多食', '多尿', '体重下降', '口渴', '乏力'],
+    def: `消渴是以多饮、多食、多尿、乏力、消瘦，或尿有甜味为特征的病证。根据病位及症状轻重，又有上消、中消、下消之分。`,
+    cause: `病位在肺、胃、肾，尤以肾为关键。基本病机为阴津亏损、燥热偏盛，久则气阴两伤、阴阳俱损，并可兼见血瘀。`,
+    chief: '口渴多饮伴乏力消瘦1年。',
+    hpi: `患者1年来口干多饮，每日饮水约3000ml，多食易饥，夜尿3至4次，体重下降约8kg，伴乏力、视物模糊。体检发现空腹血糖9.8mmol/L，未规律治疗。`,
+    exam: `BP 136/86mmHg。BMI 24.6。神志清，皮肤弹性稍差，双下肢未见水肿，足背动脉搏动可。舌红、苔薄黄，脉弦细。`,
+    aux: `空腹血糖9.8mmol/L，餐后2小时血糖15.6mmol/L，HbA1c 9.2%；尿常规：尿糖（++），酮体阴性；眼底：未见明显糖尿病视网膜病变。`,
+    wmDx: `2型糖尿病（血糖控制不佳）`,
+    adv: `1. 糖尿病饮食，控制总热量，定时定量，主食粗细搭配。2. 每周至少150分钟中等强度运动，避免空腹运动。3. 每日监测空腹及餐后血糖，记录血糖日记。4. 中药7剂，每日1剂，分2次温服。5. 每月复查糖化血红蛋白，每年查眼底、尿微量白蛋白及足部。`,
+    src: `《中医内科学》（第十版）消渴；2型糖尿病中医诊疗指南`,
+    synd: [
+      { name: '肺热津伤证（上消）', points: `口渴多饮，口舌干燥，尿频量多，烦热多汗，舌边尖红、苔薄黄，脉洪数。`, treat: '清热润肺，生津止渴', formula: '消渴方加减', herbs: `天花粉20g　黄连6g　生地黄15g　麦冬15g　葛根20g　知母10g　芦根30g`, acu: `肺俞、心俞、太渊、鱼际、廉泉，平补平泻`, kw: ['口渴多饮', '口舌干燥', '尿频量多', '烦热', '脉洪数'] },
+      { name: '胃热炽盛证（中消）', points: `多食易饥，口渴，尿多，形体消瘦，大便干结，舌红、苔黄燥，脉滑实有力。`, treat: '清胃泻火，养阴增液', formula: '玉女煎加减', herbs: `生石膏30g（先煎）　知母10g　麦冬15g　生地黄15g　黄连6g　栀子10g　牛膝15g`, acu: `胃俞、中脘、足三里、内庭、三阴交，泻法`, kw: ['多食易饥', '形体消瘦', '大便干结', '苔黄燥', '脉滑实有力'] },
+      { name: '肾阴亏虚证（下消）', points: `尿频量多，浑浊如脂膏或尿甜，腰膝酸软，乏力，头晕耳鸣，口干唇燥，皮肤干燥瘙痒，舌红少苔，脉细数。`, treat: '滋阴固肾，润燥止渴', formula: '六味地黄丸加减', herbs: `熟地黄15g　山茱萸12g　山药15g　牡丹皮10g　泽泻12g　茯苓15g　知母10g　黄柏10g`, acu: `肾俞、关元、太溪、三阴交、然谷，补法`, kw: ['尿频量多', '腰膝酸软', '头晕耳鸣', '皮肤瘙痒', '舌红少苔'] },
+      { name: '阴阳两虚证', points: `小便频数，浑浊如膏，甚则饮一溲一，腰膝酸软，畏寒肢冷，面色㿠白，耳轮干枯，舌淡、苔白，脉沉细无力。`, treat: '滋阴温阳，补肾固摄', formula: '金匮肾气丸加减', herbs: `附子10g（先煎）　肉桂6g　熟地黄15g　山茱萸12g　山药15g　茯苓15g　泽泻12g　牡丹皮10g`, acu: `肾俞、命门、关元、气海、太溪，补法或艾灸`, kw: ['饮一溲一', '畏寒肢冷', '面色㿠白', '耳轮干枯', '脉沉细无力'] }
+    ]
+  },
+  {
+    id: 'yingbing', name: '瘿病', alias: '甲状腺功能亢进、甲状腺结节', dept: '内分泌科', type: '门诊病历',
+    wm: ['甲状腺功能亢进', '甲亢', '甲状腺结节', '桥本甲状腺炎', '甲状腺肿'],
+    sig: ['颈前肿大', '心悸', '手抖', '多汗', '消瘦', '突眼'],
+    def: `瘿病是以颈前喉结两旁结块肿大为主要特征的病证，可伴心悸、多汗、手抖、消瘦、突眼等。`,
+    cause: `病位在颈前，与肝、脾、心、肾相关。基本病机为气滞、痰凝、血瘀结于颈前；肝火旺盛、气阴两伤为常见转归。`,
+    chief: '颈前肿大伴心悸手抖半年。',
+    hpi: `患者半年来发现颈前肿大，逐渐加重，伴心悸、怕热多汗、双手细颤、多食易饥、体重下降5kg、性情急躁、夜寐不安。`,
+    exam: `BP 138/76mmHg，心率104次/分，律齐。颈前可触及弥漫性肿大，质软，未闻及血管杂音。双手平伸可见细颤。突眼度轻度。舌红、苔薄黄，脉弦数。`,
+    aux: `甲状腺功能：FT3 12.6pmol/L，FT4 32.8pmol/L，TSH 0.01mIU/L；甲状腺超声：甲状腺弥漫性肿大，血流丰富；TRAb阳性。`,
+    wmDx: `甲状腺功能亢进症（Graves病）`,
+    adv: `1. 低碘饮食，忌海带、紫菜等含碘食物。2. 注意休息，避免劳累及情绪激动。3. 监测心率、体重及甲状腺功能，每月复查。4. 中药7剂，每日1剂，分2次温服。5. 若出现高热、心率明显增快、烦躁等，警惕甲状腺危象，立即急诊。`,
+    src: `《中医内科学》（第十版）瘿病`,
+    synd: [
+      { name: '气郁痰阻证', points: `颈前喉结两旁结块肿大，质软不痛，颈部觉胀，胸闷，喜太息，病情常随情志波动，舌淡红、苔薄白，脉弦。`, treat: '理气舒郁，化痰消瘿', formula: '四海舒郁丸加减', herbs: `昆布12g　海藻12g　柴胡10g　郁金10g　香附10g　陈皮10g　浙贝母10g　夏枯草15g`, acu: `天突、膻中、内关、太冲、丰隆，平补平泻`, kw: ['质软不痛', '颈部觉胀', '胸闷', '喜太息', '脉弦'] },
+      { name: '痰结血瘀证', points: `颈前肿块，按之较硬或有结节，经久未消，胸闷，纳差，舌暗、苔薄白或白腻，脉沉细。`, treat: '理气活血，化痰消瘿', formula: '海藻玉壶汤加减', herbs: `海藻12g　昆布12g　陈皮10g　法半夏10g　浙贝母10g　当归12g　川芎10g　三棱10g　莪术10g`, acu: `天突、膻中、丰隆、血海、膈俞`, kw: ['按之较硬', '有结节', '经久未消', '舌暗', '脉沉细'] },
+      { name: '肝火旺盛证', points: `颈前轻度或中度肿大，眼球突出，手指颤抖，面部烘热，口苦，急躁易怒，舌红、苔薄黄，脉弦数。`, treat: '清肝泻火，消瘿散结', formula: '栀子清肝汤合藻药散加减', herbs: `栀子10g　牡丹皮10g　柴胡10g　白芍15g　夏枯草15g　龙胆草6g　浙贝母10g　牡蛎30g（先煎）`, acu: `太冲、行间、风池、内关、天突，泻法`, kw: ['眼球突出', '手指颤抖', '面部烘热', '急躁易怒', '脉弦数'] },
+      { name: '心肝阴虚证', points: `颈前肿块或大或小，质软，心悸不宁，心烦少寐，易出汗，手指颤动，眼干目眩，倦怠乏力，舌红少苔，脉细数。`, treat: '滋阴降火，宁心柔肝', formula: '天王补心丹加减', herbs: `生地黄15g　玄参15g　麦冬15g　天冬12g　酸枣仁20g　柏子仁12g　白芍15g　枸杞子15g`, acu: `心俞、肝俞、太溪、三阴交、神门，补法`, kw: ['心悸不宁', '心烦少寐', '易出汗', '眼干目眩', '舌红少苔'] }
+    ]
+  }
+);
+KB.push(
+  {
+    id: 'jingbi', name: '颈痹', alias: '颈椎病、颈肩综合征', dept: '骨伤科', type: '门诊病历',
+    wm: ['颈椎病', '神经根型颈椎病', '颈肩综合征', '颈椎间盘突出'],
+    sig: ['颈痛', '颈肩痛', '上肢麻木', '头晕', '颈项僵硬'],
+    def: `颈痹是因颈部长期劳损或感受风寒湿邪，致经脉痹阻、气血不畅，以颈项疼痛僵硬、肩臂麻木疼痛，甚则头晕为主要表现的病证。`,
+    cause: `病位在颈项筋脉，与肝、肾、脾相关。基本病机为经络痹阻、气血不通，或肝肾亏虚、筋骨失养；外因多为风寒湿邪与慢性劳损。`,
+    chief: '颈项疼痛伴右上肢麻木2个月。',
+    hpi: `患者2个月来颈项疼痛僵硬，晨起及久坐后加重，伴右上肢外侧麻木、酸胀，偶有头晕，无行走不稳及踩棉感。长期伏案工作。`,
+    exam: `颈椎生理曲度变直，C4至C6棘旁压痛，右侧臂丛神经牵拉试验阳性，椎间孔挤压试验阳性，霍夫曼征阴性。舌淡、苔白腻，脉弦紧。`,
+    aux: `颈椎MRI：C4/5、C5/6椎间盘突出，硬膜囊受压；颈椎正侧位片：生理曲度变直，椎间隙变窄。`,
+    wmDx: `1. 神经根型颈椎病　2. 颈椎间盘突出（C4/5、C5/6）`,
+    adv: `1. 避免长期低头伏案，每工作1小时活动颈部。2. 避免颈部受凉及高枕，睡姿以仰卧或侧卧低枕为宜。3. 适度进行颈椎屈伸、旋转及肩胛肌锻炼，忌猛力甩头。4. 中药7剂，每日1剂，分2次温服。5. 若出现四肢无力、行走不稳、大小便异常，及时就诊。`,
+    src: `《中医骨伤科学》颈痹；颈椎病中医诊疗方案`,
+    synd: [
+      { name: '寒湿阻络证', points: `颈肩疼痛，遇寒加重，得温则减，颈项僵硬，活动不利，舌淡、苔白腻，脉弦紧。`, treat: '祛风散寒，除湿通络', formula: '羌活胜湿汤加减', herbs: `羌活10g　独活10g　防风10g　川芎10g　葛根20g　桂枝10g　威灵仙15g　炙甘草6g`, acu: `颈夹脊、风池、大椎、肩井、后溪，温针或艾灸`, kw: ['遇寒加重', '得温则减', '颈项僵硬', '苔白腻', '脉弦紧'] },
+      { name: '气滞血瘀证', points: `颈项刺痛，固定不移，夜间加重，上肢麻木，舌紫暗或有瘀斑，脉弦涩。`, treat: '活血化瘀，行气止痛', formula: '身痛逐瘀汤加减', herbs: `桃仁10g　红花6g　当归12g　川芎10g　秦艽10g　羌活10g　葛根20g　地龙10g　炙甘草6g`, acu: `颈夹脊、肩井、曲池、外关、膈俞，泻法`, kw: ['刺痛', '固定不移', '夜间加重', '舌紫暗', '脉弦涩'] },
+      { name: '肝肾不足证', points: `颈肩酸痛，绵绵不休，劳累后加重，伴头晕耳鸣、腰膝酸软，舌淡、苔薄白，脉沉细。`, treat: '补益肝肾，强筋通络', formula: '独活寄生汤加减', herbs: `独活10g　桑寄生15g　杜仲12g　牛膝15g　熟地黄15g　当归12g　白芍15g　葛根20g　党参15g`, acu: `颈夹脊、肝俞、肾俞、太溪、悬钟，补法`, kw: ['酸痛', '劳累加重', '头晕耳鸣', '腰膝酸软', '脉沉细'] }
+    ]
+  },
+  {
+    id: 'yaobi', name: '腰痹', alias: '腰椎间盘突出、腰肌劳损', dept: '骨伤科', type: '门诊病历',
+    wm: ['腰椎间盘突出', '腰椎间盘突出症', '腰肌劳损', '腰椎退行性变', '腰痛'],
+    sig: ['腰痛', '腰腿痛', '下肢放射痛', '腰部活动受限', '腿麻'],
+    def: `腰痹是因腰部劳损、外伤或感受外邪，致腰部经络痹阻、气血不畅，以腰部疼痛、活动受限，甚则下肢放射痛为主要表现的病证。`,
+    cause: `病位在腰脊及下肢经络，与肾、肝、脾相关。基本病机为经络痹阻、不通则痛；肾虚为本，寒湿、瘀血为标。`,
+    chief: '腰痛伴左下肢放射痛1个月。',
+    hpi: `患者1个月前搬重物后出现腰痛，呈刺痛，活动受限，3天后左下肢后侧放射痛，行走及咳嗽时加重，卧床休息可缓解。无下肢无力及大小便障碍。`,
+    exam: `腰椎生理曲度变直，L4/5棘旁压痛，左侧直腿抬高试验40°阳性，加强试验阳性，左足背外侧感觉减退。舌暗、苔白腻，脉弦。`,
+    aux: `腰椎MRI：L4/5椎间盘突出，压迫左侧神经根；腰椎正侧位片：腰椎退行性变。`,
+    wmDx: `腰椎间盘突出症（L4/5）`,
+    adv: `1. 急性期卧床休息，避免弯腰负重及久坐。2. 症状缓解后加强腰背肌功能锻炼（五点支撑、小燕飞）。3. 注意腰部保暖，控制体重。4. 中药7剂，每日1剂，分2次温服。5. 若出现下肢肌力下降、马尾综合征表现，立即就诊。`,
+    src: `《中医骨伤科学》腰痹；腰椎间盘突出症中医诊疗方案`,
+    synd: [
+      { name: '寒湿腰痛证', points: `腰部冷痛重着，转侧不利，遇阴雨或受寒加重，得温则减，舌淡、苔白腻，脉沉紧。`, treat: '散寒除湿，温经通络', formula: '甘姜苓术汤加减', herbs: `干姜10g　茯苓15g　炒白术15g　炙甘草6g　独活10g　桂枝10g　牛膝15g　杜仲12g`, acu: `肾俞、大肠俞、腰阳关、委中、阿是穴，温针灸`, kw: ['冷痛重着', '转侧不利', '遇寒加重', '苔白腻', '脉沉紧'] },
+      { name: '瘀血腰痛证', points: `腰痛如刺，痛有定处，日轻夜重，腰部活动受限，舌紫暗或有瘀斑，脉弦涩。`, treat: '活血化瘀，通络止痛', formula: '身痛逐瘀汤加减', herbs: `桃仁10g　红花6g　当归12g　川芎10g　牛膝15g　地龙10g　秦艽10g　香附10g　炙甘草6g`, acu: `肾俞、大肠俞、膈俞、委中、承山，泻法`, kw: ['刺痛', '痛有定处', '日轻夜重', '舌紫暗', '脉弦涩'] },
+      { name: '肾虚腰痛证', points: `腰部酸痛，绵绵不休，劳累后加重，卧则减轻，偏阳虚者畏寒肢冷，偏阴虚者心烦失眠，舌淡或红，脉沉细或细数。`, treat: '补肾强腰，通络止痛', formula: '偏阳虚用右归丸、偏阴虚用左归丸加减', herbs: `熟地黄15g　山茱萸12g　山药15g　杜仲12g　续断15g　牛膝15g　桑寄生15g　狗脊15g`, acu: `肾俞、命门、关元、腰阳关、太溪，补法`, kw: ['酸痛', '劳累加重', '卧则减轻', '腰膝酸软', '脉沉细'] }
+    ]
+  },
+  {
+    id: 'xibi', name: '膝痹', alias: '膝骨关节炎、退行性膝关节炎', dept: '骨伤科', type: '门诊病历',
+    wm: ['膝骨关节炎', '退行性膝关节炎', '膝关节骨性关节炎', '膝关节滑膜炎'],
+    sig: ['膝痛', '膝关节疼痛', '屈伸不利', '上下楼梯痛', '膝关节肿胀'],
+    def: `膝痹是因年老肝肾亏虚、筋骨失养，或感受风寒湿邪、劳损外伤，致膝部经络痹阻，以膝关节疼痛、肿胀、屈伸不利、活动受限为主要表现的病证。`,
+    cause: `病位在膝部筋骨，与肝、肾、脾相关。基本病机为肝肾亏虚、筋骨失养，兼风寒湿瘀痹阻；本虚标实贯穿始终。`,
+    chief: '双膝疼痛反复3年，加重1个月。',
+    hpi: `患者3年来双膝疼痛，上下楼梯及蹲起时明显，晨起僵硬约10分钟，活动后稍缓解。1个月前受凉后加重，右膝肿胀，屈伸不利，行走距离缩短。`,
+    exam: `双膝轻度内翻，右膝肿胀，髌骨研磨试验阳性，浮髌试验弱阳性，关节活动度0至110度，股四头肌轻度萎缩。舌淡、苔白腻，脉沉细。`,
+    aux: `双膝X线：关节间隙变窄，软骨下骨硬化，边缘骨赘形成；右膝超声：滑膜增厚，少量积液。`,
+    wmDx: `1. 双膝骨关节炎　2. 右膝关节滑膜炎`,
+    adv: `1. 控制体重，减少爬山、爬楼及深蹲，改用游泳、骑车等低负荷运动。2. 加强股四头肌等长收缩训练，每日2至3组。3. 注意膝部保暖，可佩戴护膝。4. 中药7剂，每日1剂，分2次温服。5. 若关节肿胀明显、活动受限加重，及时复诊。`,
+    src: `《中医骨伤科学》膝痹；膝骨关节炎中医诊疗方案`,
+    synd: [
+      { name: '寒湿痹阻证', points: `膝关节冷痛，遇寒加重，得温则减，屈伸不利，舌淡、苔白腻，脉沉紧。`, treat: '温经散寒，除湿通络', formula: '独活寄生汤加减', herbs: `独活10g　桑寄生15g　桂枝10g　细辛3g　牛膝15g　杜仲12g　当归12g　威灵仙15g　炙甘草6g`, acu: `犊鼻、内膝眼、鹤顶、阳陵泉、阴陵泉，温针灸`, kw: ['冷痛', '遇寒加重', '屈伸不利', '苔白腻', '脉沉紧'] },
+      { name: '湿热痹阻证', points: `膝关节红肿热痛，触之灼热，屈伸不利，身热口黏，舌红、苔黄腻，脉滑数。`, treat: '清热利湿，通络止痛', formula: '四妙丸加减', herbs: `苍术10g　黄柏10g　薏苡仁30g　牛膝15g　防己10g　赤芍15g　木瓜12g　忍冬藤30g`, acu: `犊鼻、内膝眼、阳陵泉、阴陵泉、曲池，泻法`, kw: ['红肿热痛', '触之灼热', '身热', '苔黄腻', '脉滑数'] },
+      { name: '肝肾亏虚证', points: `膝关节隐痛，绵绵不休，劳累后加重，腰膝酸软，头晕耳鸣，舌淡、苔薄白，脉沉细弱。`, treat: '补益肝肾，强筋壮骨', formula: '左归丸加减', herbs: `熟地黄15g　山茱萸12g　山药15g　枸杞子15g　牛膝15g　杜仲12g　桑寄生15g　骨碎补15g`, acu: `犊鼻、内膝眼、肝俞、肾俞、太溪、悬钟，补法`, kw: ['隐痛', '劳累加重', '腰膝酸软', '头晕耳鸣', '脉沉细弱'] }
+    ]
+  },
+  {
+    id: 'jianbi', name: '肩痹', alias: '肩周炎、肩关节周围炎', dept: '骨伤科', type: '门诊病历',
+    wm: ['肩周炎', '肩关节周围炎', '冻结肩', '肩袖损伤'],
+    sig: ['肩痛', '肩关节疼痛', '抬举困难', '夜间痛', '肩关节活动受限'],
+    def: `肩痹又称肩凝、漏肩风，因感受风寒湿邪或劳损、外伤，致肩部经络痹阻，以肩部疼痛、活动受限，甚则肩臂肌肉萎缩为主要表现的病证。`,
+    cause: `病位在肩部筋脉，与肝、肾、脾相关。基本病机为经络痹阻、气血不畅，或气血亏虚、筋脉失养。`,
+    chief: '右肩疼痛伴抬举困难3个月。',
+    hpi: `患者3个月来右肩疼痛，夜间为甚，穿衣、梳头及后背动作受限，遇寒加重，得温稍缓。无明显外伤史。`,
+    exam: `右肩关节外展约80°，前屈约90°，后伸约20°，外旋明显受限，肩峰下及结节间沟压痛，三角肌轻度萎缩。舌淡、苔白，脉沉细。`,
+    aux: `右肩MRI：肩袖未见明显撕裂，关节囊增厚，肩峰下滑囊少量积液。`,
+    wmDx: `右肩关节周围炎`,
+    adv: `1. 坚持肩关节功能锻炼（爬墙、钟摆、体后拉手），每日2至3次。2. 注意肩部保暖，避免提重物及过度劳累。3. 夜间避免患侧受压。4. 中药7剂，每日1剂，分2次温服。5. 若锻炼1个月无改善或外伤后疼痛剧烈，及时复诊。`,
+    src: `《中医骨伤科学》肩痹；肩周炎中医诊疗方案`,
+    synd: [
+      { name: '风寒湿痹证', points: `肩部疼痛，遇寒加重，得温则减，肩部沉重，活动受限，舌淡、苔白腻，脉弦紧。`, treat: '祛风散寒，除湿通络', formula: '蠲痹汤加减', herbs: `羌活10g　独活10g　桂枝10g　海风藤15g　桑枝20g　当归12g　川芎10g　伸筋草15g　炙甘草6g`, acu: `肩髃、肩髎、肩贞、天宗、曲池、条口，温针灸`, kw: ['遇寒加重', '得温则减', '肩部沉重', '苔白腻', '脉弦紧'] },
+      { name: '气血亏虚证', points: `肩部酸痛，绵绵不休，劳累后加重，肩臂肌肉萎缩，面色少华，神疲乏力，舌淡、苔薄白，脉细弱。`, treat: '益气养血，舒筋通络', formula: '黄芪桂枝五物汤加减', herbs: `黄芪30g　桂枝10g　白芍20g　生姜9g　大枣5枚　当归12g　鸡血藤20g　桑枝20g`, acu: `肩髃、肩髎、臂臑、足三里、气海，补法`, kw: ['酸痛', '劳累加重', '肌肉萎缩', '面色少华', '脉细弱'] }
+    ]
+  },
+  {
+    id: 'guwei', name: '骨痿', alias: '骨质疏松、骨量减少', dept: '骨伤科', type: '门诊病历',
+    wm: ['骨质疏松', '骨质疏松症', '骨量减少', '绝经后骨质疏松'],
+    sig: ['骨痛', '腰背痛', '身高变矮', '易骨折', '乏力'],
+    def: `骨痿是因肾精亏虚、骨失所养，以骨脆易折、腰背疼痛、身高变矮、乏力为主要表现的病证，多见于绝经后女性及老年人。`,
+    cause: `病位在骨，与肾、脾、肝相关。基本病机为肾精亏虚、骨髓失充，脾胃虚弱、气血生化乏源，久则骨枯髓减。`,
+    chief: '腰背酸痛伴乏力2年，加重3个月。',
+    hpi: `患者2年来腰背酸痛，逐渐加重，身高下降约3cm，轻微跌倒后曾有腕部骨折。3个月来腰背痛明显，久坐、翻身时加重，伴乏力、夜尿增多。绝经8年。`,
+    exam: `BP 132/80mmHg。脊柱轻度后凸，T10至L2棘旁叩痛，四肢肌力正常。舌淡、苔薄白，脉沉细。`,
+    aux: `骨密度：腰椎T值-2.8，股骨颈T值-2.5；胸腰椎X线：T11、L1椎体压缩性改变；血钙2.2mmol/L，25-OH-VD 18ng/ml。`,
+    wmDx: `1. 骨质疏松症（重度）　2. 维生素D缺乏　3. 胸腰椎压缩性骨折`,
+    adv: `1. 补充钙剂及维生素D，每日晒太阳15至30分钟。2. 适度负重运动及平衡训练，防跌倒。3. 居家防滑，夜间照明，避免提重物及弯腰搬物。4. 中药7剂，每日1剂，分2次温服。5. 每年复查骨密度，遵医嘱抗骨质疏松治疗。`,
+    src: `《中医骨伤科学》骨痿；原发性骨质疏松症中医诊疗方案`,
+    synd: [
+      { name: '肾精亏虚证', points: `腰背酸痛，膝软乏力，头晕耳鸣，发脱齿摇，舌淡、苔薄白，脉沉细。`, treat: '补肾填精，强筋壮骨', formula: '右归丸加减', herbs: `熟地黄15g　山茱萸12g　山药15g　枸杞子15g　杜仲12g　淫羊藿12g　骨碎补15g　鹿角胶10g（烊化）`, acu: `肾俞、命门、关元、太溪、悬钟，补法或艾灸`, kw: ['腰背酸痛', '膝软乏力', '头晕耳鸣', '发脱齿摇', '脉沉细'] },
+      { name: '脾肾两虚证', points: `腰背酸痛，神疲乏力，纳差便溏，畏寒肢冷，舌淡胖、苔白，脉沉弱。`, treat: '健脾益气，补肾壮骨', formula: '参苓白术散合右归丸加减', herbs: `党参15g　炒白术12g　茯苓15g　山药15g　熟地黄15g　杜仲12g　淫羊藿12g　骨碎补15g`, acu: `脾俞、肾俞、足三里、关元、悬钟，补法或艾灸`, kw: ['神疲乏力', '纳差便溏', '畏寒肢冷', '舌淡胖', '脉沉弱'] }
+    ]
+  },
+  {
+    id: 'bizheng', name: '痹证', alias: '类风湿关节炎、痛风、骨关节炎', dept: '风湿病科', type: '入院记录',
+    wm: ['类风湿关节炎', '风湿性关节炎', '痛风', '痛风性关节炎', '强直性脊柱炎', '骨关节炎'],
+    sig: ['关节疼痛', '关节肿胀', '晨僵', '关节屈伸不利', '游走性疼痛'],
+    def: `痹证是因风、寒、湿、热等邪气闭阻经络，影响气血运行，导致肢体筋骨、关节、肌肉疼痛、重着、酸楚、麻木，或关节屈伸不利、肿大变形为主要表现的病证。`,
+    cause: `病位在肢体关节经络，与肝、肾、脾相关。基本病机为经络闭阻、气血不通；正虚卫外不固为内在基础，风寒湿热痰瘀为外在条件。`,
+    chief: '四肢多关节疼痛肿胀反复5年，加重2周。',
+    hpi: `患者5年来双手近端指间关节、腕关节对称性疼痛肿胀，晨僵约1小时，活动后减轻。2周前受凉后加重，双腕、双膝肿痛，屈伸不利，伴乏力、低热。长期服甲氨蝶呤及叶酸。`,
+    exam: `T 37.6℃　BP 128/78mmHg。双手第2、3近端指间关节梭形肿胀，压痛（+），双腕及双膝肿胀，皮温稍高。舌红、苔黄腻，脉滑数。`,
+    aux: `血沉48mm/h，CRP 26mg/L，RF 126IU/ml，抗CCP抗体阳性；双手X线：关节间隙变窄，边缘侵蚀。`,
+    wmDx: `1. 类风湿关节炎（活动期）　2. 轻度贫血`,
+    adv: `1. 风湿病科护理常规，二级护理，卧床休息，关节制动于功能位。2. 注意关节保暖，避免受凉、受潮及冷水刺激。3. 缓解期适度关节功能锻炼，防肌肉萎缩。4. 监测血常规、肝肾功能及炎性指标。5. 中药7剂，每日1剂，分2次温服。`,
+    src: `《中医内科学》（第十版）痹证；类风湿关节炎中医诊疗指南`,
+    synd: [
+      { name: '风寒湿痹证（行痹）', points: `肢体关节疼痛，游走不定，屈伸不利，遇风冷加重，舌淡、苔薄白，脉浮弦。`, treat: '祛风通络，散寒除湿', formula: '防风汤加减', herbs: `防风10g　麻黄6g　桂枝10g　秦艽10g　葛根20g　当归12g　威灵仙15g　羌活10g`, acu: `阿是穴、曲池、外关、阳陵泉、风门，泻法`, kw: ['游走不定', '遇风加重', '屈伸不利', '脉浮弦'] },
+      { name: '风寒湿痹证（痛痹）', points: `关节疼痛较剧，痛有定处，遇寒加重，得温则减，关节屈伸不利，舌淡、苔薄白，脉弦紧。`, treat: '温经散寒，祛风除湿', formula: '乌头汤加减', herbs: `制川乌6g（先煎）　麻黄6g　黄芪30g　白芍20g　桂枝10g　细辛3g　威灵仙15g　炙甘草6g`, acu: `阿是穴、关元、肾俞、足三里，温针灸`, kw: ['疼痛剧烈', '痛有定处', '遇寒加重', '得温则减', '脉弦紧'] },
+      { name: '风湿热痹证', points: `关节红肿热痛，活动不便，发热，口渴，烦闷不安，舌红、苔黄燥，脉滑数。`, treat: '清热通络，祛风除湿', formula: '白虎加桂枝汤合宣痹汤加减', herbs: `生石膏30g（先煎）　知母10g　桂枝10g　防己10g　薏苡仁30g　连翘12g　赤小豆15g　忍冬藤30g`, acu: `阿是穴、曲池、合谷、大椎、阴陵泉，泻法`, kw: ['红肿热痛', '发热', '口渴', '苔黄燥', '脉滑数'] },
+      { name: '痰瘀阻络证', points: `关节肿胀变形，屈伸不利，疼痛固定，肌肤麻木，舌紫暗、苔白腻，脉弦涩。`, treat: '化痰行瘀，蠲痹通络', formula: '双合汤加减', herbs: `桃仁10g　红花6g　当归12g　川芎10g　法半夏10g　陈皮10g　茯苓15g　白芥子6g　地龙10g`, acu: `阿是穴、丰隆、膈俞、血海、阳陵泉`, kw: ['肿胀变形', '疼痛固定', '肌肤麻木', '舌紫暗', '脉弦涩'] },
+      { name: '肝肾亏虚证', points: `关节疼痛日久，时轻时重，屈伸不利，肌肉萎缩，腰膝酸软，舌淡、苔薄白，脉沉细。`, treat: '补益肝肾，舒筋通络', formula: '独活寄生汤加减', herbs: `独活10g　桑寄生15g　杜仲12g　牛膝15g　熟地黄15g　当归12g　白芍15g　党参15g　秦艽10g`, acu: `肝俞、肾俞、足三里、太溪、阿是穴，补法`, kw: ['日久', '肌肉萎缩', '腰膝酸软', '屈伸不利', '脉沉细'] }
+    ]
+  },
+  {
+    id: 'ganmao', name: '感冒', alias: '伤风、上呼吸道感染', dept: '肺病科', type: '门诊病历',
+    wm: ['感冒', '普通感冒', '上呼吸道感染', '急性上呼吸道感染', '流感', '流行性感冒'],
+    sig: ['发热', '恶寒', '鼻塞', '流涕', '喷嚏', '咽痛', '咽痒', '头身疼痛'],
+    def: `感冒是感受触冒风邪所导致的常见外感疾病，临床表现以鼻塞、流涕、喷嚏、咳嗽、头痛、恶寒、发热、全身不适为特征。`,
+    cause: `病位在肺卫，基本病机为卫表不和、肺失宣肃。风邪乘袭，从口鼻或皮毛而入，与寒、热、暑湿相合而发病；素体气虚者卫外不固，易反复感邪。`,
+    chief: '发热恶寒伴鼻塞流涕2天。',
+    hpi: `患者2天前受凉后出现发热恶寒，鼻塞流清涕，喷嚏时作，咽痒咳嗽，痰白稀，无胸痛及呼吸困难。自服感冒药后症状缓解不明显。刻下：恶寒重，发热轻，无汗，头身疼痛，鼻塞声重，纳差，二便调。`,
+    exam: `T 38.1℃　P 92次/分　BP 118/76mmHg。神志清，精神可，咽部轻度充血，双侧扁桃体无肿大；双肺呼吸音清，未闻及干湿啰音。`,
+    aux: `血常规：WBC 6.8×10⁹/L，N 62%，L 30%；CRP 8mg/L；甲型/乙型流感病毒抗原阴性。`,
+    wmDx: `急性上呼吸道感染（病毒性）`,
+    adv: `1. 注意休息，多饮温水，饮食清淡易消化。2. 监测体温，体温≥38.5℃可物理降温或对症处理。3. 中药每日1剂，分2次温服。4. 避风寒，戴口罩，避免传染家人。5. 若持续高热超过3天、气促、胸痛，及时就诊。`,
+    src: `《中医内科学》（第十版）感冒；《中医病证诊断疗效标准》感冒`,
+    synd: [
+      { name: '风寒束表证', points: `恶寒重，发热轻，无汗，头身疼痛，鼻塞流清涕，喷嚏，咽痒咳嗽，痰白稀，舌淡、苔薄白，脉浮紧。`, treat: '辛温解表，宣肺散寒', formula: '荆防败毒散加减', herbs: `荆芥10g　防风10g　羌活10g　独活10g　柴胡10g　前胡10g　川芎10g　枳壳10g　桔梗10g　茯苓15g　炙甘草6g`, acu: `风池、大椎、列缺、合谷、风门，泻法，留针20分钟`, kw: ['恶寒重', '无汗', '流清涕', '头身痛', '脉浮紧'] },
+      { name: '风热犯表证', points: `身热较著，微恶风，汗少，头胀痛，鼻塞流黄涕，咽喉红肿疼痛，咳嗽痰黄，舌红、苔薄黄，脉浮数。`, treat: '辛凉解表，宣肺清热', formula: '银翘散加减', herbs: `金银花15g　连翘15g　薄荷6g（后下）　荆芥穗10g　淡豆豉10g　牛蒡子10g　桔梗10g　竹叶10g　芦根20g　甘草6g`, acu: `大椎、曲池、合谷、外关、少商（点刺放血），泻法`, kw: ['发热重', '黄涕', '咽痛', '痰黄', '脉浮数'] },
+      { name: '暑湿伤表证', points: `身热，微恶风，汗少，肢体酸重或疼痛，头昏重胀痛，心烦口渴，胸闷，恶心，小便短赤，舌苔薄黄腻，脉濡数。`, treat: '清暑祛湿解表', formula: '新加香薷饮加减', herbs: `香薷10g　金银花15g　连翘15g　厚朴10g　白扁豆15g　藿香10g　佩兰10g　荷叶15g`, acu: `大椎、曲池、合谷、阴陵泉、足三里，平补平泻`, kw: ['暑湿', '头昏重', '胸闷', '恶心', '苔黄腻', '脉濡数'] },
+      { name: '气虚感冒', points: `恶寒较甚，发热，无汗，头身疼痛，倦怠乏力，气短懒言，反复易感，舌淡、苔薄白，脉浮无力。`, treat: '益气解表', formula: '参苏饮加减', herbs: `党参15g　紫苏叶10g　葛根15g　前胡10g　法半夏10g　茯苓15g　陈皮10g　桔梗10g　枳壳10g　木香6g　炙甘草6g`, acu: `风池、大椎、足三里、气海，补泻兼施`, kw: ['气虚', '倦怠', '气短', '反复易感', '脉浮无力'] }
+    ]
+  },
+  {
+    id: 'linzheng', name: '淋证', alias: '尿路感染、泌尿系结石', dept: '肾病科', type: '门诊病历',
+    wm: ['尿路感染', '泌尿系感染', '膀胱炎', '肾盂肾炎', '尿道炎', '尿道综合征', '泌尿系结石', '肾结石', '输尿管结石'],
+    sig: ['尿频', '尿急', '尿痛', '排尿不畅', '血尿', '腰腹绞痛', '小便涩痛'],
+    def: `淋证是以小便频数短涩、淋沥刺痛、欲出未尽、小腹拘急，或痛引腰腹为主症的病证。`,
+    cause: `病位在肾与膀胱，与脾、肝相关。基本病机为湿热蕴结下焦、膀胱气化不利；病久可致脾肾两虚、虚实夹杂。`,
+    chief: '尿频尿急尿痛3天。',
+    hpi: `患者3天前无明显诱因出现尿频、尿急、尿痛，排尿时尿道灼热，小便色黄，无发热及腰痛，口干欲饮，纳可，大便调。`,
+    exam: `T 37.2℃　P 84次/分　BP 120/78mmHg。双肾区无叩击痛，下腹轻压痛，尿道口无分泌物。`,
+    aux: `尿常规：WBC 15~20/HP，RBC 3~5/HP，蛋白（±）；尿培养：大肠埃希菌生长；泌尿系超声未见结石。`,
+    wmDx: `急性单纯性膀胱炎`,
+    adv: `1. 多饮水，勤排尿，每日饮水量1500~2000ml。2. 忌辛辣刺激及饮酒。3. 注意会阴部清洁，治疗期间避免性生活。4. 中药每日1剂，分2次温服。5. 出现高热、腰痛、血尿加重及时就诊。`,
+    src: `《中医内科学》（第十版）淋证；《中医病证诊断疗效标准》淋证`,
+    synd: [
+      { name: '热淋证', points: `小便频数短涩，灼热刺痛，溺色黄赤，少腹拘急，口苦，大便秘结，舌红、苔黄腻，脉滑数。`, treat: '清热利湿通淋', formula: '八正散加减', herbs: `车前子15g（包煎）　瞿麦15g　萹蓄15g　滑石20g（包煎）　栀子10g　大黄6g（后下）　木通6g　灯心草3g　甘草6g`, acu: `膀胱俞、中极、阴陵泉、三阴交、行间，泻法`, kw: ['尿频', '尿急', '尿痛', '灼热', '苔黄腻', '脉滑数'] },
+      { name: '石淋证', points: `尿中夹砂石，排尿涩痛，或排尿突然中断，尿道窘迫疼痛，少腹拘急，腰腹绞痛，尿中带血，舌红、苔薄黄，脉弦或带数。`, treat: '清热利湿，排石通淋', formula: '石韦散加减', herbs: `石韦15g　冬葵子15g　瞿麦15g　滑石20g（包煎）　车前子15g（包煎）　金钱草30g　海金沙15g（包煎）　鸡内金15g`, acu: `膀胱俞、中极、阴陵泉、三阴交、肾俞，泻法`, kw: ['砂石', '排尿中断', '腰腹绞痛', '血尿', '脉弦'] },
+      { name: '气淋证', points: `郁怒之后小便涩滞，淋沥不畅，少腹胀满疼痛，情志不舒，舌苔薄白，脉弦。`, treat: '理气疏导，通淋利尿', formula: '沉香散加减', herbs: `沉香3g（后下）　石韦15g　滑石20g（包煎）　当归12g　橘皮10g　白芍15g　冬葵子15g　王不留行12g　甘草6g`, acu: `中极、膀胱俞、肝俞、太冲、三阴交，平补平泻`, kw: ['情志不舒', '少腹胀满', '淋沥不畅', '脉弦'] },
+      { name: '劳淋证', points: `小便不甚赤涩，溺痛不甚，时作时止，遇劳即发，腰膝酸软，神疲乏力，舌淡、苔薄白，脉细弱。`, treat: '补脾益肾', formula: '无比山药丸加减', herbs: `山药20g　熟地黄15g　山茱萸12g　菟丝子15g　肉苁蓉12g　杜仲12g　牛膝15g　茯苓15g　泽泻12g　五味子10g`, acu: `脾俞、肾俞、关元、足三里、三阴交，补法`, kw: ['遇劳即发', '腰膝酸软', '乏力', '时作时止', '脉细弱'] }
+    ]
+  }
+);
+/* ===================== 西医→中医 映射规则 ===================== */
+const kbById = id => KB.find(k => k.id === id);
+const WM_MAP = [
+  { kb: 'zhongfeng', w: ['脑梗死', '脑梗塞', '脑血栓形成', '脑栓塞', '脑梗', '缺血性脑卒中', '急性缺血性卒中', '脑卒中', '脑血管意外', '脑出血', '脑溢血', '蛛网膜下腔出血', '短暂性脑缺血发作', 'TIA'], syn: ['风痰阻络证', '肝阳暴亢证', '气虚血瘀证'], note: '卒中急性期与恢复期' },
+  { kb: 'xuanyun', w: ['眩晕症', '梅尼埃病', '美尼尔病', '耳石症', '良性阵发性位置性眩晕', '前庭神经炎', '椎基底动脉供血不足', '脑供血不足', '高血压病', '原发性高血压', '血压升高', '体位性低血压'], syn: ['肝阳上亢证', '痰湿中阻证', '气血亏虚证'], note: '以眩晕为主症者' },
+  { kb: 'toutong', w: ['偏头痛', '紧张性头痛', '紧张型头痛', '血管性头痛', '丛集性头痛', '三叉神经痛', '颈源性头痛', '高血压性头痛'], syn: ['肝阳头痛证', '瘀血头痛证', '痰浊头痛证'], note: '以头痛为主症者' },
+  { kb: 'koupi', w: ['面神经麻痹', '面神经炎', '周围性面神经炎', '贝尔面瘫', '贝尔麻痹', '亨特综合征'], syn: ['风寒袭络证', '风痰阻络证'], note: '周围性面瘫' },
+  { kb: 'bumei', w: ['失眠', '失眠症', '睡眠障碍', '入睡困难', '早醒', '睡眠维持障碍', '非器质性失眠'], syn: ['肝火扰心证', '心脾两虚证', '心胆气虚证'], note: '以失眠为主症者' },
+  { kb: 'chanzheng', w: ['帕金森病', '帕金森综合征', '特发性震颤', '老年性震颤', '肝豆状核变性'], syn: ['风阳内动证', '气血亏虚证', '髓海不足证'], note: '以震颤、强直为主症者' },
+  { kb: 'xianbing', w: ['癫痫', '癫痫发作', '全面性强直阵挛发作', '强直-阵挛发作', '局灶性癫痫', '失神发作'], syn: ['风痰闭阻证', '痰火扰神证'], note: '发作期与缓解期' },
+  { kb: 'weibing', w: ['吉兰-巴雷综合征', '格林巴利综合征', '重症肌无力', '运动神经元病', '肌萎缩侧索硬化', '脊髓损伤', '周期性麻痹'], syn: ['肺热津伤证', '湿热浸淫证', '脾胃虚弱证', '肝肾亏损证'], note: '以肢体痿软无力为主症者' },
+  { kb: 'chidai', w: ['阿尔茨海默病', '阿尔兹海默病', '老年性痴呆', '血管性痴呆', '认知障碍', '轻度认知功能障碍', '记忆力减退'], syn: ['髓海不足证', '痰浊蒙窍证', '瘀血内阻证'], note: '以智能减退为主症者' },
+  { kb: 'yuzheng', w: ['抑郁症', '抑郁状态', '焦虑症', '焦虑状态', '惊恐障碍', '躯体形式障碍', '更年期综合征', '神经症'], syn: ['肝气郁结证', '气郁化火证', '心脾两虚证'], note: '以情志抑郁、焦虑为主症者' },
+  { kb: 'xiongbi', w: ['冠心病', '冠状动脉粥样硬化性心脏病', '心绞痛', '稳定型心绞痛', '不稳定型心绞痛', '心肌缺血', '心肌梗死', '心梗', '冠脉支架术后'], syn: ['心血瘀阻证', '痰浊闭阻证', '气阴两虚证'], note: '以胸痛、胸闷为主症者' },
+  { kb: 'xinji', w: ['心律失常', '房颤', '心房颤动', '室性早搏', '房性早搏', '心动过速', '心动过缓', '心脏神经症', '心脏神经官能症'], syn: ['心虚胆怯证', '心血不足证', '阴虚火旺证'], note: '以心悸、心慌为主症者' },
+  { kb: 'xinshuai', w: ['心力衰竭', '慢性心力衰竭', '心功能不全', '心衰', 'NYHA分级', '射血分数降低'], syn: ['气虚血瘀证', '阳虚水泛证', '气阴两虚证'], note: '心衰失代偿期' },
+  { kb: 'ganmao', w: ['普通感冒', '上呼吸道感染', '急性上呼吸道感染', '流行性感冒', '甲型流感', '乙型流感', '新型冠状病毒感染'], syn: ['风寒束表证', '风热犯表证', '暑湿伤表证'], note: '外感初起，病位在肺卫' },
+  { kb: 'kesou', w: ['急性支气管炎', '慢性支气管炎', '支气管炎', '咳嗽变异性哮喘', '感染后咳嗽', '支气管扩张', '急慢性咽炎'], syn: ['风寒袭肺证', '风热犯肺证', '痰热郁肺证', '肺阴亏耗证'], note: '以咳嗽为主症者' },
+  { kb: 'feizhang', w: ['慢性阻塞性肺疾病', '慢阻肺', 'COPD', '肺气肿', '慢性肺源性心脏病', '肺心病', '呼吸衰竭', 'Ⅱ型呼吸衰竭', 'II型呼吸衰竭'], syn: ['痰浊壅肺证', '痰热郁肺证', '肺肾气虚证', '阳虚水泛证'], note: '以咳喘、气促、水肿为主症者' },
+  { kb: 'weitong', w: ['慢性胃炎', '急性胃炎', '胃溃疡', '十二指肠溃疡', '胃十二指肠溃疡', '功能性消化不良', '胃食管反流', '反流性食管炎', '幽门螺杆菌感染', '慢性萎缩性胃炎'], syn: ['寒邪客胃证', '饮食伤胃证', '肝气犯胃证', '脾胃虚寒证'], note: '以上腹胃脘疼痛为主症者' },
+  { kb: 'xiexie', w: ['急性肠炎', '慢性肠炎', '肠易激综合征', '感染性腹泻', '功能性腹泻', '溃疡性结肠炎', '克罗恩病'], syn: ['寒湿内盛证', '湿热伤中证', '脾虚湿盛证', '肾阳虚衰证'], note: '以大便次数增多、粪质稀薄为主症者' },
+  { kb: 'bianmi', w: ['功能性便秘', '习惯性便秘', '慢性便秘', '慢传输型便秘', '肠功能紊乱'], syn: ['热秘证', '气秘证', '气虚秘证', '血虚秘证'], note: '以排便困难为主症者' },
+  { kb: 'xietong', w: ['慢性乙型肝炎', '慢性丙型肝炎', '病毒性肝炎', '脂肪肝', '非酒精性脂肪性肝病', '酒精性肝病', '胆囊炎', '慢性胆囊炎', '胆石症', '胆囊结石', '肝纤维化', '肝硬化代偿期', '肝功能异常'], syn: ['肝郁气滞证', '肝胆湿热证', '肝络失养证'], note: '以胁肋疼痛为主症者' },
+  { kb: 'shuizheng', w: ['肾病综合征', '慢性肾小球肾炎', '慢性肾炎', '急性肾小球肾炎', '肾功能不全', '慢性肾脏病', 'CKD', 'IgA肾病', '肾性水肿', '低蛋白血症'], syn: ['风水相搏证', '脾阳虚衰证', '肾阳衰微证'], note: '以水肿为主症者' },
+  { kb: 'linzheng', w: ['尿路感染', '泌尿系感染', '膀胱炎', '急性膀胱炎', '肾盂肾炎', '急性肾盂肾炎', '尿道炎', '尿道综合征', '泌尿系结石', '肾结石', '输尿管结石'], syn: ['热淋证', '石淋证', '气淋证', '劳淋证'], note: '以尿频尿急尿痛为主症者' },
+  { kb: 'xiaoke', w: ['2型糖尿病', '1型糖尿病', '糖尿病', '血糖升高', '高血糖', '糖耐量异常', '糖尿病前期', '糖尿病肾病', '糖尿病周围神经病变'], syn: ['肺热津伤证（上消）', '胃热炽盛证（中消）', '肾阴亏虚证（下消）', '阴阳两虚证'], note: '以多饮多食多尿为主症者' },
+  { kb: 'yingbing', w: ['甲状腺功能亢进', '甲亢', '甲状腺功能减退', '甲减', '甲状腺结节', '桥本甲状腺炎', '桥本病', '甲状腺肿', '亚急性甲状腺炎', 'Graves病'], syn: ['气郁痰阻证', '痰结血瘀证', '肝火旺盛证', '心肝阴虚证'], note: '以颈前肿大或代谢异常为主症者' },
+  { kb: 'jingbi', w: ['颈椎病', '神经根型颈椎病', '颈肩综合征', '颈椎间盘突出', '颈型颈椎病', '落枕'], syn: ['寒湿阻络证', '气滞血瘀证', '肝肾不足证'], note: '以颈肩疼痛、上肢麻木为主症者' },
+  { kb: 'yaobi', w: ['腰椎间盘突出', '腰椎间盘突出症', '腰突', '腰肌劳损', '腰椎退行性变', '腰椎管狭窄', '第三腰椎横突综合征'], syn: ['寒湿腰痛证', '瘀血腰痛证', '肾虚腰痛证'], note: '以腰痛为主症者' },
+  { kb: 'xibi', w: ['膝骨关节炎', '膝关节骨性关节炎', '退行性膝关节炎', '膝关节滑膜炎', '半月板损伤', '髌骨软化症'], syn: ['寒湿痹阻证', '湿热痹阻证', '肝肾亏虚证'], note: '以膝痛、屈伸不利为主症者' },
+  { kb: 'jianbi', w: ['肩周炎', '肩关节周围炎', '冻结肩', '五十肩', '肩袖损伤', '肱二头肌长头腱炎'], syn: ['风寒湿痹证', '气血亏虚证'], note: '以肩痛、活动受限为主症者' },
+  { kb: 'guwei', w: ['骨质疏松', '骨质疏松症', '骨量减少', '绝经后骨质疏松', '老年性骨质疏松'], syn: ['肾精亏虚证', '脾肾两虚证'], note: '以腰背酸痛、骨量下降为主症者' },
+  { kb: 'bizheng', w: ['类风湿关节炎', '类风湿性关节炎', '风湿性关节炎', '痛风', '痛风性关节炎', '高尿酸血症', '强直性脊柱炎', '骨关节炎', '反应性关节炎', '银屑病关节炎'], syn: ['风湿热痹证', '风寒湿痹证（痛痹）', '肝肾亏虚证'], note: '以关节疼痛、肿胀、变形为主症者' }
+,  { kb: 'xiaobing', w: ['哮病','支气管哮喘','哮喘','过敏性哮喘','咳嗽变异性哮喘','运动性哮喘'], syn: ['冷哮证','热哮证','肺肾两虚证'], note: '发作性痰鸣气喘' },
+  { kb: 'chuanzheng', w: ['喘证','呼吸困难','急性呼吸窘迫综合征','心源性哮喘','呼吸衰竭','急性左心衰'], syn: ['表寒肺热证','痰热郁肺证','肺气虚耗证','肾虚不纳证'], note: '以呼吸困难、不能平卧为主症' },
+  { kb: 'feiyong', w: ['肺脓肿','急性肺脓肿','吸入性肺脓肿','坏死性肺炎'], syn: ['初期','成痈期','溃脓期','恢复期'], note: '高热咳吐腥臭脓痰' },
+  { kb: 'huangdan', w: ['黄疸','急性黄疸型肝炎','甲型肝炎','乙型肝炎','戊型肝炎','胆道梗阻','梗阻性黄疸','胆总管结石','梗阻性化脓性胆管炎','肝细胞性黄疸'], syn: ['热重于湿证','湿重于热证','疫毒炽盛证','寒湿阻遏证'], note: '目黄、身黄、尿黄' },
+  { kb: 'liji', w: ['痢疾','细菌性痢疾','急性菌痢','慢性菌痢','阿米巴痢疾','溃疡性结肠炎','克罗恩病'], syn: ['湿热痢证','疫毒痢证','寒湿痢证','休息痢证'], note: '腹痛腹泻、脓血便、里急后重' },
+  { kb: 'manxingqiguan', w: ['慢性支气管炎','老慢支','支气管扩张','慢性阻塞性肺疾病稳定期'], syn: ['风寒袭肺证','风热犯肺证','痰湿蕴肺证','痰热郁肺证'], note: '长期咳嗽咳痰' },
+  { kb: 'feilao', w: ['肺结核','肺痨','结核中毒症状'], syn: ['肺阴亏损证','虚火灼肺证','气阴耗伤证','阴阳两虚证'], note: '午后潮热、盗汗、消瘦' },
+  { kb: 'piman', w: ['功能性消化不良','胃排空延迟症','餐后不适综合征','上腹饱胀'], syn: ['饮食内停证','痰湿中阻证','肝胃不和证','脾胃虚弱证'], note: '脘腹胀满、食少' },
+  { kb: 'ouyu', w: ['急性胃炎','梅尼埃病呕吐','化疗后呕吐','妊娠呕吐','幽门梗阻'], syn: ['外邪犯胃证','食滞内停证','肝气犯胃证','脾胃气虚证'], note: '恶心呕吐为主症' },
+  { kb: 'ganping', w: ['慢性乙型肝炎','慢性丙型肝炎','脂肪肝','非酒精性脂肪性肝病','酒精性肝病','肝功能异常'], syn: ['肝郁气滞证','肝胆湿热证','肝络失养证'], note: '胁肋疼痛、口苦' },
+  { kb: 'zhengji', w: ['肝硬化','肝硬化代偿期','肝硬化失代偿期','脾肿大','门静脉高压'], syn: ['气滞血瘀证','瘀血内结证','正虚瘀结证'], note: '肝脾肿大、质硬' },
+  { kb: 'guzhang', w: ['肝硬化腹水','原发性肝癌腹水','结核性腹膜炎','顽固性腹水'], syn: ['气滞湿阻证','水热蕴结证','阳虚水盛证','阴虚水停证'], note: '以腹部胀大如鼓为主症' },
+  { kb: 'shuizheng2', w: ['肾病综合征','慢性肾小球肾炎','急性肾小球肾炎','慢性肾衰竭','IgA肾病'], syn: ['风水相搏证','脾阳虚衰证','肾阳衰微证','湿毒浸淫证'], note: '以水肿为主症' },
+  { kb: 'longbi', w: ['尿潴留','前列腺增生','膀胱麻痹','神经源性膀胱'], syn: ['膀胱湿热证','肺热壅盛证','肝气郁滞证','肾阳衰惫证'], note: '以排尿困难、甚则点滴不通为主症' },
+  { kb: 'buxu', w: ['亚健康状态','慢性疲劳综合征','贫血','肿瘤化疗后虚弱'], syn: ['气虚证','血虚证','阴虚证','阳虚证','气血两虚证','阴阳两虚证'], note: '脏腑亏损、气血阴阳不足' },
+  { kb: 'qiwei', w: ['胃食管反流病','反流性食管炎','食管裂孔疝','功能性烧心'], syn: ['肝胃郁热证','胆热犯胃证','气郁痰阻证','脾胃虚寒证'], note: '胸骨后烧灼感、反酸、嗳气' },
+  { kb: 'niaozheng', w: ['尿失禁','压力性尿失禁','急迫性尿失禁','充盈性尿失禁','膀胱过度活动症'], syn: ['肾气不固证','脾肺气虚证','肝经湿热证','下焦瘀滞证'], note: '尿液不自主流出' },
+  { kb: 'tuoxie', w: ['腰椎间盘突出症','腰椎管狭窄症','腰椎滑脱','腰背肌筋膜炎','梨状肌综合征'], syn: ['寒湿腰痛证','瘀血腰痛证','肾虚腰痛证','湿热腰痛证'], note: '腰痛伴下肢放射痛' },
+  { kb: 'huoyan', w: ['肩周炎','肩关节周围炎','冻结肩','肩袖损伤','肩峰撞击综合征'], syn: ['风寒湿痹证','气血两虚证','气血瘀滞证'], note: '肩痛、夜间加重、活动受限' },
+  { kb: 'yanchang', w: ['类风湿关节炎','系统性红斑狼疮','干燥综合征','硬皮病','皮肌炎'], syn: ['风湿热痹证','痰瘀痹阻证','肝肾亏虚证'], note: '关节疼痛、肿胀、晨僵、变形' },
+  { kb: 'zhangjiang', w: ['痛风','痛风性关节炎','高尿酸血症','假性痛风'], syn: ['湿热痹阻证','痰热痹阻证','瘀血痹阻证','肝肾亏虚证'], note: '第一跖趾关节红肿热痛、夜间发作' },
+  { kb: 'gujie', w: ['颈椎病','神经根型颈椎病','椎动脉型颈椎病','颈型颈椎病','落枕'], syn: ['寒湿阻络证','气滞血瘀证','肝肾不足证'], note: '颈肩疼痛、上肢麻木、头晕' },
+  { kb: 'nanchi', w: ['荨麻疹','慢性荨麻疹','急性荨麻疹','胆碱能性荨麻疹','皮肤划痕症'], syn: ['风寒束表证','风热犯表证','血虚风燥证','胃肠湿热证'], note: '皮肤风团、瘙痒、骤起骤消' },
+  { kb: 'yinzhen', w: ['湿疹','急性湿疹','慢性湿疹','特应性皮炎','接触性皮炎'], syn: ['湿热蕴肤证','脾虚湿蕴证','血虚风燥证'], note: '皮肤红斑、丘疹、水疱、渗出、瘙痒、反复发作' },
+  { kb: 'shechuan', w: ['带状疱疹','带状疱疹神经痛','疱疹后神经痛','亨特综合征'], syn: ['肝经郁热证','脾虚湿蕴证','气滞血瘀证'], note: '沿肋间神经分布的簇集性疱疹、神经痛' },
+  { kb: 'dan', w: ['内痔','外痔','混合痔','肛裂','肛周脓肿','肛瘘','肛门直肠周围脓肿'], syn: ['风热肠燥证','湿热下注证','脾虚气陷证','血热瘀阻证'], note: '便血、脱出、疼痛、肿块' },
+  { kb: 'jingdai', w: ['细菌性阴道病','滴虫性阴道炎','霉菌性阴道炎','老年性阴道炎','带下过多'], syn: ['脾虚证','肾阳虚证','阴虚夹湿证','湿热下注证','热毒蕴结证'], note: '白带量多、色、质、味异常' },
+  { kb: 'tongjing', w: ['痛经','原发性痛经','继发性痛经','子宫内膜异位症','子宫腺肌病'], syn: ['肾气亏损证','气血虚弱证','气滞血瘀证','寒凝血瘀证','湿热瘀阻证'], note: '经期或经后小腹疼痛' },
+  { kb: 'pengqiangyan', w: ['盆腔炎','急性盆腔炎','慢性盆腔炎','盆腔积液','附件炎','子宫内膜炎'], syn: ['湿热瘀结证','热毒炽盛证','寒湿瘀滞证','气虚血瘀证'], note: '下腹痛、发热、白带异常' },
+  { kb: 'zixu', w: ['卵巢早衰','绝经综合征','更年期综合征','老年性阴道炎'], syn: ['肾阴虚证','肾阳虚证','肾阴阳俱虚证','心肾不交证'], note: '潮热、汗出、心烦、失眠、月经紊乱' },
+  { kb: 'yueshi', w: ['月经不调','月经先期','月经后期','月经先后不定期','月经过多','月经过少','功能失调性子宫出血'], syn: ['肾虚证','血虚证','血寒证','血热证','气滞证','血瘀证'], note: '月经周期、经期、经量异常' },
+  { kb: 'manxingpenqiangyan', w: ['慢性盆腔炎','慢性盆腔痛','盆腔瘀血综合征','输卵管积水','慢性附件炎'], syn: ['湿热瘀结证','气虚血瘀证','寒湿瘀滞证','肾虚血瘀证'], note: '下腹胀痛、腰骶酸痛、带下量多' },
+  { kb: 'xiaoerkezou', w: ['小儿急性支气管炎','小儿慢性支气管炎','小儿支气管哮喘','小儿上呼吸道感染'], syn: ['风寒袭肺证','风热犯肺证','痰热郁肺证','痰湿蕴肺证'], note: '小儿咳嗽、咳痰、喘息' },
+  { kb: 'xiaoerexie', w: ['小儿腹泻','急性胃肠炎','轮状病毒肠炎','消化不良','乳糖不耐受'], syn: ['风寒泻证','湿热泻证','伤食泻证','脾虚泻证','脾肾阳虚泻证'], note: '小儿大便次数增多、粪质稀薄' },
+  { kb: 'xiaoerchi', w: ['小儿厌食症','小儿功能性消化不良','小儿积滞','小儿疳证','小儿营养不良'], syn: ['脾失健运证','脾胃气虚证','脾胃阴虚证'], note: '小儿长期食欲减退、食量减少' },
+  { kb: 'xiaoerxingfeng', w: ['小儿呼吸道合胞病毒肺炎','小儿支原体肺炎','小儿细菌性肺炎','急性上呼吸道感染伴发热'], syn: ['风寒闭肺证','风热闭肺证','痰热闭肺证','毒热闭肺证','正虚邪恋证'], note: '小儿发热、咳嗽、气促、鼻翼煽动' },
+  { kb: 'qingqi', w: ['慢性鼻炎','过敏性鼻炎','萎缩性鼻炎','慢性鼻窦炎','鼻息肉'], syn: ['肺气虚寒证','脾气虚弱证','肾阳不足证','肺经伏热证'], note: '鼻塞、流涕、打喷嚏、鼻痒' },
+  { kb: 'eman', w: ['慢性咽炎','急性咽炎','慢性扁桃体炎','咽部异感症','反流性咽喉炎'], syn: ['肺阴虚证','肾阴虚证','肺肾阴虚证','痰热蕴结证','痰气交阻证'], note: '咽干、咽痛、异物感、干咳' }
+];
+/* ===================== 动态模板（由病种库自动生成） ===================== */
+const DYN = {};
+const deptOf = d => String(d || '').replace(/门诊$/, '');
+const KB_DEPT_LIST = ['脑病科', '心病科', '肺病科', '脾胃病科', '肝病科', '肾病科', '内分泌科', '骨伤科', '风湿病科'];
+
+function tonguePulse() {
+  for (let i = 0; i < arguments.length; i++) {
+    const s = arguments[i];
+    if (!s) continue;
+    const m = /舌[^。；]*?(?:，|,)?\s*脉[^。；]*/.exec(String(s));
+    if (m) return m[0].replace(/[。；]$/, '').trim();
+  }
+  return '';
+}
+
+function fourOf(kb, syn, sources) {
+  const list = (sources || []).concat([syn && syn.points, kb && kb.exam]);
+  const tp = tonguePulse.apply(null, list) || '舌淡红、苔薄白，脉平和';
+  return '望诊：神志清楚，精神可，面色少华，形体适中；闻诊：语声正常，气息平稳，未闻及异常气味；问诊：详见现病史；切诊：' + tp + '。';
+}
+
+function composeTpl(kb, synIdx, type, idOverride) {
+  const syn = kb.synd[synIdx] || kb.synd[0];
+  const isIn = type === '入院记录';
+  const id = idOverride || ('k_' + kb.id + '_' + synIdx + (isIn ? 'i' : 'm'));
+  const base = isIn
+    ? '姓名：×××　性别：　年龄：　民族：汉族　婚姻：　职业：　住址：　　　　入院时间：' + today() + '　记录时间：' + nowStamp() + '　病史陈述者：患者本人（可靠）'
+    : '就诊时间：' + nowStamp() + '　就诊科室：中医' + kb.dept + '　姓名：×××　性别：　年龄：　联系电话：';
+  const basis = '患者以“' + kb.chief.replace(/[。；]$/, '') + '”为主诉，四诊合参：' + syn.points +
+    kb.cause + '综合舌脉，辨为' + syn.name + '，病性属' + (/虚|亏|不足/.test(syn.name) ? '本虚' : '标实') + '，治当' + syn.treat + '。';
+  const rx = syn.herbs + '。7剂，水煎服，每日1剂，分2次温服。';
+  const acu = syn.acu + '；每日1次，10次为1疗程。';
+  let advice;
+  if (isIn) {
+    advice = kb.adv;
+  } else {
+    const items = kb.adv.split(/。/).map(s => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+    advice = '1. 中药7剂，每日1剂，分2次温服。2. 针灸治疗每周3次，10次为1疗程。3. ' + (items[0] || '避风寒，调情志，饮食清淡') + '。4. 7剂后复诊，症状加重随诊。';
+  }
+  const secIn = [
+    { key: 'base', label: '基本信息', rows: 2, v: base },
+    { key: 'chief', label: '主诉', rows: 2, v: kb.chief },
+    { key: 'hpi', label: '现病史', rows: 6, v: kb.hpi },
+    { key: 'past', label: '既往史', rows: 2, v: '平素体健，否认肝炎、结核等传染病史，否认重大外伤及手术史，否认输血史，否认药物及食物过敏史。' },
+    { key: 'personal', label: '个人史', rows: 2, v: '生于原籍，久居本地，否认疫区及疫水接触史；否认吸烟、饮酒等不良嗜好。' },
+    { key: 'family', label: '家族史', rows: 2, v: '父母健在，否认家族性遗传病史及类似疾病史。' },
+    { key: 'four', label: '中医四诊', rows: 3, v: fourOf(kb, syn) },
+    { key: 'exam', label: '体格检查', rows: 4, v: kb.exam },
+    { key: 'aux', label: '辅助检查', rows: 3, v: kb.aux },
+    { key: 'tcmDx', label: '中医诊断', rows: 2, v: kb.name + '　' + syn.name },
+    { key: 'wmDx', label: '西医诊断', rows: 2, v: kb.wmDx },
+    { key: 'basis', label: '辨证依据', rows: 5, v: basis },
+    { key: 'treat', label: '治法', rows: 2, v: syn.treat },
+    { key: 'rx', label: '方药', rows: 3, v: rx },
+    { key: 'acu', label: '针灸取穴', rows: 2, v: acu },
+    { key: 'advice', label: '医嘱与调护', rows: 4, v: advice },
+    { key: 'sign', label: '医师签名', rows: 1, v: isIn ? '记录医师：×××　　上级医师：×××' : '接诊医师：×××' }
+  ];
+  const secOut = [
+    { key: 'base', label: '基本信息', rows: 2, v: base },
+    { key: 'chief', label: '主诉', rows: 2, v: kb.chief },
+    { key: 'hpi', label: '现病史', rows: 6, v: kb.hpi },
+    { key: 'four', label: '中医四诊', rows: 3, v: fourOf(kb, syn) },
+    { key: 'exam', label: '体格检查', rows: 4, v: kb.exam },
+    { key: 'aux', label: '辅助检查', rows: 3, v: kb.aux },
+    { key: 'tcmDx', label: '中医诊断', rows: 2, v: kb.name + '　' + syn.name },
+    { key: 'wmDx', label: '西医诊断', rows: 2, v: kb.wmDx },
+    { key: 'basis', label: '辨证依据', rows: 5, v: basis },
+    { key: 'treat', label: '治法', rows: 2, v: syn.treat },
+    { key: 'rx', label: '方药', rows: 3, v: rx },
+    { key: 'acu', label: '针灸取穴', rows: 2, v: acu },
+    { key: 'advice', label: '医嘱与调护', rows: 4, v: advice },
+    { key: 'sign', label: '医师签名', rows: 1, v: '接诊医师：×××' }
+  ];
+  return {
+    id: id, name: kb.name + '·' + syn.name + '（' + (isIn ? '入院' : '门诊') + '）',
+    dept: kb.dept, disease: kb.name, syn: syn.name, type: type, score: 92,
+    tags: [kb.dept, isIn ? '住院' : '门诊', kb.alias.split('、')[0]],
+    src: kb.src, sections: isIn ? secIn : secOut
+  };
+}
+
+function ensureTemplates() {
+  KB.forEach(kb => {
+    kb.synd.forEach((sy, i) => {
+      ['i', 'm'].forEach(code => {
+        const id = 'k_' + kb.id + '_' + i + code;
+        if (DYN[id]) return;
+        const t = composeTpl(kb, i, code === 'i' ? '入院记录' : '门诊病历', id);
+        DYN[id] = t;
+        if (i === 0) TPL.push(t);
+      });
+    });
+  });
+}
+
+KB.push(
+  {
+    id: 'xiaobing', name: '哮病', alias: '支气管哮喘', dept: '肺病科', type: '门诊病历',
+    wm: ['支气管哮喘','哮喘','过敏性哮喘','咳嗽变异性哮喘','运动性哮喘','哮喘持续状态'],
+    sig: ['喘息','喉中哮鸣','呼吸困难','胸闷','咳嗽','痰多','夜间发作','不能平卧'],
+    def: `哮病是一种发作性的痰鸣气喘疾患。发时喉中有哮鸣声，呼吸气促困难，甚则喘息不能平卧。发作常有明显的季节性，多在夜间和凌晨发作或加重。`,
+    cause: `哮病的发生，为宿痰内伏于肺，每因外感、饮食、情志、劳倦等诱因引动而触发，以致痰壅气道，肺气宣降功能失常。发作时以邪实为主，间歇期以正虚为主。`,
+    chief: '反复发作性喘息3年，加重1天。',
+    hpi: `患者3年前无明显诱因出现发作性喘息，喉中哮鸣，夜间加重，经外院诊断为支气管哮喘，给予吸入激素+β2受体激动剂治疗。1天前受凉后症状加重，喘息明显，不能平卧，伴咳嗽，痰白黏。刻下：端坐呼吸，喉中痰鸣，痰白黏，纳差，二便调。`,
+    exam: `T 37.2℃　P 104次/分　R 28次/分　BP 125/80mmHg。双肺满布哮鸣音，呼气延长，心率104次/分，律齐。舌淡胖、苔白腻，脉滑。`,
+    aux: `肺功能：FEV1/FVC 65%，PEF变异率>20%；嗜酸性粒细胞分类 8%；胸片：双肺透亮度增加。`,
+    wmDx: `支气管哮喘（急性发作期）`,
+    adv: `1. 脱离过敏原，避免受凉、油烟、宠物毛发等诱因。2. 规律吸入布地奈德福莫特罗粉吸入剂。3. 中药每日1剂，分2次温服。4. 针灸肺俞、膻中、定喘、丰隆，平补平泻。5. 随身携带沙丁胺醇气雾剂应急。6. 呼吸内科定期随访。`,
+    src: `《中医内科学》（第十版，十三五，人民卫生出版社，2017年1月）哮病；《中医病证诊断疗效标准》（ZY/T001-94）哮病`,
+    synd: [
+      { name: '冷哮证', points: `喉中哮鸣如水鸡声，呼吸急促，喘憋气逆，胸膈满闷如塞，咳不甚，痰少咯吐不爽，色白而多泡沫，口不渴或渴喜热饮，形寒怕冷，天冷或受寒易发，面色青晦，舌苔白滑，脉弦紧或浮紧。病机为寒痰伏肺，遇感触发，痰升气阻，肺失宣畅。`, treat: '宣肺散寒，化痰平喘', formula: '射干麻黄汤加减', herbs: `射干10g　麻黄6g　生姜10g　细辛3g　紫菀10g　款冬花10g　五味子6g　大枣3枚　制半夏10g`, acu: `肺俞、膻中、定喘、风门，艾灸`, kw: ['冷哮','喉中哮鸣','泡沫痰','形寒'] },
+      { name: '热哮证', points: `喉中痰鸣如吼，喘而气粗息涌，胸高胁胀，咳呛阵作，咳痰色黄或白，黏浊稠厚，排吐不利，口苦，口渴喜饮，汗出，面赤，或有身热，舌苔黄腻，质红，脉滑数或弦滑。病机为痰热蕴肺，壅阻气道，肺失清肃。`, treat: '清热宣肺，化痰定喘', formula: '定喘汤加减', herbs: `麻黄6g　杏仁10g　桑白皮15g　黄芩10g　半夏12g　款冬花10g　苏子10g　白果10g　甘草6g`, acu: `肺俞、膻中、定喘、曲池，泻法`, kw: ['热哮','痰鸣如吼','黄痰','面赤'] },
+      { name: '风痰哮证', points: `喉中痰鸣如吹哨笛，喘急胸满，但坐不得卧，咳痰黏腻难出，或为白色泡沫痰液，无明显寒热倾向，面色青黯，起病多急，常倏忽来去，发前自觉鼻、咽、眼、耳发痒，喷嚏，鼻塞，流涕，喷嚏随之哮喘发作，舌苔厚浊，脉滑实。病机为痰浊伏肺，风邪引触，肺气郁闭，升降失司。`, treat: '祛风涤痰，降气平喘', formula: '三子养亲汤加减', herbs: `白芥子6g　苏子12g　莱菔子15g　厚朴10g　陈皮10g　茯苓15g　制半夏12g　炙甘草6g`, acu: `肺俞、膻中、定喘、丰隆，平补平泻`, kw: ['风痰','黏痰','倏忽来去','脉滑实'] },
+      { name: '肺肾两虚证', points: `平素短气息促，动则为甚，吸气不利，咳痰质黏起沫，脑转耳鸣，腰酸腿软，心慌，不耐劳累；或五心烦热，颧红，口干，舌红少苔，脉细数；或畏寒肢冷，面色苍白，舌淡苔白胖，脉沉细。病机为哮病久发，精气亏乏，肺肾摄纳失常，气不归原，津凝为痰。`, treat: '补肺益肾', formula: '生脉地黄汤合金水六君煎加减', herbs: `人参6g　麦冬15g　五味子10g　熟地黄15g　山茱萸12g　胡桃肉10g　茯苓15g　当归12g　陈皮10g`, acu: `肺俞、肾俞、关元、足三里，补法`, kw: ['肺肾两虚','动则气短','腰酸腿软','脉细'] }
+    ]
+}
+  );
+
+KB.push(
+  {
+    id: 'chuanzheng', name: '喘证', alias: '呼吸困难', dept: '肺病科', type: '入院记录',
+    wm: ['呼吸困难','喘息','急性呼吸窘迫综合征','呼吸衰竭','急性左心衰','心源性哮喘'],
+    sig: ['呼吸困难','喘促','气粗','鼻煽','不能平卧','烦躁不安','紫绀','咳嗽'],
+    def: `喘证是以呼吸困难，甚至张口抬肩，鼻翼煽动，不能平卧为临床特征的病证。古人认为"喘以气息言，哮以声响言"，喘者未必兼哮，哮者必兼喘。`,
+    cause: `喘证的病因不外外感和内伤两大类。外感为六淫之邪，内伤为痰浊、肝火、肺肾虚弱、劳欲久病等。病位主要在肺和肾，涉及肝脾。基本病机为肺失宣降、肾不纳气。`,
+    chief: '呼吸困难伴喘息1天。',
+    hpi: `患者1天前无明显诱因出现呼吸困难，喘息气粗，不能平卧，咳嗽咳痰，痰黄黏稠，伴发热、口渴。刻下：端坐呼吸，喘促气粗，痰黄难咯，面红目赤，大便偏干。`,
+    exam: `T 39.1℃　P 120次/分　R 32次/分　BP 130/80mmHg。口唇轻度紫绀，双肺满布干湿啰音，心率120次/分，律齐。舌红、苔黄腻，脉滑数。`,
+    aux: `血气分析：pH 7.45，PaO₂ 58mmHg，PaCO₂ 35mmHg；胸片：双肺散在片状阴影；血常规：WBC 12.5×10⁹/L，N 85%。`,
+    wmDx: `1. 重症肺炎　2. 急性呼吸窘迫综合征`,
+    adv: `1. 机械通气支持，广谱抗生素抗感染。2. 化痰平喘，液体管理。3. 中药每日1剂，分2次温服，鼻饲给药。4. 针灸肺俞、膻中、定喘、曲池，泻法。5. 加强营养支持，密切监测生命体征。`,
+    src: `《中医内科学》（第十版，人民卫生出版社，2017年1月）喘证；《中医病证诊断疗效标准》（ZY/T001-94）喘证`,
+    synd: [
+      { name: '表寒肺热证', points: `喘逆上气，胸胀或痛，息粗，鼻煽，咳而不爽，吐痰稠黏，伴形寒，身热，烦闷，身痛，有汗或无汗，舌边红，苔薄白或薄黄，脉浮或滑。病机为寒邪束表，热郁于肺，肺气上逆，宣降失司。`, treat: '解表清里，化痰平喘', formula: '麻杏石甘汤加减', herbs: `麻黄6g　杏仁10g　石膏30g（先煎）　甘草6g　黄芩10g　桑白皮15g　制半夏12g　前胡10g`, acu: `列缺、肺俞、合谷、大椎，泻法`, kw: ['表寒','肺热','喘逆','脉浮'] },
+      { name: '痰热郁肺证', points: `喘咳气涌，胸部胀痛，痰多质黏厚或稠黄，咯吐不爽，或有痰中带血，伴发热，口渴喜冷饮，面红，尿赤，或大便秘结，舌红，苔黄腻，脉滑数。病机为邪热壅肺，蒸液成痰，痰热阻肺，肺失肃降。`, treat: '清热化痰，宣肺平喘', formula: '桑白皮汤加减', herbs: `桑白皮15g　黄芩10g　黄连6g　栀子10g　杏仁10g　制半夏12g　紫苏子10g　川贝母10g（研末冲服）`, acu: `肺俞、膻中、丰隆、曲池，泻法`, kw: ['痰热','黄痰','发热','脉滑数'] },
+      { name: '肺气虚耗证', points: `喘促短气，气怯声低，喉有鼾声，咳声低弱，痰吐稀薄，自汗畏风，或见咳呛，痰少质黏，烦热而渴，咽喉不利，面颧潮红，舌质淡红或有苔剥，脉软弱或细数。病机为肺气亏虚，气失所主；或肺阴亏虚，虚火灼肺，肺失清肃。`, treat: '补肺益气养阴', formula: '生脉散合补肺汤加减', herbs: `人参10g　麦冬15g　五味子10g　黄芪20g　桑白皮15g　熟地黄15g　紫菀10g　甘草6g`, acu: `肺俞、肾俞、气海、足三里，补法`, kw: ['气虚','气短','声低','脉弱'] },
+      { name: '肾虚不纳证', points: `喘促日久，动则喘甚，呼多吸少，呼则难升，吸则难降，气不得续，形瘦神惫，跗肿，汗出肢冷，面青唇紫，舌淡苔白或黑而润滑，脉微细或沉弱；或见喘咳，面红烦躁，口咽干燥，足冷，汗出如油，舌红少津，脉细弱。病机为肾阳不足，肾失摄纳，气不归原。`, treat: '补肾纳气', formula: '金匮肾气丸合参蛤散加减', herbs: `附子10g（先煎）　桂枝10g　熟地黄15g　山茱萸12g　山药15g　泽泻10g　茯苓15g　牡丹皮10g　人参6g　蛤蚧1只（研末冲服）`, acu: `肾俞、命门、关元、气海，补法`, kw: ['肾虚','动则喘','呼多吸少','脉微细'] }
+    ]
+}
+  );
+
+KB.push(
+  {
+    id: 'feiyong', name: '肺痈', alias: '肺脓肿', dept: '肺病科', type: '入院记录',
+    wm: ['肺脓肿','急性肺脓肿','吸入性肺脓肿','血源性肺脓肿','坏死性肺炎'],
+    sig: ['高热','咳吐大量脓痰','腥臭','胸痛','咳嗽','咯血','消瘦'],
+    def: `肺痈是肺叶生疮，形成脓疡的一种病证，属内痈之一。临床以咳嗽、胸痛、发热、咳吐腥臭浊痰，甚则脓血相兼为主要特征。`,
+    cause: `肺痈的发病多由外感风热邪毒，或感受风寒化热，邪热蕴肺，热壅血瘀，肉腐血败，化为脓疡。病位在肺，基本病机为邪热蕴肺、化腐成脓。`,
+    chief: '发热咳嗽咳吐腥臭脓痰7天。',
+    hpi: `患者7天前受凉后出现发热，最高39.5℃，咳嗽，咳吐黄痰，3天前痰量明显增多，每日约200ml，呈黄绿色脓痰，伴恶臭味，伴胸痛，咳时加重，消瘦明显。刻下：高热不退，咳嗽剧烈，痰脓腥臭，胸痛，纳差，大便干结。`,
+    exam: `T 39.3℃　P 116次/分　R 26次/分　BP 125/78mmHg。右下肺叩诊浊音，听诊呼吸音减低，可闻及支气管呼吸音及湿啰音。舌红、苔黄厚腻，脉滑数。`,
+    aux: `血常规：WBC 18.6×10⁹/L，N 92%，Hb 92g/L；CRP 156mg/L；痰培养：金黄色葡萄球菌；胸部CT：右下肺见空洞形成，内有气液平。`,
+    wmDx: `右下肺肺脓肿`,
+    adv: `1. 广谱抗生素足量足疗程使用（4~6周）。2. 体位引流，每日2~3次，每次15~30分钟。3. 中药每日1剂，分3次温服，配合中药雾化吸入。4. 针灸肺俞、膻中、丰隆、曲池，泻法。5. 加强营养，高蛋白高热量饮食。6. 必要时经皮肺穿刺引流或手术治疗。`,
+    src: `《中医内科学》（第十版，人民卫生出版社，2017年1月）肺痈；《中医病证诊断疗效标准》（ZY/T001-94）肺痈`,
+    synd: [
+      { name: '初期（风热犯肺）', points: `恶寒发热，咳嗽，咳白色黏痰，痰量由少渐多，胸痛，咳时尤甚，呼吸不利，口干鼻燥，舌苔薄黄，脉浮数而滑。病机为风热邪毒犯肺，肺失清肃，营卫不和。`, treat: '疏风散热，清肺化痰', formula: '银翘散加减', herbs: `金银花15g　连翘15g　薄荷6g（后下）　荆芥穗10g　桔梗10g　杏仁10g　淡豆豉10g　芦根20g　甘草6g`, acu: `肺俞、大椎、曲池、合谷，泻法`, kw: ['初期','恶寒发热','白黏痰','脉浮数'] },
+      { name: '成痈期', points: `身热转甚，时时振寒，继则壮热，汗出烦躁，咳嗽气急，胸满作痛，转侧不利，咳吐浊痰，呈黄绿色，自觉喉间有腥味，口干咽燥，舌红苔黄腻，脉滑数。病机为邪热壅肺，蒸液成痰，热壅血瘀，蕴酿成痈。`, treat: '清肺解毒，化瘀消痈', formula: '千金苇茎汤合如金解毒散加减', herbs: `苇茎30g　薏苡仁30g　冬瓜仁20g　桃仁10g　黄芩12g　黄连6g　山栀10g　桔梗10g　甘草6g`, acu: `肺俞、膻中、丰隆、曲池，泻法`, kw: ['成痈期','黄绿色痰','喉间腥味','脉滑数'] },
+      { name: '溃脓期', points: `咳吐大量浓痰，或如米粥，或痰血相兼，腥臭异常，有时咯血，胸中烦满而痛，甚则气喘不能卧，身热面赤，烦渴喜饮，舌红或绛，苔黄腻，脉滑数或实。病机为痰热与瘀血壅阻肺络，肉腐血败化脓，继则肺损络伤，脓疡内溃外泄。`, treat: '排脓解毒', formula: '加味桔梗汤加减', herbs: `桔梗12g　甘草6g　贝母10g　薏苡仁30g　金银花15g　白及10g　鱼腥草30g　金荞麦20g　败酱草20g`, acu: `肺俞、膻中、丰隆、尺泽，泻法`, kw: ['溃脓期','浓痰','腥臭','如米粥'] },
+      { name: '恢复期', points: `身热渐退，咳嗽减轻，脓痰日见减少，臭味减轻，痰液转为清稀，精神渐振，食欲改善，或见胸胁隐痛，难以久卧，气短乏力，自汗，盗汗，低热，午后潮热，心烦，口干，咽干，面色不华，形体消瘦，精神委顿，舌质红或淡红，苔薄，脉细或细数无力。病机为脓疡已溃，邪毒渐退，正气受损，气阴两亏。`, treat: '益气养阴，清肺排脓', formula: '沙参清肺汤加减', herbs: `北沙参20g　麦冬15g　玉竹10g　白及10g　桔梗10g　甘草6g　冬瓜仁15g　黄芪15g　金银花10g`, acu: `肺俞、太渊、三阴交、太溪，补法`, kw: ['恢复期','热退','痰稀','气阴两伤'] }
+    ]
+}
+  );
+
+KB.push(
+  {
+    id: 'huangdan', name: '黄疸', alias: '急性黄疸性肝炎、胆道梗阻', dept: '肝病科', type: '入院记录',
+    wm: ['急性黄疸型肝炎','甲型肝炎','乙型肝炎','戊型肝炎','胆道梗阻','梗阻性黄疸','胆总管结石','梗阻性化脓性胆管炎','肝细胞性黄疸'],
+    sig: ['身黄','目黄','尿黄','皮肤瘙痒','胁痛','口苦','食欲减退','乏力'],
+    def: `黄疸是以目黄、身黄、小便黄为主症的一种病证，其中目睛黄染尤为本病的重要特征。现代医学认为本病多因肝细胞损伤、胆道梗阻或胆红素代谢障碍所致。`,
+    cause: `黄疸的病因有外感和内伤两个方面。外感多由湿热邪毒所致，内伤多由饮食所伤、脾胃虚弱、肝胆瘀阻、胆道阻滞等。病位在肝胆，涉及脾胃。基本病机为湿邪（湿热或寒湿）困遏脾胃，壅塞肝胆，疏泄失常，胆汁外溢。`,
+    chief: '身目发黄伴尿黄7天。',
+    hpi: `患者7天前出现乏力、食欲减退、恶心，3天前发现小便深黄如浓茶，继而目黄、身黄，伴皮肤瘙痒、口苦、胁痛，无发热。刻下：身目俱黄，色鲜明如橘，口干口苦，胁肋胀痛，纳差，便干，尿如浓茶。`,
+    exam: `T 37.0℃　P 86次/分　BP 120/78mmHg。皮肤巩膜中度黄染，未见肝掌及蜘蛛痣；右上腹轻压痛，肝肋下1.5cm，质中，轻触痛；脾未及。舌红、苔黄腻，脉弦数。`,
+    aux: `肝功能：ALT 2580U/L，AST 1800U/L，TBIL 125μmol/L，DBIL 78μmol/L；HBsAg阴性，HAV-IgM阳性；腹部B超：肝胆脾胰未见异常。`,
+    wmDx: `急性甲型肝炎（黄疸型）`,
+    adv: `1. 消化道隔离，卧床休息。2. 清淡饮食，补充足量维生素。3. 保肝、降酶、退黄治疗。4. 中药每日1剂，分2次温服。5. 针灸期门、阳陵泉、足三里、胆俞，平补平泻。6. 2周后复查肝功能。`,
+    src: `《中医内科学》（第十版，人民卫生出版社，2017年1月）黄疸；《中医病证诊断疗效标准》（ZY/T001-94）黄疸`,
+    synd: [
+      { name: '热重于湿证', points: `身目俱黄，黄色鲜明，发热口渴，或见心中懊侬，腹部胀闷，口干而苦，恶心呕吐，小便短少黄赤，大便秘结，舌红，苔黄腻，脉弦数。病机为湿热蕴蒸，热重于湿，肝失疏泄，胆汁外溢。`, treat: '清热利湿，佐以泻下', formula: '茵陈蒿汤加减', herbs: `茵陈30g　栀子12g　大黄9g（后下）　枳实10g　厚朴10g　茯苓15g　泽泻15g　甘草6g`, acu: `期门、阳陵泉、足三里、胆俞，泻法`, kw: ['热重于湿','鲜明黄','口渴','便秘'] },
+      { name: '湿重于热证', points: `身目俱黄，黄色不及前者鲜明，头重身困，胸脘痞满，食欲减退，恶心呕吐，腹胀或大便溏垢，小便短少黄赤，舌苔厚腻微黄，脉濡数或弦数。病机为湿遏热伏，肝失疏泄，胆汁外溢。`, treat: '利湿化浊运脾，佐以清热', formula: '茵陈五苓散合甘露消毒丹加减', herbs: `茵陈20g　滑石20g（包煎）　茯苓15g　猪苓15g　泽泻15g　白术12g　藿香10g　白豆蔻10g　黄芩10g　石菖蒲10g`, acu: `期门、中脘、足三里、胆俞，平补平泻`, kw: ['湿重于热','头重身困','便溏','苔厚腻'] },
+      { name: '疫毒炽盛证（急黄）', points: `发病急骤，黄疸迅速加深，其色如金，皮肤瘙痒，高热口渴，胁痛腹满，神昏谵语，烦躁抽搐，或见衄血、便血、肌肤瘀斑，舌红绛，苔黄燥，脉弦滑或数。病机为热毒炽盛，内入营血，迫血妄行，内闭心神。`, treat: '清热解毒，凉血开窍', formula: '千金犀角散加减', herbs: `犀角粉3g（冲服，或水牛角30g代）　黄连10g　栀子12g　升麻10g　茵陈30g　生地黄20g　玄参15g　牡丹皮15g　金银花20g　石菖蒲10g`, acu: `十宣（点刺放血）、水沟、涌泉、期门，泻法`, kw: ['急黄','发病急','高热','神昏'] },
+      { name: '寒湿阻遏证（阴黄）', points: `身目俱黄，黄色晦暗，或如烟熏，脘腹痞胀，纳谷减少，大便不实，神疲畏寒，口淡不渴，舌淡，苔腻，脉濡缓或沉迟。病机为寒湿困遏，脾阳不振，肝失疏泄，胆汁外溢。`, treat: '温中化湿，健脾和胃', formula: '茵陈术附汤加减', herbs: `茵陈20g　附子10g（先煎）　白术12g　干姜6g　茯苓15g　泽泻12g　炙甘草6g`, acu: `中脘、足三里、关元、胆俞，补法`, kw: ['阴黄','晦暗如烟熏','畏寒','便不实'] }
+    ]
+}
+  );
+
+KB.push(
+  {
+    id: 'liji', name: '痢疾', alias: '细菌性痢疾、溃疡性结肠炎', dept: '脾胃病科', type: '入院记录',
+    wm: ['细菌性痢疾','急性菌痢','慢性菌痢','阿米巴痢疾','溃疡性结肠炎','克罗恩病'],
+    sig: ['腹痛','腹泻','里急后重','脓血便','黏液便','发热','下坠感'],
+    def: `痢疾是以腹痛、里急后重、下痢赤白脓血为主症的病证。多发于夏秋季节。现代医学的细菌性痢疾、阿米巴痢疾、溃疡性结肠炎等可参照本病辨证论治。`,
+    cause: `痢疾的病因有外感时邪疫毒和饮食不节两个方面。外感疫毒、湿热、寒湿之邪，内伤饮食不洁。病位在肠，与脾胃有关。基本病机为邪毒壅塞肠道，传导失司，气血凝滞，腐败化为脓血。`,
+    chief: '腹痛腹泻伴脓血便3天。',
+    hpi: `患者3天前在外聚餐后出现腹痛腹泻，每日10余次，大便带脓血黏液，里急后重，伴发热38.5℃、恶心呕吐。刻下：腹痛阵阵，里急后重，下痢赤白脓血，肛门灼热，发热口渴，小便短赤。`,
+    exam: `T 38.7℃　P 104次/分　BP 115/70mmHg。脐周及左下腹压痛，肠鸣音活跃。舌红、苔黄腻，脉滑数。`,
+    aux: `大便常规：WBC满视野，RBC 20~30/HP，脓细胞（+++）；大便培养：志贺菌属生长；血常规：WBC 15.6×10⁹/L，N 85%。`,
+    wmDx: `急性细菌性痢疾`,
+    adv: `1. 消化道隔离，卧床休息。2. 流质饮食，多饮水，必要时静脉补液。3. 喹诺酮类抗生素抗感染。4. 中药每日1剂，分2次温服。5. 针灸天枢、关元、足三里、上巨虚，泻法。6. 5天后复查大便常规。`,
+    src: `《中医内科学》（第十版，人民卫生出版社，2017年1月）痢疾；《中医病证诊断疗效标准》（ZY/T001-94）痢疾`,
+    synd: [
+      { name: '湿热痢证', points: `腹部疼痛，里急后重，下痢赤白相兼，黏液脓血便，肛门灼热，小便短赤，或有发热，舌红，苔黄腻，脉滑数。病机为湿热蕴结，壅塞肠道，传导失司，气血凝滞，化为脓血。`, treat: '清肠化湿，调和气血', formula: '芍药汤加减', herbs: `白芍20g　黄芩12g　黄连8g　大黄6g（后下）　木香10g　槟榔10g　当归12g　肉桂3g　甘草6g`, acu: `天枢、关元、足三里、上巨虚，泻法`, kw: ['湿热痢','赤白脓血','肛门灼热','脉滑数'] },
+      { name: '疫毒痢证', points: `发病急骤，壮热口渴，头痛烦躁，恶心呕吐，大便频频，痢下鲜紫脓血，腹痛剧烈，里急后重显著，甚者神昏惊厥，舌红绛，苔黄燥，脉滑数或微欲绝。病机为疫毒之邪，内蕴肠胃，燔灼气血，灼伤营阴，内闭心神。`, treat: '清热解毒，凉血止痢', formula: '白头翁汤加减', herbs: `白头翁20g　秦皮12g　黄连10g　黄柏12g　金银花15g　赤芍15g　牡丹皮15g　生地黄20g`, acu: `天枢、上巨虚、十宣（点刺放血）、水沟，泻法`, kw: ['疫毒痢','发病急','鲜紫脓血','神昏'] },
+      { name: '寒湿痢证', points: `腹痛拘急，下痢赤白黏冻，白多赤少，或为纯为白冻，里急后重，头身困重，口淡无味，饮食乏味，胃脘饱闷，舌淡，苔白腻，脉濡缓。病机为寒湿客肠，气血凝滞，传导失司。`, treat: '温中燥湿，调气和血', formula: '不换金正气散加减', herbs: `藿香10g　苍术12g　厚朴10g　制半夏12g　陈皮10g　茯苓15g　桂枝10g　炮姜6g　甘草6g`, acu: `天枢、关元、中脘、足三里，温针灸`, kw: ['寒湿痢','白多赤少','头身困重','苔白腻'] },
+      { name: '休息痢证', points: `下痢时发时止，迁延不愈，常因饮食不当、受凉、劳累而发，发时大便次数增多，夹有赤白黏冻，腹胀食少，倦怠嗜卧，舌淡苔腻，脉濡或虚数。病机为痢疾迁延，正虚邪恋，大肠传导失司。`, treat: '温中清肠，调气化滞', formula: '连理汤加减', herbs: `人参10g　白术12g　干姜6g　黄连8g　茯苓15g　炙甘草6g　木香10g　槟榔10g`, acu: `天枢、关元、脾俞、足三里，平补平泻`, kw: ['休息痢','时发时止','迁延不愈','正虚邪恋'] }
+    ]
+  }
+  );
+
+
+function ensureTplById(id) {
+  const found = tplById(id);
+  if (found) return found;
+  const m = /^k_(\w+)_(\d+)([im])$/.exec(id || '');
+  if (!m) return null;
+  const kb = KB.find(k => k.id === m[1]);
+  if (!kb) return null;
+  const t = composeTpl(kb, +m[2], m[3] === 'i' ? '入院记录' : '门诊病历', id);
+  DYN[id] = t;
+  return t;
+}
+
+
+/* ===================== 示例病历（可恢复） ===================== */
+const DEMO_RECORDS = [
+  { id: 'r7', tplId: 't3', title: '中风病恢复期病程记录·李某某', patient: '李某某　男　63岁', disease: '中风病', type: '日常病程记录', score: 86, status: 'archived', date: '2026-10-15', fields: null },
+  { id: 'r1', tplId: 't1', title: '中风病急性期入院记录·李某某', patient: '李某某　男　63岁', disease: '中风病', type: '入院记录', score: 96, status: 'archived', date: '2026-10-18', fields: null },
+  { id: 'r4', tplId: 't6', title: '眩晕门诊初诊·孙某某', patient: '孙某某　男　54岁', disease: '眩晕', type: '门诊病历', score: 87, status: 'archived', date: '2026-10-20', fields: null },
+  { id: 'r2', tplId: 't5', title: '耳眩晕住院记录·赵某某', patient: '赵某某　女　46岁', disease: '眩晕', type: '入院记录', score: 93, status: 'review', date: '2026-10-22', fields: null },
+  { id: 'r5', tplId: 't8', title: '口僻门诊病历·刘某某', patient: '刘某某　男　35岁', disease: '面瘫', type: '门诊病历', score: 89, status: 'review', date: '2026-10-23', fields: null },
+  { id: 'r3', tplId: 't10', title: '颤证住院记录·高某某', patient: '高某某　男　69岁', disease: '颤证', type: '入院记录', score: 91, status: 'draft', date: '2026-10-27', fields: null },
+  { id: 'r6', tplId: 't9', title: '不寐门诊病历·陈某某', patient: '陈某某　女　38岁', disease: '不寐', type: '门诊病历', score: 82, status: 'draft', date: '2026-10-30', fields: null }
+];
+
+const STATUS_MAP = {
+  draft: { label: '草稿', cls: 'st-draft', next: 'review', nextLabel: '提交待审' },
+  review: { label: '待审', cls: 'st-review', next: 'archived', nextLabel: '标记归档' },
+  archived: { label: '已归档', cls: 'st-arch', next: 'draft', nextLabel: '退回草稿' }
+};
+
+const TITLE_MAP = {
+  '入院记录': '入　院　记　录',
+  '首次病程记录': '首 次 病 程 记 录',
+  '日常病程记录': '病 程 记 录',
+  '上级医师查房记录': '上 级 医 师 查 房 记 录',
+  '门诊病历': '门（急）诊 病 历'
+};
+
+const TYPE_ORDER = ['入院记录', '首次病程记录', '日常病程记录', '上级医师查房记录', '门诊病历'];
+/* ===================== 存储与状态 ===================== */
+const LS_KEY = 'tcmws_v1';
+const state = {
+  records: [],
+  fields: {},
+  currentTpl: 't1',
+  editingId: null,
+  prefs: { view: 'work', tplDept: '全部', tplType: '全部', tplSort: 'score', kbDept: '全部', recStatus: 'all', recSort: 'dateDesc' }
+};
+let storageOK = true;
+let seededOnce = false;
+
+function persist() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      records: state.records, prefs: state.prefs,
+      lastTpl: state.currentTpl, lastFields: state.fields
+    }));
+    storageOK = true;
+  } catch (e) { storageOK = false; }
+  paintSaveBadge();
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || typeof d !== 'object') return false;
+    state.records = Array.isArray(d.records) ? d.records : [];
+    state.prefs = Object.assign(state.prefs, d.prefs || {});
+    if (d.lastTpl && tplById(d.lastTpl)) state.currentTpl = d.lastTpl;
+    if (d.lastFields && typeof d.lastFields === 'object') state.fields = d.lastFields;
+    return true;
+  } catch (e) { storageOK = false; return false; }
+}
+
+function paintSaveBadge() {
+  const b = document.getElementById('saveBadge');
+  const t = document.getElementById('saveTxt');
+  if (!b) return;
+  if (storageOK) { b.classList.remove('off'); t.textContent = '本机自动保存'; }
+  else { b.classList.add('off'); t.textContent = '存储受限·仅本次有效'; }
+}
+
+/* ===================== 小工具 ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nowStamp = () => {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+};
+const today = () => nowStamp().slice(0, 10);
+const uid = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const tplById = id => TPL.find(t => t.id === id) || DYN[id];
+
+function toast(msg, type) {
+  const box = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  box.appendChild(el);
+  box.classList.add('on');
+  setTimeout(() => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(-6px)'; el.style.transition = '.25s';
+    setTimeout(() => { el.remove(); if (!box.children.length) box.classList.remove('on'); }, 260);
+  }, 2100);
+}
+
+/* ===================== 评分引擎 ===================== */
+const TIME_RE = /\d+\s*(小时|分钟|天|日|周|月|年|h|d)/;
+const DxNameRE = /脑梗死|脑卒中|中风病|梅尼埃|帕金森|面神经麻痹|失眠症|高血压/;
+
+function evalQuality(tpl, f) {
+  const secs = tpl.sections;
+  const filled = secs.filter(s => (f[s.key] || '').trim().length > 0);
+  const completeRatio = secs.length ? filled.length / secs.length : 0;
+  const completeScore = completeRatio * 60;
+
+  const get = k => (f[k] || '').trim();
+  const all = secs.map(s => get(s.key)).join(' ');
+  const chief = get('chief');
+  const hist = get('hpi') || get('course') || get('feature') || get('round') || '';
+  const four = get('four') || '';
+  const tcm = get('tcmDx') || '';
+  const treat = get('treat') || '';
+  const rx = get('rx') || '';
+  const adv = get('advice') || get('plan') || '';
+  const sign = get('sign') || '';
+  const basis = get('basis') || get('discuss') || get('adjust') || '';
+
+  const checks = [
+    { name: '主诉含时间', pass: TIME_RE.test(chief), tip: '主诉缺持续时间' },
+    { name: '主诉不超过20字', pass: chief.length > 0 && chief.replace(/[，。、；：\s]/g, '').length <= 20, tip: '主诉超过20字' },
+    { name: '主诉不含诊断名', pass: chief.length > 0 && !DxNameRE.test(chief), tip: '主诉用了诊断名' },
+    { name: '病史够具体', pass: hist.length >= 60, tip: '病史描述过简' },
+    { name: '有四诊舌脉', pass: /舌/.test(four || all) && /脉/.test(four || all), tip: '缺舌象或脉象' },
+    { name: '中医诊断带证型', pass: /证/.test(tcm), tip: '中医诊断未写证型' },
+    { name: '有治法', pass: treat.length >= 4, tip: '治法未写' },
+    { name: '方药剂量与剂数', pass: /g|克/.test(rx) && /剂/.test(rx), tip: '方药缺剂量或剂数' },
+    { name: '有辨证分析', pass: basis.length >= 30, tip: '辨证依据不足30字' },
+    { name: '医嘱与调护', pass: adv.length >= 15, tip: '医嘱过于简略' },
+    { name: '医师签名', pass: sign.length >= 2, tip: '缺医师签名' }
+  ];
+  const passCount = checks.filter(c => c.pass).length;
+  const normScore = checks.length ? (passCount / checks.length) * 40 : 0;
+  const score = Math.round(Math.min(100, completeScore + normScore));
+  const issues = checks.filter(c => !c.pass).map(c => c.tip);
+  if (filled.length < secs.length) issues.unshift('还有 ' + (secs.length - filled.length) + ' 项未填');
+  return { score: score, issues: issues, passCount: passCount, total: checks.length, filled: filled.length, totalSec: secs.length };
+}
+
+function gradeOf(s) {
+  if (s >= 90) return { t: '优秀', c: '#4A736A' };
+  if (s >= 80) return { t: '良好', c: '#5E8C81' };
+  if (s >= 70) return { t: '合格', c: '#A9895F' };
+  return { t: '待完善', c: '#B0827A' };
+}
+
+/* ===================== 成文 ===================== */
+function buildLines(tpl, f) {
+  const lines = [];
+  tpl.sections.forEach(s => {
+    const v = (f[s.key] || '').trim();
+    if (!v) return;
+    const inline = s.key === 'base' || s.key === 'sign';
+    lines.push({ label: inline ? '' : s.label + '：', value: v });
+  });
+  return lines;
+}
+
+function plainText(tpl) {
+  const f = state.fields;
+  const lines = buildLines(tpl, f);
+  let out = (TITLE_MAP[tpl.type] || '病历记录') + '\n';
+  out += '（' + tpl.dept + '　' + tpl.disease + '·' + tpl.syn + '）\n\n';
+  lines.forEach(l => { out += l.label + l.value + '\n'; });
+  out += '\n—— 本文件由「AI 中医病历书写台」离线生成，须经执业医师审核签名后使用 ——\n';
+  return out;
+}
+
+function renderPreview() {
+  const tpl = tplById(state.currentTpl);
+  const paper = document.getElementById('paper');
+  if (!tpl) return;
+  const lines = buildLines(tpl, state.fields);
+  let html = '<div class="pv-title">' + esc(TITLE_MAP[tpl.type] || '病历记录') + '</div>';
+  html += '<div class="pv-sub">' + esc(tpl.dept + '　' + tpl.disease + '·' + tpl.syn) + '</div>';
+  if (!lines.length) {
+    html += '<div class="pv-empty">左侧还没有内容。<br>可点「填入示例内容」看规范写法，或直接开始写。<br><br>提示：先把主诉和现病史写清楚，其余按四诊→诊断→治法→方药→调护的顺序补。</div>';
+  } else {
+    lines.forEach(l => {
+      html += '<div class="paper-line">' + (l.label ? '<span class="k">' + esc(l.label) + '</span>' : '') + esc(l.value) + '</div>';
+    });
+  }
+  paper.innerHTML = html;
+  const txt = plainText(tpl);
+  document.getElementById('pvCount').textContent = txt.replace(/\s/g, '').length + ' 字';
+  document.getElementById('pvMeta').textContent = tpl.type + ' · ' + tpl.syn;
+}
+
+function renderQuality() {
+  const tpl = tplById(state.currentTpl);
+  const q = evalQuality(tpl, state.fields);
+  const g = gradeOf(q.score);
+  const r = 22, c = 2 * Math.PI * r;
+  const ring = document.getElementById('qRing');
+  ring.innerHTML = '<svg width="56" height="56" viewBox="0 0 56 56">' +
+    '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="#E3EDE8" stroke-width="5"/>' +
+    '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="' + g.c + '" stroke-width="5" stroke-linecap="round" stroke-dasharray="' + (c * q.score / 100).toFixed(1) + ' ' + c.toFixed(1) + '"/>' +
+    '</svg><b style="color:' + g.c + '">' + q.score + '</b>';
+  document.getElementById('qTitle').textContent = '质评：' + q.score + ' 分 · ' + g.t;
+  document.getElementById('qDesc').innerHTML = '必备字段 ' + q.filled + '/' + q.totalSec + ' 项已填，书写规范 ' + q.passCount + '/' + q.total + ' 项达标。' +
+    (q.score >= 85 ? '已达合格线（85 分），可保存后提交上级审核。' : '低于 85 分合格线，先补下面的红标项。');
+  const box = document.getElementById('qIssues');
+  if (!q.issues.length) {
+    box.innerHTML = '<span class="q-issue ok">✓ 规范检查全部通过</span>';
+  } else {
+    box.innerHTML = q.issues.slice(0, 6).map(t => '<span class="q-issue">' + esc(t) + '</span>').join('');
+  }
+}
+
+function renderForm() {
+  const tpl = tplById(state.currentTpl);
+  const area = document.getElementById('formArea');
+  area.innerHTML = tpl.sections.map(s => {
+    const v = state.fields[s.key] || '';
+    return '<div class="field">' +
+      '<label><b>' + esc(s.label) + '</b><i>' + (v.replace(/\s/g, '').length) + ' 字</i></label>' +
+      '<textarea data-key="' + s.key + '" rows="' + (s.rows || 3) + '" placeholder="' + esc(s.label) + '…">' + esc(v) + '</textarea>' +
+      '</div>';
+  }).join('');
+}
+
+/* ===================== 书写台动作 ===================== */
+function loadTemplate(id, opts) {
+  const tpl = tplById(id);
+  if (!tpl) return;
+  state.currentTpl = id;
+  state.editingId = null;
+  const useDemo = !!(opts && opts.demo === true);
+  state.fields = {};
+  tpl.sections.forEach(s => { state.fields[s.key] = useDemo ? s.v : ''; });
+  const sel = document.getElementById('tplSelect');
+  if (sel) {
+    if (!Array.prototype.some.call(sel.options, o => o.value === id)) {
+      const og = document.createElement('optgroup'); og.label = '当前病历模板';
+      og.appendChild(new Option(tpl.name, tpl.id)); sel.appendChild(og);
+    }
+    sel.value = id;
+  }
+  renderForm(); renderPreview(); renderQuality(); persist();
+}
+
+function fillDemo() {
+  const tpl = tplById(state.currentTpl);
+  tpl.sections.forEach(s => { state.fields[s.key] = s.v; });
+  renderForm(); renderPreview(); renderQuality(); persist();
+  toast('已填入「' + tpl.disease + '·' + tpl.syn + '」示例内容，可直接改写', 'ok');
+}
+
+function resetForm() {
+  const tpl = tplById(state.currentTpl);
+  Object.keys(state.fields).forEach(k => state.fields[k] = '');
+  state.editingId = null;
+  renderForm(); renderPreview(); renderQuality(); persist();
+  toast('表单已清空，可以开始写新的了');
+}
+
+function parsePatient(base) {
+  const nameM = /姓名[：:]\s*([^\s　，,。]{1,12})/.exec(base || '');
+  const sexM = /性别[：:]\s*([男女])/.exec(base || '');
+  const ageM = /年龄[：:]\s*(\d{1,3}\s*岁)/.exec(base || '');
+  const name = nameM ? nameM[1] : '未署名';
+  return { name: name, text: name + '　' + (sexM ? sexM[1] : '—') + '　' + (ageM ? ageM[1] : '—') };
+}
+
+function saveRecord() {
+  const tpl = tplById(state.currentTpl);
+  const q = evalQuality(tpl, state.fields);
+  const filledAny = tpl.sections.some(s => (state.fields[s.key] || '').trim());
+  if (!filledAny) { toast('还没有内容，先填几项再保存', 'warn'); return; }
+  const p = parsePatient(state.fields.base);
+  const title = tpl.disease + tpl.type + '·' + p.name;
+  if (state.editingId) {
+    const rec = state.records.find(r => r.id === state.editingId);
+    if (rec) {
+      rec.title = title; rec.patient = p.text; rec.score = q.score;
+      rec.fields = JSON.parse(JSON.stringify(state.fields));
+      rec.date = today(); rec.updatedAt = nowStamp();
+      persist(); renderKpis(); renderRecent(); renderRecList(); renderCharts();
+      toast('已更新病历：' + title + '（质评 ' + q.score + ' 分）', 'ok');
+      return;
+    }
+  }
+  const rec = {
+    id: uid(), tplId: tpl.id, title: title, patient: p.text,
+    disease: tpl.disease, type: tpl.type, score: q.score, status: 'draft',
+    date: today(), createdAt: nowStamp(), updatedAt: nowStamp(),
+    fields: JSON.parse(JSON.stringify(state.fields))
+  };
+  state.records.unshift(rec);
+  state.editingId = rec.id;
+  persist(); renderKpis(); renderRecent(); renderRecList(); renderCharts();
+  toast('已保存为草稿：' + title + '（质评 ' + q.score + ' 分）', 'ok');
+}
+
+function copyText() {
+  const tpl = tplById(state.currentTpl);
+  const txt = plainText(tpl);
+  const done = () => toast('全文已复制，可直接粘贴到病历系统', 'ok');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt, done));
+  } else { fallbackCopy(txt, done); }
+}
+function fallbackCopy(txt, done) {
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败，请手动选中预览区内容', 'warn'); }
+  ta.remove();
+}
+
+function downloadTxt() {
+  const tpl = tplById(state.currentTpl);
+  const p = parsePatient(state.fields.base);
+  const name = tpl.disease + tpl.type + '·' + p.name + '.txt';
+  const blob = new Blob([plainText(tpl)], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  toast('已下载：' + name, 'ok');
+}
+/* ===================== 概览 ===================== */
+function renderKpis() {
+  const n = state.records.length;
+  const avg = n ? Math.round(state.records.reduce((s, r) => s + (r.score || 0), 0) / n) : 0;
+  const review = state.records.filter(r => r.status === 'review').length;
+  const drafts = state.records.filter(r => r.status === 'draft').length;
+  document.getElementById('kpiTpl').innerHTML = TPL.length + '<i>套</i>';
+  document.getElementById('kpiRec').innerHTML = n + '<i>份</i>';
+  document.getElementById('kpiRecSub').textContent = n ? ('草稿 ' + drafts + ' 份 · 已归档 ' + state.records.filter(r => r.status === 'archived').length + ' 份') : '尚未保存病历';
+  document.getElementById('kpiScore').innerHTML = (n ? avg : '—') + '<i>分</i>';
+  document.getElementById('kpiReview').innerHTML = review + '<i>份</i>';
+  document.getElementById('kpiReviewSub').textContent = review ? '需上级医师审核签名' : '无待审任务';
+  const tc = document.getElementById('tabRecCount');
+  if (tc) tc.textContent = n;
+  const tt = document.getElementById('tabTplCount');
+  if (tt) tt.textContent = TPL.length;
+  const ks = document.getElementById('kpiTplSub');
+  if (ks) ks.textContent = '覆盖 ' + KB.length + ' 个病种 · ' + TPL.map(t => deptOf(t.dept)).filter((v, i, a) => a.indexOf(v) === i).length + ' 个科室';
+}
+
+function renderRecent() {
+  const box = document.getElementById('recentList');
+  const list = state.records.slice().sort((a, b) => (b.updatedAt || b.date).localeCompare(a.updatedAt || a.date)).slice(0, 5);
+  if (!list.length) {
+    box.innerHTML = emptyHtml('还没有病历', '点下面按钮，用模板写第一份', '<button class="btn btn-primary btn-sm" data-go="work">去书写台</button>');
+    return;
+  }
+  box.innerHTML = list.map(r => '<div class="rec" style="box-shadow:none">' +
+    '<div class="rec-main"><h4>' + esc(r.title) + '</h4>' +
+    '<div class="rec-sub"><span>' + esc(r.patient) + '</span><span>' + esc(r.type) + '</span><span>' + esc((r.updatedAt || r.date).slice(0, 16)) + '</span></div></div>' +
+    '<div class="rec-side"><span class="badge ' + STATUS_MAP[r.status].cls + '">' + STATUS_MAP[r.status].label + '</span>' +
+    '<span class="score-pill">' + (r.score || '—') + '</span></div></div>').join('');
+}
+
+function emptyHtml(title, desc, btn) {
+  return '<div class="empty"><div class="ico">✎</div><h4>' + esc(title) + '</h4><p>' + esc(desc) + '</p>' + (btn || '') + '</div>';
+}
+
+/* ===================== 模板库 ===================== */
+function renderTplSelect() {
+  const sel = document.getElementById('tplSelect');
+  const groups = {};
+  TPL.forEach(t => {
+    const k = deptOf(t.dept) + '｜' + t.disease;
+    (groups[k] = groups[k] || { dept: deptOf(t.dept), disease: t.disease, list: [] }).list.push(t);
+  });
+  let html = '';
+  Object.keys(groups).forEach(k => {
+    html += '<optgroup label="' + esc(groups[k].dept + ' · ' + groups[k].disease) + '">';
+    groups[k].list.forEach(t => { html += '<option value="' + t.id + '">' + esc(t.syn) + '（' + esc(t.type) + ' · ' + t.score + '分）</option>'; });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+  sel.value = state.currentTpl;
+}
+
+function renderTplChips() {
+  const box = document.getElementById('tplDiseaseChips');
+  const depts = ['全部'].concat(TPL.map(t => deptOf(t.dept)).filter((v, i, a) => a.indexOf(v) === i));
+  box.innerHTML = depts.map(d => {
+    const c = d === '全部' ? TPL.length : TPL.filter(t => deptOf(t.dept) === d).length;
+    return '<button class="chip' + (state.prefs.tplDept === d ? ' on' : '') + '" data-tpl-dept="' + esc(d) + '">' + esc(d) + '<em>' + c + '</em></button>';
+  }).join('');
+
+  const sel = document.getElementById('tplTypeSel');
+  if (!sel.options.length) {
+    sel.innerHTML = '<option value="全部">全部记录类型</option>' + TYPE_ORDER.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+  }
+  sel.value = state.prefs.tplType;
+  document.getElementById('tplSortSel').value = state.prefs.tplSort;
+}
+
+function filteredTpls() {
+  const kw = (document.getElementById('tplSearch').value || '').trim().toLowerCase();
+  let list = TPL.filter(t => {
+    const okD = state.prefs.tplDept === '全部' || deptOf(t.dept) === state.prefs.tplDept;
+    const okT = state.prefs.tplType === '全部' || t.type === state.prefs.tplType;
+    const hay = (t.name + t.disease + t.syn + t.tags.join('') + t.src).toLowerCase();
+    const okK = !kw || hay.indexOf(kw) > -1;
+    return okD && okT && okK;
+  });
+  const s = state.prefs.tplSort;
+  if (s === 'score') list.sort((a, b) => b.score - a.score);
+  else if (s === 'scoreAsc') list.sort((a, b) => a.score - b.score);
+  else list.sort((a, b) => a.disease.localeCompare(b.disease, 'zh'));
+  return list;
+}
+
+function renderTplGrid() {
+  const list = filteredTpls();
+  const grid = document.getElementById('tplGrid');
+  const empty = document.getElementById('tplEmpty');
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.innerHTML = emptyHtml('没有匹配的模板', '换个病种或清空搜索词试试', '<button class="btn btn-ghost btn-sm" id="btnResetTplFilter">清空筛选条件</button>');
+    const b = document.getElementById('btnResetTplFilter');
+    if (b) b.onclick = () => {
+      state.prefs.tplDept = '全部'; state.prefs.tplType = '全部';
+      document.getElementById('tplSearch').value = '';
+      renderTplChips(); renderTplGrid(); toast('已清空筛选');
+    };
+    return;
+  }
+  empty.innerHTML = '';
+  grid.innerHTML = list.map(t => '<div class="tpl-card">' +
+    '<div class="tpl-top"><h4>' + esc(t.name) + '</h4><div class="tpl-score">' + t.score + '<span>分</span></div></div>' +
+    '<div class="tpl-meta">' +
+    '<span class="tag g">' + esc(t.disease) + '</span>' +
+    '<span class="tag s">' + esc(t.syn) + '</span>' +
+    '<span class="tag">' + esc(t.type) + '</span>' +
+    t.tags.slice(0, 2).map(x => '<span class="tag">' + esc(x) + '</span>').join('') +
+    '</div>' +
+    '<div class="tpl-src">依据：' + esc(t.src) + '</div>' +
+    '<div class="tpl-acts">' +
+    '<button class="btn btn-primary btn-sm" data-use="' + t.id + '">用此模板</button>' +
+    '<button class="btn btn-ghost btn-sm" data-view-demo="' + t.id + '">看示例</button>' +
+    '</div></div>').join('');
+}
+
+/* ===================== 书写台：新建 / 西医转中医 ===================== */
+function blankFields(tplId) {
+  const tpl = tplById(tplId);
+  const f = {};
+  if (tpl) tpl.sections.forEach(s => { f[s.key] = ''; });
+  return f;
+}
+
+function newRecord() {
+  const tpl = tplById(state.currentTpl);
+  state.fields = blankFields(state.currentTpl);
+  state.editingId = null;
+  renderForm(); renderPreview(); renderQuality(); persist();
+  toast('已新建空白病历（骨架：' + (tpl ? tpl.name : '—') + '）', 'ok');
+}
+
+function detectDisease(text) {
+  const t = text.toLowerCase();
+  let best = null;
+  const consider = (kb, s, hits, rule) => {
+    if (s > 0 && (!best || s > best.score)) best = { kb: kb, score: s, hits: hits, rule: rule || null };
+  };
+  // 1) 西医→中医 映射规则：命中具体西医病名时优先
+  WM_MAP.forEach(r => {
+    const kb = kbById(r.kb);
+    if (!kb) return;
+    let hit = '';
+    r.w.forEach(w => { if (!hit && t.indexOf(w.toLowerCase()) > -1) hit = w; });
+    if (!hit) return;
+    const extra = [];
+    kb.wm.forEach(w => { if (t.indexOf(w.toLowerCase()) > -1) extra.push(w); });
+    kb.sig.forEach(w => { if (t.indexOf(w) > -1) extra.push(w); });
+    consider(kb, 20 + Math.min(hit.length, 8),
+      ['西医「' + hit + '」→ 中医「' + kb.name + '」'].concat(extra.slice(0, 6)),
+      Object.assign({}, r, { hit: hit }));
+  });
+  // 2) 病种库自带关键词兜底（未命中映射规则或症状描述为主时）
+  KB.forEach(kb => {
+    let s = 0; const hits = [];
+    kb.wm.forEach(w => { if (t.indexOf(w.toLowerCase()) > -1) { s += 6; hits.push(w); } });
+    kb.sig.forEach(w => { if (t.indexOf(w) > -1) { s += 2; hits.push(w); } });
+    if (t.indexOf(kb.name) > -1) { s += 8; hits.push(kb.name); }
+    consider(kb, s, hits.filter((v, i, a) => a.indexOf(v) === i), null);
+  });
+  return best || { kb: null, score: 0, hits: [], rule: null };
+}
+
+function detectSyndrome(kb, text, rule) {
+  let best = { idx: 0, score: 0, hits: [] };
+  kb.synd.forEach((sy, i) => {
+    let s = 0; const hits = [];
+    sy.kw.forEach(k => { if (text.indexOf(k) > -1) { s += 3; hits.push(k); } });
+    const core = sy.name.replace(/[（(].*|[证证型].*$/g, '');
+    if (core && text.indexOf(core) > -1) { s += 3; hits.push(core); }
+    if (rule && rule.syn && rule.syn.indexOf(sy.name) > -1) { s += 2; hits.push('西医病名提示'); }
+    if (s > best.score) best = { idx: i, score: s, hits: hits.filter((v, j, a) => a.indexOf(v) === j) };
+  });
+  return best;
+}
+
+function pickSeg(text, names) {
+  const re = new RegExp('(?:^|[\\n，,；;])\\s*(?:' + names.join('|') + ')\\s*[：:]\\s*([\\s\\S]*?)(?=\\n|$|(?:主诉|现病史|既往史|个人史|家族史|查体|体格检查|辅助检查|中医诊断|西医诊断|辨证|治法|处理|医嘱|方药)\\s*[：:])');
+  const m = re.exec(text);
+  return m ? m[1].replace(/\s*\n\s*/g, '；').trim().replace(/[；;]$/, '') : '';
+}
+
+function guessChief(text, kb) {
+  const t = text.replace(/^(?:患者|病人)[，,、]?/, '');
+  const m = /([^。；\n，,]{2,16}?(?:\d+|[一二三四五六七八九十]+)\s*(?:小时|天|日|周|个月|月|年))/.exec(t);
+  if (m) {
+    let s = m[1].trim().replace(/^[^，,]{0,10}(?:男|女)[，,]?\s*\d{0,3}岁[，,]?/, '');
+    if (s.replace(/[，。；、\s]/g, '').length <= 20) return s.replace(/[。；]$/, '') + '。';
+  }
+  return kb.chief;
+}
+
+function extractFromText(text, kb, syn, tpl) {
+  const f = {};
+  tpl.sections.forEach(s => { f[s.key] = s.v; });
+  const nameM = /姓名[：:]\s*([^\s　，,。]{1,8})/.exec(text);
+  const sexM = /(?:性别[：:]?\s*)?([男女])\s*(?:性|，|,)/.exec(text);
+  const ageM = /(\d{1,3})\s*岁/.exec(text);
+  const name = nameM ? nameM[1] : '×××';
+  const sex = sexM ? sexM[1] : '';
+  const age = ageM ? ageM[1] + '岁' : '';
+  if (tpl.type === '门诊病历') {
+    f.base = '就诊时间：' + nowStamp() + '　就诊科室：中医' + kb.dept + '　姓名：' + name + '　性别：' + (sex || '　') + '　年龄：' + (age || '　') + '　联系电话：';
+  } else {
+    f.base = '姓名：' + name + '　性别：' + (sex || '　') + '　年龄：' + (age || '　') + '　民族：汉族　婚姻：　职业：　住址：　　　　入院时间：' + today() + '　记录时间：' + nowStamp() + '　病史陈述者：患者本人（可靠）';
+  }
+  const chief = pickSeg(text, ['主诉']);
+  f.chief = chief || guessChief(text, kb);
+  const hpi = pickSeg(text, ['现病史', '病史']);
+  if (hpi) f.hpi = hpi;
+  const exam = pickSeg(text, ['查体', '体格检查']);
+  if (exam) f.exam = exam;
+  f.four = fourOf(kb, syn, [exam, text]);
+  const aux = pickSeg(text, ['辅助检查', '检查']);
+  if (aux) f.aux = aux;
+  const past = pickSeg(text, ['既往史']);
+  if (past && tpl.type === '入院记录') f.past = past;
+  const wmDx = pickSeg(text, ['西医诊断', '诊断']);
+  if (wmDx) f.wmDx = wmDx;
+  const tcmDx = pickSeg(text, ['中医诊断']);
+  if (tcmDx) f.tcmDx = tcmDx;
+  const basis = pickSeg(text, ['辨证依据', '辨证分析', '辨证']);
+  if (basis) f.basis = basis + '舌脉合参，辨为' + syn.name + '。' + kb.cause;
+  return f;
+}
+
+function confOf(score, hi, mid) {
+  return score >= hi ? '高' : (score >= mid ? '中' : '低');
+}
+
+function applyGeneration(kb, idx, type, text, meta) {
+  const syn = kb.synd[idx];
+  const tpl = ensureTplById('k_' + kb.id + '_' + idx + (type === '入院记录' ? 'i' : 'm'));
+  if (!tpl) { toast('这个病种暂时没有可用模板', 'warn'); return; }
+  state.currentTpl = tpl.id;
+  state.editingId = null;
+  state.fields = extractFromText(text, kb, syn, tpl);
+  state.gen = { kbId: kb.id, type: type, text: text, synIdx: idx };
+  renderForm(); renderPreview(); renderQuality(); persist();
+  renderGenResult(kb, idx, type, meta);
+}
+
+function renderGenResult(kb, idx, type, meta) {
+  const box = document.getElementById('genResult');
+  const syn = kb.synd[idx];
+  const synConf = confOf(meta.synScore, 6, 3);
+  const ev = meta.hits.length ? meta.hits.slice(0, 10).join('、') : '未命中明显关键词';
+  box.hidden = false;
+  box.innerHTML =
+    '<div class="gen-res-hd">' +
+    '<span class="tag g">中医病名：' + esc(kb.name) + '</span>' +
+    '<span class="tag s">证型：' + esc(syn.name) + '</span>' +
+    '<span class="tag">' + esc(type) + '</span>' +
+    '<span class="gen-conf">病种置信度 ' + confOf(meta.dScore, 10, 5) + ' · 证型置信度 ' + synConf + '</span>' +
+    '</div>' +
+    '<div class="gen-ev"><b>识别依据：</b>' + esc(ev) + (meta.score ? '（匹配得分 ' + meta.score + '）' : '') + '。已套用「' + esc(kb.name) + '·' + esc(syn.name) + '」骨架，' + (meta.textHits ? '并代入你粘贴的主诉/病史/查体/检查。' : '内容为病种示例底稿，请按实际情况改写。') + '</div>' +
+    '<div class="gen-row"><label for="genSynSel">换个证型</label><select id="genSynSel">' +
+    kb.synd.map((s, i) => '<option value="' + i + '"' + (i === idx ? ' selected' : '') + '>' + esc(s.name) + '｜' + esc(s.treat) + '</option>').join('') +
+    '</select><span class="sub">换证型会按同一份输入重新成文</span></div>' +
+    '<div class="gen-note">' +
+    (meta.rule ? '映射规则：西医「' + esc(meta.rule.hit || '') + '」→ 中医「' + esc(kb.name) + '」（' + esc(meta.rule.note || '常见对应关系') + '）。' : '') +
+    '依据：' + esc(kb.src) + '。中医病名描述见「中医病种库」。</div>';
+}
+
+function generateFromWM() {
+  const text = (document.getElementById('wmInput').value || '').trim();
+  if (!text) { toast('先把西医病历或诊断粘贴进上面的框', 'warn'); return; }
+  let type = document.getElementById('genTypeSel').value;
+  if (type === 'auto') type = /入院|住院|病房|入院记录/.test(text) ? '入院记录' : '门诊病历';
+  const pick = document.getElementById('genKbSel').value;
+  const det = pick && pick !== 'auto' ? { kb: KB.find(k => k.id === pick), score: 0, hits: [] } : detectDisease(text);
+  if (!det.kb) { toast('没识别出中医病种，请在“病种”里手动选一个再生成', 'warn'); return; }
+  const sd = detectSyndrome(det.kb, text, det.rule);
+  const meta = {
+    hits: det.hits.concat(sd.hits).filter((v, i, a) => a.indexOf(v) === i),
+    score: det.score + sd.score, dScore: det.score, synScore: sd.score,
+    rule: det.rule || null,
+    textHits: /主诉[：:]|现病史[：:]|查体[：:]|体格检查[：:]|辅助检查[：:]/.test(text)
+  };
+  applyGeneration(det.kb, sd.idx, type, text, meta);
+  document.getElementById('genTypeSel').value = type;
+  switchView('work');
+  toast('已生成：' + det.kb.name + '·' + det.kb.synd[sd.idx].name + '（' + type + '）', 'ok');
+}
+
+/* ===================== 中医病种库 ===================== */
+function kbHay(kb) {
+  const mapTerms = WM_MAP.filter(r => r.kb === kb.id).map(r => r.w.join('') + (r.note || '')).join('');
+  return (kb.name + kb.alias + kb.dept + kb.wm.join('') + mapTerms + kb.synd.map(s => s.name + s.treat + s.formula + s.herbs + s.kw.join('')).join('') + kb.def).toLowerCase();
+}
+
+function renderKbChips() {
+  const box = document.getElementById('kbDeptChips');
+  const depts = ['全部'].concat(KB_DEPT_LIST.filter(d => KB.filter(k => k.dept === d).length));
+  box.innerHTML = depts.map(d => {
+    const n = d === '全部' ? KB.length : KB.filter(k => k.dept === d).length;
+    return '<button class="chip' + (state.prefs.kbDept === d ? ' on' : '') + '" data-kbdept="' + esc(d) + '">' + esc(d) + '<em>' + n + '</em></button>';
+  }).join('');
+}
+
+function renderKb() {
+  const grid = document.getElementById('kbGrid');
+  const empty = document.getElementById('kbEmpty');
+  const kw = (document.getElementById('kbSearch').value || '').trim().toLowerCase();
+  const list = KB.filter(kb => {
+    const okD = state.prefs.kbDept === '全部' || kb.dept === state.prefs.kbDept;
+    return okD && (!kw || kbHay(kb).indexOf(kw) > -1);
+  });
+  const tc = document.getElementById('tabKbCount');
+  if (tc) tc.textContent = KB.length;
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.innerHTML = emptyHtml('没有匹配的病种', '换个科室或搜索词试试，也可搜方剂、药物、症状', '');
+    return;
+  }
+  empty.innerHTML = '';
+  grid.innerHTML = list.map(kb => '<div class="kb-card">' +
+    '<div class="kb-top"><h4>' + esc(kb.name) + '</h4><span class="tag g">' + esc(kb.dept) + '</span></div>' +
+    '<div class="kb-alias">西医对应：' + esc(kb.alias) + '</div>' +
+    '<div class="kb-def">' + esc(kb.def.length > 96 ? kb.def.slice(0, 96) + '…' : kb.def) + '</div>' +
+    '<div class="kb-meta"><span>' + kb.synd.length + ' 个证型</span><span>' + esc(kb.type) + '</span><span>' + esc(kb.src.split('；')[0]) + '</span></div>' +
+    '<div class="kb-acts">' +
+    '<button class="btn btn-ghost btn-sm" data-kb="' + kb.id + '">病名描述</button>' +
+    '<button class="btn btn-primary btn-sm" data-kb-write="' + kb.id + '|0|i">写入院病历</button>' +
+    '<button class="btn btn-sand btn-sm" data-kb-write="' + kb.id + '|0|m">写门诊病历</button>' +
+    '</div></div>').join('');
+}
+
+function kbWmText(kb) {
+  const mapped = WM_MAP.filter(r => r.kb === kb.id).map(r => r.w).reduce((a, b) => a.concat(b), []);
+  return kb.wm.concat(mapped).filter((v, i, a) => a.indexOf(v) === i && v !== kb.name).join('、');
+}
+
+function openKbCard(id) {
+  const kb = KB.find(k => k.id === id);
+  if (!kb) return;
+  let body = '<p class="kb-desc">' + esc(kb.def) + '</p>' +
+    '<table class="kb-table">' +
+    '<tr><th>西医对应</th><td>' + esc(kbWmText(kb)) + '</td></tr>' +
+    '<tr><th>病因病机</th><td>' + esc(kb.cause) + '</td></tr>' +
+    '<tr><th>常见证型</th><td>' + kb.synd.map(s => '· ' + esc(s.name) + '：' + esc(s.treat) + '（' + esc(s.formula) + '）').join('<br>') + '</td></tr>' +
+    '<tr><th>针灸取穴</th><td>' + esc(kb.synd[0].acu) + '</td></tr>' +
+    '<tr><th>资料依据</th><td>' + esc(kb.src) + '</td></tr>' +
+    '</table>' +
+    '<div class="gen-row" style="margin-top:14px"><label for="kbSynSel">选择证型</label><select id="kbSynSel">' +
+    kb.synd.map((s, i) => '<option value="' + i + '">' + esc(s.name) + '</option>').join('') +
+    '</select></div>';
+  const write = type => {
+    const idx = +(document.getElementById('kbSynSel') || { value: 0 }).value;
+    writeDisease(kb.id, idx, type);
+    closeModal();
+  };
+  openModal(kb.name + ' · 中医病名描述', body, [
+    { label: '关闭', cls: 'btn-ghost', fn: closeModal },
+    { label: '照此写入院病历', cls: 'btn-primary', fn: () => write('入院记录') },
+    { label: '照此写门诊病历', cls: 'btn-sand', fn: () => write('门诊病历') }
+  ]);
+}
+
+function writeDisease(kbId, synIdx, type) {
+  const kb = KB.find(k => k.id === kbId);
+  if (!kb) return;
+  const tpl = ensureTplById('k_' + kb.id + '_' + synIdx + (type === '入院记录' ? 'i' : 'm'));
+  if (!tpl) { toast('模板生成失败', 'warn'); return; }
+  loadTemplate(tpl.id, { demo: true });
+  switchView('work');
+  toast('已按「' + kb.name + '·' + kb.synd[synIdx].name + '」载入' + type + '底稿，请核对改写', 'ok');
+}
+
+/* ===================== 规范速查：方药库 ===================== */
+function renderGuideRx() {
+  const box = document.getElementById('guideFx') || document.getElementById('guideRx');
+  if (!box) return;
+  const kw = ((document.getElementById('guideRxSearch') || {}).value || '').trim().toLowerCase();
+  const items = [];
+  KB.forEach(kb => kb.synd.forEach(sy => items.push({ d: kb.name, s: sy.name, t: sy.treat, f: sy.formula, h: sy.herbs, dept: kb.dept })));
+  const list = items.filter(x => !kw || (x.d + x.s + x.t + x.f + x.h).toLowerCase().indexOf(kw) > -1);
+  if (!list.length) { box.innerHTML = '<div class="hint">没有匹配的方证，换个关键词试试</div>'; return; }
+  box.innerHTML = '<div class="hint" style="margin-bottom:8px">共 ' + list.length + ' 条方证（知识库内置，剂量为示例，须辨证加减）</div>' +
+    list.slice(0, 120).map(x => '<div class="rx-item"><div class="rx-hd"><b>' + esc(x.d) + '·' + esc(x.s) + '</b><span>' + esc(x.dept) + '</span></div>' +
+      '<div class="rx-line"><em>治法</em>' + esc(x.t) + '</div>' +
+      '<div class="rx-line"><em>方剂</em>' + esc(x.f) + '</div>' +
+      '<div class="rx-line herb"><em>药物</em>' + esc(x.h) + '</div></div>').join('');
+}
+
+/* ===================== 数据导出 / 导入（离线备份） ===================== */
+function exportData() {
+  const payload = {
+    app: '中医病历书写台', version: 2, exportedAt: nowStamp(),
+    records: state.records, prefs: state.prefs,
+    lastTpl: state.currentTpl, lastFields: state.fields
+  };
+  const stamp = nowStamp().slice(0, 10).replace(/-/g, '') + '_' + nowStamp().slice(11, 16).replace(':', '');
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '中医病历数据_' + stamp + '.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  toast('已导出 ' + state.records.length + ' 份病历与书写台内容', 'ok');
+}
+
+function importData(file) {
+  if (!file) return;
+  const fr = new FileReader();
+  fr.onload = function () {
+    let d = null;
+    try { d = JSON.parse(String(fr.result)); } catch (e) { toast('文件不是有效的 JSON', 'warn'); return; }
+    const recs = Array.isArray(d) ? d : (d && d.records);
+    if (!Array.isArray(recs)) { toast('文件里没有病历数据', 'warn'); return; }
+    recs.forEach(r => { if (r && r.tplId && !tplById(r.tplId)) ensureTplById(r.tplId); });
+    const apply = mode => {
+      if (mode === 'replace') state.records = recs;
+      else {
+        recs.forEach(r => {
+          const i = state.records.findIndex(x => x.id === r.id);
+          if (i > -1) state.records[i] = r; else state.records.unshift(r);
+        });
+      }
+      if (!Array.isArray(d) && d.lastTpl && ensureTplById(d.lastTpl)) {
+        state.currentTpl = d.lastTpl;
+        state.fields = (d.lastFields && typeof d.lastFields === 'object') ? d.lastFields : blankFields(d.lastTpl);
+      }
+      if (!Array.isArray(d) && d.prefs) state.prefs = Object.assign(state.prefs, d.prefs);
+      persist();
+      renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts();
+      renderTplSelect(); renderTplChips(); renderTplGrid();
+      renderForm(); renderPreview(); renderQuality();
+      toast('已导入 ' + recs.length + ' 份病历（' + (mode === 'replace' ? '覆盖' : '合并') + '）', 'ok');
+    };
+    openModal('导入数据', '<p style="font-size:13.5px;margin:0 0 10px">文件包含 <b>' + recs.length + '</b> 份病历，当前本机有 <b>' + state.records.length + '</b> 份。</p><p class="hint">覆盖会清掉现有病历；合并会按病历编号去重。模板与病种库是本工具自带的，不受影响。</p>', [
+      { label: '取消', cls: 'btn-ghost', fn: closeModal },
+      { label: '合并导入', cls: 'btn-ghost', fn: function () { closeModal(); apply('merge'); } },
+      { label: '覆盖导入', cls: 'btn-primary', fn: function () { closeModal(); apply('replace'); } }
+    ]);
+  };
+  fr.readAsText(file, 'utf-8');
+}
+
+/* ===================== 病历列表 ===================== */
+function renderRecChips() {
+  const box = document.getElementById('recStatusChips');
+  const items = [
+    { k: 'all', label: '全部', n: state.records.length },
+    { k: 'draft', label: '草稿', n: state.records.filter(r => r.status === 'draft').length },
+    { k: 'review', label: '待审', n: state.records.filter(r => r.status === 'review').length },
+    { k: 'archived', label: '已归档', n: state.records.filter(r => r.status === 'archived').length }
+  ];
+  box.innerHTML = items.map(i => '<button class="chip' + (state.prefs.recStatus === i.k ? ' on' : '') + '" data-status="' + i.k + '">' + i.label + '<em>' + i.n + '</em></button>').join('');
+  document.getElementById('recSortSel').value = state.prefs.recSort;
+}
+
+function filteredRecords() {
+  const kw = (document.getElementById('recSearch').value || '').trim().toLowerCase();
+  let list = state.records.filter(r => {
+    const okS = state.prefs.recStatus === 'all' || r.status === state.prefs.recStatus;
+    const hay = (r.title + r.patient + r.disease + r.type).toLowerCase();
+    return okS && (!kw || hay.indexOf(kw) > -1);
+  });
+  const s = state.prefs.recSort;
+  if (s === 'dateDesc') list.sort((a, b) => (b.date + (b.updatedAt || '')).localeCompare(a.date + (a.updatedAt || '')));
+  else if (s === 'dateAsc') list.sort((a, b) => (a.date + (a.updatedAt || '')).localeCompare(b.date + (b.updatedAt || '')));
+  else list.sort((a, b) => (b.score || 0) - (a.score || 0));
+  return list;
+}
+
+function renderRecList() {
+  const list = filteredRecords();
+  const box = document.getElementById('recList');
+  const empty = document.getElementById('recEmpty');
+  if (!list.length) {
+    box.innerHTML = '';
+    if (!state.records.length) {
+      empty.innerHTML = emptyHtml('病历库是空的', '去书写台写第一份，或用下方按钮恢复示例数据',
+        '<button class="btn btn-primary btn-sm" data-go="work" style="margin-right:8px">去书写台</button><button class="btn btn-ghost btn-sm" id="btnRestore2">恢复示例数据</button>');
+    } else {
+      empty.innerHTML = emptyHtml('没有符合条件的病历', '换个状态或清空搜索词',
+        '<button class="btn btn-ghost btn-sm" id="btnResetRecFilter">清空筛选条件</button>');
+    }
+    const b1 = document.getElementById('btnRestore2'); if (b1) b1.onclick = restoreDemo;
+    const b2 = document.getElementById('btnResetRecFilter');
+    if (b2) b2.onclick = () => {
+      state.prefs.recStatus = 'all'; document.getElementById('recSearch').value = '';
+      renderRecChips(); renderRecList(); toast('已清空筛选');
+    };
+    return;
+  }
+  empty.innerHTML = '';
+  box.innerHTML = list.map(r => '<div class="rec">' +
+    '<div class="rec-main"><h4>' + esc(r.title) + '</h4>' +
+    '<div class="rec-sub"><span>' + esc(r.patient) + '</span><span>' + esc(r.disease) + '·' + esc(r.type) + '</span><span>' + esc(r.date) + '</span></div></div>' +
+    '<div class="rec-side">' +
+    '<span class="score-pill" title="质评分">' + (r.score || '—') + '</span>' +
+    '<span class="badge ' + STATUS_MAP[r.status].cls + '">' + STATUS_MAP[r.status].label + '</span>' +
+    '<button class="btn btn-ghost btn-sm" data-open="' + r.id + '">打开</button>' +
+    '<button class="btn btn-sand btn-sm" data-cycle="' + r.id + '">' + STATUS_MAP[r.status].nextLabel + '</button>' +
+    '<button class="btn btn-danger-ghost btn-sm" data-del="' + r.id + '">删除</button>' +
+    '</div></div>').join('');
+}
+
+/* ===================== 图表 ===================== */
+const PALETTE = ['#5E8C81', '#7FA79C', '#A9C0B7', '#D9C3A4', '#C9AE8C', '#8FA9A0'];
+
+function svgWrap(w, h, inner) {
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" role="img">' + inner + '</svg>';
+}
+function clipText(s, width, fs) {
+  const max = Math.max(3, Math.floor(width / (fs * 0.95)));
+  return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
+function chartRank() {
+  const el = document.getElementById('chartRank');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const rows = TPL.slice().sort((a, b) => b.score - a.score).slice(0, 12);
+  const rowH = 34, top = 16, bot = 26;
+  const h = rows.length * rowH + top + bot;
+  const labelW = Math.min(160, Math.round(w * 0.4));
+  const valueW = 34;
+  const barMax = Math.max(60, w - labelW - valueW - 10);
+  const min = 70, max = 100;
+  const avg = rows.reduce((s, r) => s + r.score, 0) / rows.length;
+  let s = '';
+  rows.forEach((r, i) => {
+    const y = top + i * rowH;
+    const bw = Math.max(6, barMax * (r.score - min) / (max - min));
+    const col = r.score >= 94 ? '#5E8C81' : (r.score >= 88 ? '#7FA79C' : '#A9C0B7');
+    s += '<rect x="0" y="' + (y + 9) + '" width="' + barMax + '" height="13" rx="6.5" fill="#F4F1E7"/>';
+    s += '<rect x="0" y="' + (y + 9) + '" width="' + bw.toFixed(1) + '" height="13" rx="6.5" fill="' + col + '"/>';
+    s += '<text x="' + (barMax + 6) + '" y="' + (y + 19.5) + '" font-size="11.5" fill="#4A736A" font-weight="600">' + r.score + '</text>';
+    s += '<text x="0" y="' + (y + 3) + '" font-size="10.5" fill="#8C998F">' + esc(clipText(r.name.replace('（', '·').replace('）', ''), labelW - 8, 10.5)) + '</text>';
+  });
+  const ax = barMax * (avg - min) / (max - min);
+  s += '<line x1="' + ax.toFixed(1) + '" y1="' + (top - 2) + '" x2="' + ax.toFixed(1) + '" y2="' + (h - bot + 4) + '" stroke="#C8AE8C" stroke-width="1" stroke-dasharray="4 4"/>';
+  s += '<text x="' + ax.toFixed(1) + '" y="' + (h - 8) + '" font-size="10" fill="#A9895F" text-anchor="middle">均 ' + avg.toFixed(1) + '</text>';
+  s += '<text x="0" y="' + (h - 8) + '" font-size="10" fill="#B5B0A3">' + min + ' 分</text>';
+  s += '<text x="' + barMax + '" y="' + (h - 8) + '" font-size="10" fill="#B5B0A3" text-anchor="end">' + max + ' 分</text>';
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function chartMix() {
+  const el = document.getElementById('chartMix');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const diseases = TPL.map(t => t.disease).filter((v, i, a) => a.indexOf(v) === i).slice(0, 12);
+  const data = diseases.map(d => ({
+    d: d,
+    t: TPL.filter(t => t.disease === d).length,
+    r: state.records.filter(x => x.disease === d).length
+  }));
+  const max = Math.max(1, ...data.map(x => Math.max(x.t, x.r)));
+  const rowH = 40, top = 14, bot = 26;
+  const h = data.length * rowH + top + bot;
+  const labelW = Math.min(66, Math.round(w * 0.22));
+  const barMax = Math.max(50, w - labelW - 28);
+  let s = '';
+  [0, Math.ceil(max / 2), max].forEach(v => {
+    const x = labelW + barMax * v / max;
+    s += '<line x1="' + x.toFixed(1) + '" y1="' + top + '" x2="' + x.toFixed(1) + '" y2="' + (h - bot + 2) + '" stroke="#F0EBE0" stroke-width="1"/>';
+    s += '<text x="' + x.toFixed(1) + '" y="' + (h - 8) + '" font-size="10" fill="#B5B0A3" text-anchor="middle">' + v + '</text>';
+  });
+  data.forEach((x, i) => {
+    const y = top + i * rowH;
+    const h1 = 10, gap = 5;
+    const w1 = Math.max(3, barMax * x.t / max);
+    const w2 = Math.max(x.r ? 3 : 0, barMax * x.r / max);
+    s += '<text x="0" y="' + (y + 17) + '" font-size="11.5" fill="#57655F">' + esc(x.d) + '</text>';
+    s += '<rect x="' + labelW + '" y="' + y + '" width="' + w1.toFixed(1) + '" height="' + h1 + '" rx="5" fill="#7FA79C"/>';
+    s += '<text x="' + (labelW + w1 + 5).toFixed(1) + '" y="' + (y + 8.5) + '" font-size="10" fill="#4A736A">' + x.t + '</text>';
+    if (x.r) {
+      s += '<rect x="' + labelW + '" y="' + (y + h1 + gap) + '" width="' + w2.toFixed(1) + '" height="' + h1 + '" rx="5" fill="#D9C3A4"/>';
+      s += '<text x="' + (labelW + w2 + 5).toFixed(1) + '" y="' + (y + h1 + gap + 8.5) + '" font-size="10" fill="#A9895F">' + x.r + '</text>';
+    } else {
+      s += '<text x="' + (labelW + 4) + '" y="' + (y + h1 + gap + 8.5) + '" font-size="10" fill="#C9C3B4">无病历</text>';
+    }
+  });
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function chartFunnel() {
+  const el = document.getElementById('chartFunnel');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const total = state.records.length;
+  if (!total) {
+    el.innerHTML = '<div class="empty" style="padding:36px 10px"><div class="ico">▽</div><h4>还没有数据</h4><p>保存一份病历后，这里会显示流转漏斗</p></div>';
+    return;
+  }
+  const stages = [
+    { label: '已建病历', v: total, c: '#4A736A' },
+    { label: '草稿', v: state.records.filter(r => r.status === 'draft').length, c: '#5E8C81' },
+    { label: '待审', v: state.records.filter(r => r.status === 'review').length, c: '#7FA79C' },
+    { label: '已归档', v: state.records.filter(r => r.status === 'archived').length, c: '#A9C0B7' }
+  ];
+  const pad = 10, maxW = w - pad * 2, layerH = 50, top = 8, h = stages.length * layerH + top + 8;
+  let s = '';
+  stages.forEach((st, i) => {
+    const ratio = Math.max(0.18, st.v / total);
+    const nextRatio = i < stages.length - 1 ? Math.max(0.18, stages[i + 1].v / total) : ratio * 0.9;
+    const tw = maxW * ratio, bw = maxW * nextRatio;
+    const y = top + i * layerH;
+    const x1 = pad + (maxW - tw) / 2, x2 = pad + (maxW + tw) / 2;
+    const x3 = pad + (maxW + bw) / 2, x4 = pad + (maxW - bw) / 2;
+    s += '<path d="M' + x1.toFixed(1) + ' ' + y + ' L' + x2.toFixed(1) + ' ' + y + ' L' + x3.toFixed(1) + ' ' + (y + layerH - 4) + ' L' + x4.toFixed(1) + ' ' + (y + layerH - 4) + ' Z" fill="' + st.c + '" opacity="0.94"/>';
+    const midY = y + layerH / 2 - 2;
+    s += '<text x="' + (pad + 10) + '" y="' + (midY + 4) + '" font-size="11.5" fill="' + (i < 3 ? '#FFFFFF' : '#33544C') + '">' + st.label + '</text>';
+    s += '<text x="' + (w - pad - 10) + '" y="' + (midY + 4) + '" font-size="12" fill="' + (i < 3 ? '#FFFFFF' : '#33544C') + '" text-anchor="end" font-weight="600">' + st.v + ' 份 · ' + Math.round(st.v / total * 100) + '%</text>';
+  });
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function chartTrend() {
+  const el = document.getElementById('chartTrend');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const list = state.records.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(w < 420 ? -6 : -10);
+  if (!list.length) {
+    el.innerHTML = '<div class="empty" style="padding:36px 10px"><div class="ico">◔</div><h4>还没有可分析的数据</h4><p>保存病历后，这里会画出质评变化曲线</p></div>';
+    return;
+  }
+  const pad = { l: 32, r: 14, t: 18, b: 32 };
+  const h = 236;
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const scores = list.map(r => r.score || 0);
+  let lo = Math.min(70, ...scores) - 4, hi = Math.max(96, ...scores) + 3;
+  lo = Math.max(0, Math.floor(lo / 5) * 5); hi = Math.ceil(hi / 5) * 5;
+  const px = i => pad.l + (list.length === 1 ? iw / 2 : iw * i / (list.length - 1));
+  const py = v => pad.t + ih - ih * (v - lo) / (hi - lo);
+  let s = '';
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const v = lo + (hi - lo) * i / ticks, y = py(v);
+    s += '<line x1="' + pad.l + '" y1="' + y.toFixed(1) + '" x2="' + (w - pad.r) + '" y2="' + y.toFixed(1) + '" stroke="#F2EDE2" stroke-width="1"/>';
+    s += '<text x="' + (pad.l - 6) + '" y="' + (y + 3.5).toFixed(1) + '" font-size="9.5" fill="#B5B0A3" text-anchor="end">' + Math.round(v) + '</text>';
+  }
+  const refY = py(85);
+  s += '<line x1="' + pad.l + '" y1="' + refY.toFixed(1) + '" x2="' + (w - pad.r) + '" y2="' + refY.toFixed(1) + '" stroke="#C8AE8C" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  s += '<text x="' + (w - pad.r) + '" y="' + (refY - 5).toFixed(1) + '" font-size="9.5" fill="#A9895F" text-anchor="end">合格参考线 85</text>';
+
+  let line = '', area = '';
+  list.forEach((r, i) => { line += (i ? ' L' : 'M') + px(i).toFixed(1) + ' ' + py(r.score).toFixed(1); });
+  if (list.length > 1) {
+    area = line + ' L' + px(list.length - 1).toFixed(1) + ' ' + (pad.t + ih) + ' L' + px(0).toFixed(1) + ' ' + (pad.t + ih) + ' Z';
+    s += '<defs><linearGradient id="gTrend" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7FA79C" stop-opacity=".28"/><stop offset="100%" stop-color="#7FA79C" stop-opacity="0"/></linearGradient></defs>';
+    s += '<path d="' + area + '" fill="url(#gTrend)"/>';
+    s += '<path d="' + line + '" fill="none" stroke="#5E8C81" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+  list.forEach((r, i) => {
+    const x = px(i), y = py(r.score);
+    s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.6" fill="#fff" stroke="#5E8C81" stroke-width="1.8"/>';
+    const lbl = (r.date || '').slice(5);
+    s += '<text x="' + x.toFixed(1) + '" y="' + (h - 12) + '" font-size="9" fill="#A8A192" text-anchor="middle">' + esc(lbl) + '</text>';
+  });
+  const last = list[list.length - 1];
+  s += '<text x="' + px(list.length - 1).toFixed(1) + '" y="' + (py(last.score) - 9).toFixed(1) + '" font-size="10.5" fill="#4A736A" text-anchor="end" font-weight="600">' + last.score + ' 分</text>';
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function renderCharts() {
+  chartRank(); chartMix(); chartFunnel(); chartTrend();
+}
+
+/* ===================== 视图切换 ===================== */
+function switchView(name) {
+  const views = ['overview', 'work', 'kb', 'tpl', 'rec', 'chart', 'guide'];
+  if (views.indexOf(name) < 0) name = 'overview';
+  views.forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.hidden = (v !== name);
+  });
+  $$('#tabs .tab').forEach(t => t.classList.toggle('on', t.dataset.view === name));
+  state.prefs.view = name;
+  persist();
+  if (name === 'chart') setTimeout(renderCharts, 30);
+  if (name === 'work') { renderPreview(); renderQuality(); }
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+}
+
+/* ===================== 弹窗 ===================== */
+function openModal(title, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  const ft = document.getElementById('modalFoot');
+  ft.innerHTML = '';
+  (actions || [{ label: '关闭', cls: 'btn-ghost', fn: closeModal }]).forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (a.cls || 'btn-ghost');
+    b.textContent = a.label;
+    b.onclick = a.fn;
+    ft.appendChild(b);
+  });
+  document.getElementById('mask').classList.add('on');
+}
+function closeModal() { document.getElementById('mask').classList.remove('on'); }
+
+function confirmDialog(title, text, okLabel, onOk, danger) {
+  openModal(title, '<p style="font-size:13.5px;color:#57655F;margin:0;line-height:1.9">' + esc(text) + '</p>', [
+    { label: '取消', cls: 'btn-ghost', fn: closeModal },
+    { label: okLabel, cls: danger ? 'btn-danger-ghost' : 'btn-primary', fn: function () { closeModal(); onOk(); } }
+  ]);
+}
+
+/* ===================== 示例数据 ===================== */
+function demoFields(tplId) {
+  const tpl = tplById(tplId);
+  const f = {};
+  if (!tpl) return f;
+  tpl.sections.forEach(s => { f[s.key] = s.v; });
+  return f;
+}
+
+function restoreDemo() {
+  confirmDialog('恢复示例数据', '将把 7 份中医神经内科示例病历写回本机（现有病历会被替换，此操作不可撤销）。', '确认恢复', function () {
+    state.records = DEMO_RECORDS.map(function (r) {
+      return Object.assign({}, r, {
+        fields: demoFields(r.tplId),
+        createdAt: r.date + ' 09:00',
+        updatedAt: r.date + ' 16:40'
+      });
+    });
+    state.editingId = null;
+    if (!state.fields || !Object.keys(state.fields).length) state.fields = demoFields(state.currentTpl);
+    persist();
+    renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts(); renderTplGrid();
+    renderForm(); renderPreview(); renderQuality();
+    toast('已恢复 7 份示例病历', 'ok');
+  });
+}
+
+function clearAll() {
+  confirmDialog('一键清空', '将清空本机保存的全部病历与书写台当前内容（模板不会删除）。清空后可用「恢复示例数据」找回示例。', '确认清空', function () {
+    state.records = [];
+    state.fields = {};
+    state.editingId = null;
+    persist();
+    renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts(); renderForm(); renderPreview(); renderQuality();
+    toast('已清空全部病历', 'warn');
+  }, true);
+}
+
+/* ===================== 事件绑定 ===================== */
+function bindEvents() {
+  $$('#tabs .tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+
+  document.body.addEventListener('click', function (e) {
+    const go = e.target.closest('[data-go]');
+    if (go) { switchView(go.dataset.go); return; }
+
+    const use = e.target.closest('[data-use]');
+    if (use) { state.prefs.view = 'work'; loadTemplate(use.dataset.use, { demo: false }); switchView('work'); toast('已载入空白模板：' + tplById(use.dataset.use).name + '（原有内容已替换）', 'ok'); return; }
+
+    const demo = e.target.closest('[data-view-demo]');
+    if (demo) {
+      const t = tplById(demo.dataset.viewDemo);
+      const f = {}; t.sections.forEach(s => f[s.key] = s.v);
+      const lines = buildLines(t, f);
+      let html = '<div class="paper"><div class="pv-title">' + esc(TITLE_MAP[t.type] || '病历') + '</div><div class="pv-sub">' + esc(t.dept + '　' + t.disease + '·' + t.syn) + '</div>';
+      lines.forEach(l => { html += '<div class="paper-line">' + (l.label ? '<span class="k">' + esc(l.label) + '</span>' : '') + esc(l.value) + '</div>'; });
+      html += '</div>';
+      openModal(t.name, html, [
+        { label: '关闭', cls: 'btn-ghost', fn: closeModal },
+        { label: '用这个模板写', cls: 'btn-primary', fn: function () { closeModal(); loadTemplate(t.id, { demo: false }); switchView('work'); toast('已载入空白模板，可开始书写', 'ok'); } }
+      ]);
+      return;
+    }
+
+    const open = e.target.closest('[data-open]');
+    if (open) {
+      const rec = state.records.find(r => r.id === open.dataset.open);
+      if (!rec) return;
+      const tpl = tplById(rec.tplId) || ensureTplById(rec.tplId);
+      if (!tpl) { toast('这份病历的模板已不存在，无法打开', 'warn'); return; }
+      state.currentTpl = rec.tplId;
+      state.fields = JSON.parse(JSON.stringify(rec.fields || demoFields(rec.tplId)));
+      state.editingId = rec.id;
+      const sel = document.getElementById('tplSelect');
+      if (!Array.prototype.some.call(sel.options, o => o.value === rec.tplId)) {
+        const og = document.createElement('optgroup'); og.label = '当前病历模板';
+        og.appendChild(new Option(tpl.name, tpl.id)); sel.appendChild(og);
+      }
+      sel.value = rec.tplId;
+      renderForm(); renderPreview(); renderQuality(); persist();
+      switchView('work');
+      toast('已打开：' + rec.title + '（改动后点保存即更新）', 'ok');
+      return;
+    }
+
+    const cyc = e.target.closest('[data-cycle]');
+    if (cyc) {
+      const rec = state.records.find(r => r.id === cyc.dataset.cycle);
+      if (!rec) return;
+      rec.status = STATUS_MAP[rec.status].next;
+      rec.updatedAt = nowStamp();
+      persist(); renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts();
+      toast('状态已改为「' + STATUS_MAP[rec.status].label + '」', 'ok');
+      return;
+    }
+
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      const rec = state.records.find(r => r.id === del.dataset.del);
+      if (!rec) return;
+      confirmDialog('删除病历', '确认删除「' + rec.title + '」？删除后不可恢复。', '删除', function () {
+        state.records = state.records.filter(r => r.id !== rec.id);
+        if (state.editingId === rec.id) state.editingId = null;
+        persist(); renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts();
+        toast('已删除：' + rec.title, 'warn');
+      }, true);
+      return;
+    }
+
+    const dis = e.target.closest('[data-tpl-dept]');
+    if (dis) { state.prefs.tplDept = dis.dataset.tplDept; persist(); renderTplChips(); renderTplGrid(); return; }
+
+    const kbc = e.target.closest('[data-kbdept]');
+    if (kbc) { state.prefs.kbDept = kbc.dataset.kbdept; persist(); renderKbChips(); renderKb(); return; }
+
+    const kbd = e.target.closest('[data-kb]');
+    if (kbd) { openKbCard(kbd.dataset.kb); return; }
+
+    const kbw = e.target.closest('[data-kb-write]');
+    if (kbw) {
+      const p = kbw.dataset.kbWrite.split('|');
+      writeDisease(p[0], +p[1], p[2] === 'i' ? '入院记录' : '门诊病历');
+      return;
+    }
+
+    const st = e.target.closest('[data-status]');
+    if (st) { state.prefs.recStatus = st.dataset.status; persist(); renderRecChips(); renderRecList(); return; }
+  });
+
+  // 书写台
+  document.getElementById('tplSelect').addEventListener('change', function () {
+    loadTemplate(this.value, { demo: false });
+    toast('已切换到空白模板：' + tplById(this.value).name, 'ok');
+  });
+  document.getElementById('btnFillDemo').addEventListener('click', fillDemo);
+  document.getElementById('btnResetForm').addEventListener('click', function () {
+    confirmDialog('清空表单', '将清空书写台里的全部字段（已保存的病历不受影响）。', '清空', resetForm);
+  });
+  document.getElementById('btnSaveRec').addEventListener('click', saveRecord);
+  document.getElementById('btnCopy').addEventListener('click', copyText);
+  document.getElementById('btnDownload').addEventListener('click', downloadTxt);
+  document.getElementById('btnRestore').addEventListener('click', restoreDemo);
+  document.getElementById('btnClearAll').addEventListener('click', clearAll);
+
+  // 新建 / 西医转中医
+  document.getElementById('btnNewRec').addEventListener('click', newRecord);
+  document.getElementById('btnGenerate').addEventListener('click', generateFromWM);
+  document.getElementById('btnGenClear').addEventListener('click', function () {
+    document.getElementById('wmInput').value = '';
+    document.getElementById('genResult').hidden = true;
+    toast('已清空粘贴内容');
+  });
+  document.getElementById('btnKbDesc').addEventListener('click', function () {
+    const sel = document.getElementById('genKbSel').value;
+    let kb = sel && sel !== 'auto' ? KB.find(k => k.id === sel) : null;
+    if (!kb) kb = detectDisease(document.getElementById('wmInput').value || '').kb;
+    if (!kb) { toast('先粘贴内容，或在“病种”里选一个，再看病名描述', 'warn'); return; }
+    openKbCard(kb.id);
+  });
+  document.getElementById('genResult').addEventListener('change', function (e) {
+    if (e.target.id !== 'genSynSel' || !state.gen) return;
+    const kb = KB.find(k => k.id === state.gen.kbId);
+    if (!kb) return;
+    const text = state.gen.text, type = state.gen.type;
+    const det = detectDisease(text);
+    const sd = detectSyndrome(kb, text, det.rule);
+    applyGeneration(kb, +e.target.value, type, text, {
+      hits: (det.hits || []).concat(kb.synd[+e.target.value].kw.slice(0, 6)).filter((v, i, a) => a.indexOf(v) === i),
+      score: det.score + sd.score,
+      dScore: det.score, synScore: sd.score, rule: det.rule || null, textHits: true
+    });
+    toast('已换为：' + kb.synd[+e.target.value].name, 'ok');
+  });
+
+  // 病种库 / 方药速查
+  document.getElementById('kbSearch').addEventListener('input', renderKb);
+  document.getElementById('kbReset').addEventListener('click', function () {
+    state.prefs.kbDept = '全部';
+    document.getElementById('kbSearch').value = '';
+    persist(); renderKbChips(); renderKb();
+  });
+  document.getElementById('guideRxSearch').addEventListener('input', renderGuideRx);
+
+  // 数据导出 / 导入
+  document.getElementById('btnExport').addEventListener('click', exportData);
+  document.getElementById('btnImport').addEventListener('click', function () { document.getElementById('importFile').click(); });
+  document.getElementById('importFile').addEventListener('change', function () {
+    if (this.files && this.files[0]) importData(this.files[0]);
+    this.value = '';
+  });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+  // 表单输入（只更新预览与评分，不重建表单，避免光标丢失）
+  let t = null;
+  document.getElementById('formArea').addEventListener('input', function (e) {
+    const ta = e.target;
+    if (ta.tagName !== 'TEXTAREA') return;
+    const k = ta.dataset.key;
+    state.fields[k] = ta.value;
+    const counter = ta.parentElement.querySelector('label i');
+    if (counter) counter.textContent = ta.value.replace(/\s/g, '').length + ' 字';
+    renderPreview(); renderQuality();
+    clearTimeout(t); t = setTimeout(persist, 500);
+  });
+
+  // 筛选
+  document.getElementById('tplSearch').addEventListener('input', renderTplGrid);
+  document.getElementById('tplTypeSel').addEventListener('change', function () { state.prefs.tplType = this.value; persist(); renderTplGrid(); });
+  document.getElementById('tplSortSel').addEventListener('change', function () { state.prefs.tplSort = this.value; persist(); renderTplGrid(); });
+  document.getElementById('recSearch').addEventListener('input', renderRecList);
+  document.getElementById('recSortSel').addEventListener('change', function () { state.prefs.recSort = this.value; persist(); renderRecList(); });
+
+  let rz = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(rz);
+    rz = setTimeout(function () {
+      if (!document.getElementById('view-chart').hidden) renderCharts();
+    }, 220);
+  });
+}
+
+/* ===================== 启动 ===================== */
+function renderGenKbSel() {
+  const sel = document.getElementById('genKbSel');
+  if (!sel) return;
+  const groups = {};
+  KB.forEach(k => { (groups[k.dept] = groups[k.dept] || []).push(k); });
+  let html = '<option value="auto">自动识别病种</option>';
+  Object.keys(groups).forEach(d => {
+    html += '<optgroup label="' + esc(d) + '">' + groups[d].map(k =>
+      '<option value="' + k.id + '">' + esc(k.name) + '（' + esc(k.alias.split('、')[0]) + '）</option>').join('') + '</optgroup>';
+  });
+  sel.innerHTML = html;
+}
+
+function init() {
+  ensureTemplates();
+  const had = restore();
+  if (!had) {
+    state.records = DEMO_RECORDS.map(function (r) {
+      return Object.assign({}, r, { fields: demoFields(r.tplId), createdAt: r.date + ' 09:00', updatedAt: r.date + ' 16:40' });
+    });
+    state.fields = blankFields(state.currentTpl);
+    persist();
+    seededOnce = true;
+  }
+  if (!state.fields || !Object.keys(state.fields).length) state.fields = blankFields(state.currentTpl);
+  paintSaveBadge();
+  renderKpis(); renderRecent(); renderTplChips(); renderTplSelect(); renderTplGrid();
+  renderGenKbSel(); renderKbChips(); renderKb(); renderGuideRx();
+  renderRecChips(); renderRecList(); renderForm(); renderPreview(); renderQuality();
+  bindEvents();
+  switchView('work');
+  if (!had) setTimeout(function () { toast('首次使用：已放好示例病历；病种库内置 ' + KB.length + ' 个病种，可直接写病历', 'ok'); }, 600);
+  if (!storageOK) setTimeout(function () { toast('本机存储不可用，刷新后数据会丢失', 'warn'); }, 1200);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>
