@@ -434,11 +434,19 @@
   .gx-core .c-ring.r2 { inset:-2px; border-style:solid; border-color: rgba(184,107,255,.22);
     animation: spin 26s linear infinite reverse; }
   .gx-core .c-dot { width:64px; height:64px; border-radius:50%; display:grid; place-items:center;
-    font-size:26px; line-height:1;
-    background: radial-gradient(circle at 34% 28%, #1e4568, #071020 72%);
+    /* 核心星球：左上高光 + 右下阴影 + 中心电青底色 */
+    background:
+      radial-gradient(ellipse 60% 50% at 32% 22%, rgba(180,240,255,.55) 0%, rgba(180,240,255,0) 58%),
+      radial-gradient(ellipse 38% 34% at 76% 80%, rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 65%),
+      radial-gradient(circle at 50% 50%, #1e4568 0%, #0b1f38 55%, #050d1b 100%);
     border:1px solid rgba(0,212,255,.55);
-    box-shadow: 0 0 26px rgba(0,212,255,.42), inset 0 0 18px rgba(0,212,255,.22);
+    box-shadow:
+      0 0 28px rgba(0,212,255,.45),
+      inset -6px -8px 14px rgba(0,0,0,.45),
+      inset 5px 6px 12px rgba(255,255,255,.14),
+      inset 0 0 20px rgba(0,212,255,.22);
     animation: coreGlow 5s ease-in-out infinite; }
+  .gx-core .c-dot svg { filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)) drop-shadow(0 0 4px rgba(0,212,255,.35)); }
   .gx-core .c-lbl { position:absolute; bottom:-16px; font-size:10px; font-weight:700; color: var(--text-secondary);
     letter-spacing:.08em; white-space:nowrap; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -447,16 +455,47 @@
 
   .planet { position:absolute; transform:translate(-50%,-50%); width:74px;
     background:none; border:none; padding:0; cursor:pointer; z-index:3;
-    display:flex; flex-direction:column; align-items:center; gap:5px; }
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    perspective: 400px; }
   .pl-orb { position:relative; width:50px; height:50px; border-radius:50%; display:grid; place-items:center;
-    color: var(--c);
-    background: radial-gradient(circle at 36% 30%, color-mix(in srgb, var(--c) 26%, #0b1a2c), #070f1d 74%);
-    border:1px solid color-mix(in srgb, var(--c) 48%, transparent);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--c) 30%, transparent),
-                inset 0 0 12px color-mix(in srgb, var(--c) 16%, transparent);
+    color: #fff;
+    /* 立体光球：左上高光 + 右下阴影 + 环境光底 */
+    background:
+      radial-gradient(ellipse 72% 62% at 28% 22%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 55%),
+      radial-gradient(ellipse 42% 38% at 78% 82%, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 65%),
+      radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--c) 82%, #0b1a2c) 0%, color-mix(in srgb, var(--c) 55%, #050a14) 60%, #050913 100%);
+    border:1px solid color-mix(in srgb, var(--c) 38%, transparent);
+    box-shadow:
+      /* 外层发光 halo */
+      0 0 18px color-mix(in srgb, var(--c) 28%, transparent),
+      /* 右下投影 —— 最立体的关键 */
+      inset -6px -8px 14px rgba(0,0,0,.55),
+      /* 左上高光 —— 让球面鼓起来 */
+      inset 5px 6px 12px rgba(255,255,255,.12),
+      /* 内部中心亮度 */
+      inset 0 0 18px color-mix(in srgb, var(--c) 15%, transparent);
     animation: bobY 4.8s ease-in-out infinite; animation-delay: var(--d, 0s);
-    transition: box-shadow .2s; }
-  .planet:active .pl-orb { scale: .9; }
+    transition: transform .18s cubic-bezier(.2,.7,.3,1);
+    transform-style: preserve-3d; }
+  /* 表面斑点纹理（噪点感）+ 高光微闪 */
+  .pl-orb::before { content:""; position:absolute; inset:4px; border-radius:50%;
+    background:
+      radial-gradient(ellipse 14px 10px at 30% 26%, rgba(255,255,255,.25), transparent 60%),
+      radial-gradient(ellipse 7px 6px at 62% 70%, color-mix(in srgb, var(--c) 45%, transparent), transparent 60%),
+      radial-gradient(ellipse 5px 4px at 75% 38%, rgba(255,255,255,.12), transparent 60%),
+      radial-gradient(circle 3px at 18% 60%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%);
+    mix-blend-mode: screen; pointer-events:none; }
+  /* 大气边缘反射 */
+  .pl-orb::after { content:""; position:absolute; inset:-3px; border-radius:50%; pointer-events:none;
+    background: radial-gradient(circle at 30% 30%, transparent 52%, color-mix(in srgb, var(--c) 22%, transparent) 70%, transparent 85%);
+    animation: haloPulse 3.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+  .planet:hover .pl-orb { transform: translateZ(8px) scale(1.06);
+    box-shadow:
+      0 0 28px color-mix(in srgb, var(--c) 55%, transparent),
+      inset -6px -8px 14px rgba(0,0,0,.5),
+      inset 5px 6px 12px rgba(255,255,255,.15),
+      inset 0 0 22px color-mix(in srgb, var(--c) 22%, transparent); }
+  .planet:active .pl-orb { transform: translateZ(-6px) scale(.92); }
   .planet:active { opacity:.85; }
   .pl-halo { position:absolute; inset:-8px; border-radius:50%;
     border:1px solid color-mix(in srgb, var(--c) 26%, transparent);
@@ -481,14 +520,33 @@
     transform-origin: 50% 0; border-radius:2px;
     background: linear-gradient(180deg, transparent, rgba(160,242,255,.95), transparent);
     animation: streak .6s ease-in forwards; animation-delay: var(--sd, 0s); }
+  /* 反向跃迁：光环收缩、星条向内聚合 */
+  .warp.back {
+    background: radial-gradient(circle at 50% 50%, rgba(255,140,66,.22), rgba(3,8,16,.94) 62%);
+    animation: warpFadeRev .76s cubic-bezier(.6,.05,.9,.25) forwards; }
+  .warp.back .wring { border-color: rgba(255,190,130,.9);
+    box-shadow: 0 0 32px rgba(255,140,66,.65), inset 0 0 24px rgba(255,140,66,.5);
+    animation: wringRev .58s cubic-bezier(.6,.05,.9,.25) forwards; }
+  .warp.back .wring.w2 { animation-delay:.06s; border-color: rgba(255,107,160,.75); }
+  .warp.back .streak { background: linear-gradient(180deg, transparent, rgba(255,190,130,.95), transparent);
+    animation: streakRev .52s cubic-bezier(.6,.05,.9,.25) forwards; animation-delay: var(--sd, 0s); }
   @keyframes wring { 0%{opacity:.95; transform:scale(.35)} 70%{opacity:.8} 100%{opacity:0; transform:scale(15)} }
+  @keyframes wringRev { 0%{opacity:.9; transform:scale(14)} 60%{opacity:.7} 100%{opacity:0; transform:scale(.3)} }
   @keyframes streak { 0%{opacity:0; transform:rotate(var(--a)) translateY(8px) scaleY(.35)}
     55%{opacity:.9} 100%{opacity:0; transform:rotate(var(--a)) translateY(42vh) scaleY(1.7)} }
+  @keyframes streakRev { 0%{opacity:0; transform:rotate(var(--a)) translateY(42vh) scaleY(1.7)}
+    50%{opacity:.9} 100%{opacity:0; transform:rotate(var(--a)) translateY(6px) scaleY(.25)} }
   @keyframes warpFade { 0%{opacity:0} 14%{opacity:1} 100%{opacity:0} }
+  @keyframes warpFadeRev { 0%{opacity:0} 12%{opacity:1} 100%{opacity:0} }
 
   /* 进入模块世界的入场动画 */
   #screen.to-world { animation: worldIn .52s cubic-bezier(.2,.7,.3,1); }
+  #screen.to-home  { animation: galaxyIn .62s cubic-bezier(.2,.7,.3,1); }
   @keyframes worldIn { 0%{opacity:0; transform:scale(.955) translateY(10px)} 100%{opacity:1; transform:none} }
+  @keyframes galaxyIn {
+    0%{ opacity:0; transform:scale(1.08); filter: blur(4px); }
+    100%{ opacity:1; transform:none; filter:none; }
+  }
 
   .link-danger { color: var(--danger); background:none; border:none; font-size: 14px; font-weight: 600; cursor:pointer; }
 
@@ -1564,26 +1622,38 @@ function confirmDelete(key,id){
 }
 
 /* ---------- router / nav ---------- */
-function go(v){
+function go(v, opts={}){
   view=v; closeDrawer(); render(); window.scrollTo({top:0});
-  // 进入新世界的入场动画
   const s=$("#screen");
-  s.classList.remove("to-world"); void s.offsetWidth;
+  s.classList.remove("to-world","to-home"); void s.offsetWidth;
   if(v!=="home") s.classList.add("to-world");
+  else if(opts._fromWarpBack) s.classList.add("to-home");
 }
 
-/* 跃迁：点击星球 → 时空隧道 → 落地新世界 */
+/* 跃迁：方向 forward = 放大进入新世界；方向 back = 收缩返回星系 */
 let warping=false;
-function warpTo(key){
-  if(warping || view===key) return;
+function warpTo(key, dir="forward"){
+  if(warping || (dir==="forward" && view===key)) return;
+  if(dir==="back" && view==="home") return;
   warping=true;
-  const o=document.createElement("div"); o.className="warp";
+  const back = dir==="back";
+  const o=document.createElement("div"); o.className="warp"+(back?" back":"");
   let st="";
-  for(let i=0;i<16;i++) st+=`<i class="streak" style="--a:${i*22.5}deg;--sd:${(i%4)*0.045}s"></i>`;
+  for(let i=0;i<18;i++) st+=`<i class="streak" style="--a:${i*20}deg;--sd:${(i%4)*0.038}s"></i>`;
   o.innerHTML=`<div class="wring"></div><div class="wring w2"></div>${st}`;
   document.body.appendChild(o);
-  setTimeout(()=>go(key), 360);
-  setTimeout(()=>{ o.remove(); warping=false; }, 920);
+  setTimeout(()=>{
+    if(back) go("home",{_fromWarpBack:true});
+    else go(key);
+  }, back?320:360);
+  setTimeout(()=>{ o.remove(); warping=false; }, 900);
+}
+
+/* 页面跳转统一走 warpTo —— 从非首页走“正向跃迁”，从非首页→首页走“反向跃迁” */
+function navGo(key){
+  if(view===key) return;
+  if(view!=="home" && key==="home") warpTo(key,"back");
+  else warpTo(key,"forward");
 }
 
 function render(){
@@ -1614,7 +1684,7 @@ function buildDrawer(){
     .concat(CONFIG.modules.map(m=>`<div class="ditem" data-go="${m.key}">${icon(m.icon,20)}${m.name}</div>`))
     .concat([`<div class="ditem" data-go="insight">${icon("chart",20)}洞察</div>`]);
   $("#drawerList").innerHTML=items.join("");
-  $("#drawerList").querySelectorAll("[data-go]").forEach(el=>el.onclick=()=>go(el.dataset.go));
+  $("#drawerList").querySelectorAll("[data-go]").forEach(el=>el.onclick=()=>navGo(el.dataset.go));
 }
 function openDrawer(){
   $("#drawerList").querySelectorAll(".ditem").forEach(el=>el.classList.toggle("active", el.dataset.go===view));
@@ -1629,7 +1699,7 @@ $("#scrim").onclick=closeDrawer;
 $("#nav").querySelectorAll(".n").forEach(n=>n.onclick=()=>{
   const t=n.dataset.nav;
   if(t==="drawer") openDrawer();
-  else go(t);
+  else navGo(t);
 });
 
 /* ---------- avatar upload ---------- */
