@@ -387,6 +387,8 @@ select{appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3C
     <button class="tab" data-view="overview">概览</button>
     <button class="tab" data-view="chart">数据看板</button>
     <button class="tab" data-view="guide">规范速查</button>
+    <button class="tab" data-view="diff">鉴别诊断</button>
+    <button class="tab" data-view="course">病程日程</button>
   </nav>
 
   <main>
@@ -681,6 +683,14 @@ select{appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3C
         </div>
       <p class="meta" style="text-align:center;margin-top:14px">内容按《中医病历书写基本规范》《中医内科学（第十版）》《中医骨伤科学》《中医病证诊断疗效标准》及公开诊疗方案整理，供书写参考，须执业医师审核；方药剂量为示例，临床需辨证加减。</p>
     </section>
+
+    <section class="view" id="view-diff" hidden>
+      <div id="diffBox"></div>
+    </section>
+    <section class="view" id="view-course" hidden>
+      <div id="courseBox"></div>
+    </section>
+
   </main>
 </div>
 
@@ -3340,6 +3350,479 @@ function writeDisease(kbId, synIdx, type) {
 }
 
 /* ===================== 规范速查：方药库 ===================== */
+
+/* ---------- 获取当前选中的病种（适配主文件 state 结构） ---------- */
+function getCurrentKbForDiffCourse() {
+  // 优先级1：wmInput 里自动识别
+  try {
+    const wmInp = document.getElementById('wmInput');
+    if (wmInp && wmInp.value && typeof detectDisease === 'function') {
+      const det = detectDisease(wmInp.value);
+      if (det && det.kb) return det.kb;
+    }
+  } catch (e) {}
+  // 优先级2：genKbSel 手动选的
+  try {
+    const sel = document.getElementById('genKbSel');
+    if (sel && sel.value && sel.value !== 'auto' && typeof kbById === 'function') {
+      const kb = kbById(sel.value);
+      if (kb) return kb;
+    }
+  } catch (e) {}
+  // 优先级3：tplById(state.currentTpl) 的 disease 字段
+  try {
+    if (typeof state !== 'undefined' && state && state.currentTpl && typeof tplById === 'function' && typeof kbById === 'function') {
+      const tpl = tplById(state.currentTpl);
+      if (tpl && tpl.disease) {
+        const kb = kbById(tpl.disease);
+        if (kb) return kb;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+/* ===================== 鉴别诊断 & 病程日程 自动生成模块 ===================== */
+/* 来源：《中医内科学》（第十版）、《中医病历书写基本规范》、ZY/T 001.x-94 */
+
+/* ---------- 核心数据：各科室的常见鉴别诊断模板 ---------- */
+const DIFF_TEMPLATES = {
+  '脑病科': [
+    { with: '脑出血', point: '头颅CT可见高密度影，起病更急，多伴剧烈头痛呕吐', method: '头颅CT' },
+    { with: '短暂性脑缺血发作（TIA）', point: '症状持续数分钟至数小时，完全恢复，影像学无梗死灶', method: '头颅MRI＋DWI' },
+    { with: '痫病（癫痫）', point: '发作时突然昏倒、四肢抽搐、口吐涎沫、二便失禁，发作后神志转清', method: '脑电图' },
+    { with: '厥证', point: '突然昏倒、不省人事、四肢厥冷，但无半身不遂等局灶体征', method: '神经系统查体' },
+    { with: '痿病（吉兰-巴雷综合征）', point: '多起病缓慢，呈对称性弛缓性瘫痪，无口舌歪斜及神志改变', method: '脑脊液检查' },
+    { with: '梅尼埃病', point: '眩晕伴波动性听力下降、耳鸣、耳闷胀感，无肢体无力及言语不利', method: '纯音测听＋前庭功能' },
+    { with: '前庭性偏头痛', point: '眩晕伴偏头痛病史、畏光畏声，持续时间长', method: '神经科专科评估' },
+    { with: '颈性眩晕', point: '眩晕与头颈转动相关，伴颈肩痛，颈椎X线/MRI可见颈椎退变', method: '颈椎X线/MRI' }
+  ],
+  '心病科': [
+    { with: '急性心肌梗死', point: '胸痛持续不缓解，心电图有特征性动态演变，肌钙蛋白升高', method: '心电图＋肌钙蛋白' },
+    { with: '胃食管反流病', point: '胸骨后烧灼感，与进食/平卧相关，心电图无缺血改变', method: '胃镜' },
+    { with: '主动脉夹层', point: '撕裂样剧烈胸背痛，血压明显升高，两上肢血压不对称', method: 'CT血管造影' },
+    { with: '肺栓塞', point: '突发呼吸困难、胸痛、咯血，D-二聚体升高，CTPA可确诊', method: 'CTPA' },
+    { with: '心脏神经症', point: '症状多样但无器质性病变证据，与情绪相关', method: '排除器质性疾病' }
+  ],
+  '肺病科': [
+    { with: '社区获得性肺炎', point: '起病较急，发热、咳脓痰，胸片见斑片状阴影', method: '胸片/CT' },
+    { with: '咳嗽变异性哮喘', point: '以慢性咳嗽为唯一或主要症状，无明显喘息，肺功能激发试验阳性', method: '肺功能' },
+    { with: '慢性阻塞性肺疾病（COPD）', point: '中年以上，长期吸烟史，活动后气短，FEV1/FVC<70%', method: '肺功能' },
+    { with: '支气管扩张', point: '反复咳大量脓痰或咯血，CT见支气管柱状/囊状扩张', method: '胸部CT' },
+    { with: '肺癌', point: '刺激性咳嗽、痰中带血、消瘦，CT见占位性病变', method: '胸部CT＋肿瘤标志物' },
+    { with: '急性呼吸窘迫综合征（ARDS）', point: '进行性呼吸困难、低氧血症，胸片双肺浸润影，无心衰证据', method: '血气分析＋胸片' }
+  ],
+  '脾胃病科': [
+    { with: '消化性溃疡', point: '慢性周期性节律性上腹痛，胃镜见溃疡病灶', method: '胃镜' },
+    { with: '胃食管反流病', point: '胸骨后烧灼感、反酸、嗳气，胃镜或24小时pH监测可确诊', method: '胃镜/24h pH' },
+    { with: '慢性萎缩性胃炎', point: '症状无特异性，胃镜及病理见胃黏膜腺体萎缩', method: '胃镜＋活检' },
+    { with: '肠易激综合征', point: '腹痛伴排便习惯改变，无器质性病变，症状与情绪相关', method: '肠镜排除器质性病变' },
+    { with: '溃疡性结肠炎', point: '反复腹痛腹泻、黏液脓血便，肠镜见弥漫性黏膜充血水肿溃疡', method: '肠镜＋病理' },
+    { with: '急性胰腺炎', point: '突发上腹痛向腰背部放射，血尿淀粉酶升高，CT见胰腺水肿', method: '血淀粉酶＋胰腺CT' }
+  ],
+  '肝病科': [
+    { with: '急性黄疸型肝炎', point: '发热、食欲减退、恶心、黄疸，肝功能异常，病毒标志物阳性', method: '肝功能＋病毒学' },
+    { with: '梗阻性黄疸', point: '无痛性进行性黄疸，伴皮肤瘙痒，胆红素以直接胆红素升高为主', method: '腹部CT/MRCP' },
+    { with: '原发性肝癌', point: '肝区疼痛、消瘦、AFP升高，CT见占位性病变', method: 'AFP＋腹部CT' },
+    { with: '肝硬化失代偿期', point: '腹水、脾大、侧支循环开放，肝功能异常，白蛋白降低', method: '肝功能＋腹部B超' },
+    { with: '肝性脑病', point: '肝硬化基础上出现意识障碍、行为异常，血氨升高', method: '血氨＋头颅CT' }
+  ],
+  '肾病科': [
+    { with: '原发性肾病综合征', point: '大量蛋白尿、低白蛋白血症、水肿、高脂血症', method: '24h尿蛋白＋血脂' },
+    { with: '急性肾小球肾炎', point: '链球菌感染后起病，血尿、蛋白尿、水肿、高血压，补体C3降低', method: '尿常规＋补体' },
+    { with: '糖尿病肾病', point: '糖尿病史多年，蛋白尿、肾功能损害，眼底有糖尿病视网膜病变', method: 'HbA1c＋眼底' },
+    { with: '尿路感染', point: '尿频尿急尿痛，尿常规白细胞升高，尿培养阳性', method: '尿常规＋尿培养' },
+    { with: '前列腺炎', point: '尿频尿急、会阴部不适，前列腺液检查白细胞升高', method: '前列腺液常规' }
+  ],
+  '内分泌科': [
+    { with: '甲状腺功能亢进', point: '代谢亢进表现：心悸、多汗、消瘦、手抖，T3/T4升高、TSH降低', method: '甲状腺功能' },
+    { with: '甲状腺功能减退', point: '代谢减退表现：乏力、畏寒、黏液性水肿，T3/T4降低、TSH升高', method: '甲状腺功能' },
+    { with: '糖尿病酮症酸中毒', point: '糖尿病基础上出现恶心呕吐、深大呼吸、意识障碍，血糖升高、尿酮阳性', method: '血糖＋血气＋尿酮' },
+    { with: '原发性醛固酮增多症', point: '高血压、低钾血症，醛固酮/肾素比值升高', method: '肾上腺CT＋卧立位试验' },
+    { with: '更年期综合征', point: '潮热、汗出、失眠、情绪波动，与绝经相关，排除器质性病变', method: '排除器质性病变' }
+  ],
+  '骨伤科': [
+    { with: '腰椎管狭窄症', point: '腰痛伴间歇性跛行，CT/MRI见椎管狭窄', method: '腰椎CT/MRI' },
+    { with: '梨状肌综合征', point: '臀部疼痛伴下肢放射痛，梨状肌体表投影处压痛，直腿抬高加强试验阴性', method: '专科查体' },
+    { with: '结核性关节炎', point: '低热盗汗、关节肿胀疼痛，血沉增快，结核相关检查阳性', method: '血沉＋结核抗体' },
+    { with: '骨肿瘤', point: '进行性骨痛、夜间痛明显，X线/CT见骨质破坏', method: 'X线/CT/MRI' },
+    { with: '肩周炎（肩袖损伤）', point: '肩痛伴活动受限，MRI见肩袖撕裂、冈上肌肌腱损伤', method: '肩部MRI' }
+  ],
+  '风湿病科': [
+    { with: '痛风性关节炎', point: '第一跖趾关节红肿热痛，夜间发作，血尿酸升高，关节液见尿酸盐结晶', method: '血尿酸＋关节液穿刺' },
+    { with: '骨关节炎', point: '中老年，膝关节痛，活动后加重，X线见关节间隙变窄、骨赘形成', method: '关节X线' },
+    { with: '强直性脊柱炎', point: '年轻男性，腰背部晨僵>3个月，HLA-B27阳性，骶髂关节炎', method: 'HLA-B27＋骶髂关节CT' },
+    { with: '干燥综合征', point: '口干、眼干，腮腺肿大，抗SSA/SSB抗体阳性', method: '自身抗体＋泪膜检查' },
+    { with: '系统性红斑狼疮', point: '多系统损害，面部蝶形红斑，ANA阳性、dsDNA抗体阳性', method: '自身抗体谱' }
+  ],
+  '皮肤科': [
+    { with: '接触性皮炎', point: '有明确接触史，皮损局限于接触部位，境界清楚', method: '斑贴试验' },
+    { with: '带状疱疹后遗神经痛', point: '皮疹消退后神经痛持续>3个月，有疱疹病史', method: '临床病史' },
+    { with: '药物性皮炎', point: '用药后出现皮疹，有潜伏期，伴瘙痒或发热', method: '临床病史' },
+    { with: '结节性红斑', point: '小腿伸侧红色疼痛性结节，反复发作，与感染/药物相关', method: '皮肤活检' },
+    { with: '丹毒与类丹毒', point: '丹毒由A组β溶血性链球菌引起，境界清楚；类丹毒由猪丹毒杆菌引起', method: '细菌培养' }
+  ],
+  '耳鼻喉科': [
+    { with: '急性上呼吸道感染', point: '鼻塞流涕、咽痛、发热，咽部充血，血象正常或偏低', method: '血常规' },
+    { with: '喉咽反流（慢性咽炎鉴别）', point: '咽部异物感、声音嘶哑，喉镜见声带水肿、杓状软骨充血', method: '电子喉镜' },
+    { with: '鼻窦炎', point: '鼻塞、流脓涕、头面部胀痛，鼻窦CT见鼻窦黏膜增厚或积液', method: '鼻窦CT' },
+    { with: '过敏性鼻炎与血管运动性鼻炎', point: '过敏性鼻炎有过敏原、特异性IgE升高；血管运动性鼻炎由温度/情绪诱发', method: '过敏原检测' }
+  ],
+  '妇科': [
+    { with: '子宫内膜异位症', point: '继发性痛经、进行性加重，CA125升高，B超见卵巢巧克力囊肿', method: 'CA125＋盆腔B超' },
+    { with: '子宫腺肌病', point: '月经量多、痛经、子宫均匀增大，B超见子宫肌层回声不均', method: '盆腔B超' },
+    { with: '卵巢囊肿蒂扭转', point: '突发下腹痛，伴恶心呕吐，妇科检查触及压痛性肿块', method: '急症B超' },
+    { with: '先兆流产', point: '停经后阴道流血、下腹痛，血HCG动态监测，B超见宫内妊娠囊', method: '血HCG＋盆腔B超' },
+    { with: '盆腔炎与阑尾炎', point: '盆腔炎伴白带异常、宫颈举痛；阑尾炎麦氏点压痛反跳痛', method: '妇科查体＋血常规' }
+  ],
+  '儿科': [
+    { with: '急性上呼吸道感染', point: '发热、鼻塞流涕、咽痛，咽部充血，双肺呼吸音清', method: '血常规＋胸片' },
+    { with: '毛细支气管炎', point: '多见于2岁以下，喘憋明显，肺部哮鸣音，RSV感染引起', method: '胸片＋病毒检测' },
+    { with: '川崎病', point: '发热>5天，结膜充血、口唇皲裂、皮疹、颈部淋巴结肿大、手足硬性水肿', method: '超声心动图（冠状动脉）' },
+    { with: '过敏性紫癜', point: '皮肤紫癜、腹痛、关节痛、血尿，血小板正常', method: '血常规＋尿常规' },
+    { with: '手足口病', point: '发热、皮疹、口腔疱疹，手、足、口臀部受累', method: '病毒检测' }
+  ],
+  '全科': [
+    { with: '肿瘤相关性疲劳', point: '有明确肿瘤病史，疲劳进行性加重，伴消瘦、贫血', method: '肿瘤标志物' },
+    { with: '甲状腺功能减退', point: '乏力、畏寒、黏液性水肿，T3/T4降低、TSH升高', method: '甲状腺功能' },
+    { with: '慢性肾脏病', point: '肾功能进行性损害，蛋白尿、水肿、高血压', method: '肾功能＋尿常规' },
+    { with: '抑郁状态', point: '情绪低落、兴趣减退、睡眠障碍，持续>2周', method: '心理评估量表' }
+  ],
+  '针灸推拿科': [
+    { with: '急性软组织损伤', point: '有明确外伤史，局部肿痛、活动受限，X线排除骨折', method: 'X线' },
+    { with: '中枢性面瘫与周围性面瘫', point: '中枢性仅下半部表情肌瘫痪伴偏瘫；周围性全侧面肌瘫痪、额纹消失', method: '神经系统查体＋头颅CT' },
+    { with: '腕管综合征', point: '正中神经支配区麻木，Phalen试验阳性，肌电图见传导减慢', method: '肌电图' }
+  ]
+};
+
+/* ---------- 病程日程模板（按科室分类） ---------- */
+const COURSE_TEMPLATES = {
+  'default': [
+    { day: 1, label: '入院当天', type: '首次病程', gen: (kb) =>
+'## 入院当天 · 首次病程记录\n\n' +
+'**【基本信息】** 入院日期：' + today() + '　住院号：　床号：\n' +
+'**【病例特点】**\n' +
+'1. 患者' + (kb.chief ? kb.chief.replace(/[。；]$/, '') : '急性/亚急性起病') + '\n' +
+'2. 中医四诊：' + (kb.synd && kb.synd[0] ? kb.synd[0].points.split('。')[0] : '') + '\n' +
+'3. 查体：' + (kb.exam ? kb.exam.split('。')[0] : '待完善') + '\n' +
+'4. 辅助检查：' + (kb.aux ? kb.aux.split('；')[0] : '待完善') + '\n\n' +
+'**【拟诊讨论】**\n' +
+'- 中医诊断：' + kb.name + ' · ' + (kb.synd && kb.synd[0] ? kb.synd[0].name : '') + '\n' +
+'- 西医诊断：' + (kb.wmDx || (kb.wm && kb.wm[0]) || '') + '\n\n' +
+'**【诊疗计划】**\n' +
+'1. ' + (kb.type === '入院记录' ? '护理常规，一级/二级护理' : '内科护理常规') + '\n' +
+'2. 完善相关辅助检查\n' +
+'3. 中医辨证论治：' + (kb.synd && kb.synd[0] ? kb.synd[0].treat : '') + '，予' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '加减\n' +
+'4. 针灸/理疗辅助治疗\n' +
+'5. 调护与健康宣教\n\n' +
+'---\n*记录医师：×××*'
+    },
+    { day: 3, label: '住院第3天', type: '日常病程', gen: (kb) =>
+'## 住院第3天 · 日常病程记录\n\n' +
+'**【病情变化】** 患者神志清，精神较前改善，主诉：原症状较入院时减轻/稍缓解。\n' +
+'**【四诊情况】** ' + (kb.synd && kb.synd[0] ? kb.synd[0].points.split('。').slice(0,3).join('。') : '') + '\n' +
+'**【查体】** 生命体征平稳，专科体征较前有所改善。\n' +
+'**【辅助检查】** 已完成主要辅助检查，结果回报。\n' +
+'**【治法方药】** 效不更方，守原方续进：' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '加减。\n\n' +
+'---\n*记录医师：×××*'
+    },
+    { day: 7, label: '住院第7天', type: '日常病程', gen: (kb) =>
+'## 住院第7天 · 日常病程记录\n\n' +
+'**【病情变化】** 患者症状明显减轻，病情趋于稳定。\n' +
+'**【四诊情况】** 原' + (kb.synd && kb.synd[0] ? kb.synd[0].name : '') + '之象有所缓解，舌苔脉象较前渐复。\n' +
+'**【治法方药】** 效不更方，守方续进。\n' +
+'**【下一步】** 复查相关指标，评估出院时机。\n\n' +
+'---\n*记录医师：×××*'
+    },
+    { day: 10, label: '住院第10天', type: '出院前小结', gen: (kb) =>
+'## 住院第10天 · 出院前小结\n\n' +
+'**【入院诊断】** 中医：' + kb.name + ' · ' + (kb.synd && kb.synd[0] ? kb.synd[0].name : '') + '　西医：' + (kb.wmDx || (kb.wm && kb.wm[0]) || '') + '\n' +
+'**【出院诊断】** 同入院/有所调整\n' +
+'**【住院经过】** 入院后完善检查，明确诊断，予中医辨证论治配合西医对症治疗，病情好转。\n' +
+'**【出院医嘱】**\n' +
+'1. 中药7剂续服：' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '加减\n' +
+'2. 针灸/理疗门诊随访\n' +
+'3. 避风寒、畅情志、调饮食\n' +
+'4. 定期复查相关指标，不适随诊\n\n' +
+'---\n*记录医师：×××*'
+    }
+  ]
+};
+
+/* ---------- 脑病科特别模板 ---------- */
+COURSE_TEMPLATES['脑病科'] = [
+  { day: 1, label: '入院当天', type: '首次病程', gen: (kb) =>
+'## 入院当天 · 首次病程记录（脑病科）\n\n' +
+'**【基本信息】** 入院日期：' + today() + '　住院号：　床号：\n' +
+'**【病例特点】**\n' +
+'1. 患者急性/亚急性起病，符合' + kb.name + '发病特点\n' +
+'2. 主要症状：' + (kb.chief ? kb.chief.replace(/[。；]$/, '') : '') + '\n' +
+'3. 神经科查体：神志清楚，神经系统体征（具体待补充）\n' +
+'4. 辅助检查：' + (kb.aux || '待完善头颅CT/MRI、血液检查') + '\n\n' +
+'**【拟诊讨论】**\n' +
+'- 中医诊断：' + kb.name + ' · ' + (kb.synd && kb.synd[0] ? kb.synd[0].name : '') + '\n' +
+'- 西医诊断：' + (kb.wmDx || (kb.wm && kb.wm[0]) || '') + '\n' +
+'- 鉴别：与脑出血、TIA、痫病、厥证、痿病相鉴别\n\n' +
+'**【诊疗计划】**\n' +
+'1. 脑病科护理常规，一级护理，监测神志/瞳孔/生命体征\n' +
+'2. 完善头颅CT/MRI、血液检查\n' +
+'3. 中医：' + (kb.synd && kb.synd[0] ? kb.synd[0].treat : '') + '，予' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '加减\n' +
+'4. 针灸醒脑开窍法\n' +
+'5. 康复评估与早期介入\n\n' +
+'---\n*记录医师：×××*'
+  },
+  { day: 3, label: '住院第3天', type: '日常病程', gen: (kb) =>
+'## 住院第3天 · 日常病程记录\n\n' +
+'**【病情变化】** 患者神志清楚，症状较前有所改善。\n' +
+'**【神经科查体】** 肌力较入院时有所恢复，病理征较前减弱，舌脉渐复。\n' +
+'**【治法方药】** 效不更方，守' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '续进。\n' +
+'**【下一步】** 评估康复训练方案，开始床边被动关节活动。\n\n' +
+'---\n*记录医师：×××*'
+  },
+  { day: 7, label: '住院第7天', type: '上级医师查房', gen: (kb) =>
+'## 住院第7天 · 上级医师查房记录\n\n' +
+'**【查房医师】** ×××主任医师\n' +
+'**【病情汇报】** 床位医师汇报入院以来诊疗经过（略）。\n' +
+'**【上级医师意见】** ' + kb.name + '恢复期，当前' + (kb.synd && kb.synd[1] ? kb.synd[1].name : (kb.synd && kb.synd[0] ? kb.synd[0].name : '')) + '之象为主，治法宜' + (kb.synd && kb.synd[1] ? kb.synd[1].treat : (kb.synd && kb.synd[0] ? kb.synd[0].treat : '')) + '，方用' + (kb.synd && kb.synd[1] ? kb.synd[1].formula : (kb.synd && kb.synd[0] ? kb.synd[0].formula : '')) + '加减。针改用患肢阳明经穴为主。\n' +
+'**【落实】** 中药调整如上，康复训练升级为坐位平衡及步行训练。\n\n' +
+'---\n*记录医师：×××　　查房医师：×××*'
+  },
+  { day: 14, label: '住院第14天', type: '出院小结', gen: (kb) =>
+'## 住院第14天 · 出院小结\n\n' +
+'**【入院诊断】** 中医：' + kb.name + ' · ' + (kb.synd && kb.synd[0] ? kb.synd[0].name : '') + '　西医：' + (kb.wmDx || (kb.wm && kb.wm[0]) || '') + '\n' +
+'**【出院诊断】** 中医：' + kb.name + ' · ' + (kb.synd && kb.synd[1] ? kb.synd[1].name : (kb.synd && kb.synd[0] ? kb.synd[0].name : '')) + '　西医：同入院\n' +
+'**【住院经过】** 明确诊断，予中医辨证论治配合西医规范治疗及康复训练，病情明显好转。\n' +
+'**【出院医嘱】**\n' +
+'1. 中药续服2周\n' +
+'2. 门诊康复治疗\n' +
+'3. 二级预防：抗血小板＋他汀＋控制危险因素\n' +
+'4. 定期复查头颅MRI＋颈动脉超声\n\n' +
+'---\n*记录医师：×××*'
+  }
+];
+
+/* ---------- 心病科特别模板 ---------- */
+COURSE_TEMPLATES['心病科'] = [
+  { day: 1, label: '入院当天', type: '首次病程', gen: (kb) =>
+'## 入院当天 · 首次病程记录（心病科）\n\n' +
+'**【基本信息】** 入院日期：' + today() + '\n' +
+'**【病例特点】** ' + (kb.chief ? kb.chief.replace(/[。；]$/, '') : '') + '。\n' +
+'**【拟诊讨论】** 中医：' + kb.name + ' · ' + (kb.synd && kb.synd[0] ? kb.synd[0].name : '') + '　西医：' + (kb.wmDx || (kb.wm && kb.wm[0]) || '') + '\n' +
+'**【诊疗计划】** 1. 心电监护，监测生命体征；2. 完善心电图/心肌酶/心脏超声；3. 中医' + (kb.synd && kb.synd[0] ? kb.synd[0].treat : '') + '，' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '加减；4. 西医规范治疗。\n\n' +
+'---\n*记录医师：×××*'
+  },
+  { day: 3, label: '住院第3天', type: '日常病程', gen: (kb) =>
+'## 住院第3天 患者症状较前缓解，生命体征平稳，效不更方，守' + (kb.synd && kb.synd[0] ? kb.synd[0].formula : '') + '续进。复查心肌酶/心电图，病情趋于稳定。\n\n*记录医师：×××*'
+  },
+  { day: 7, label: '住院第7天', type: '出院评估', gen: (kb) =>
+'## 住院第7天 患者病情稳定，症状消失。完善出院前检查，调整治疗方案为口服维持。出院医嘱：中药续服，门诊随访，避免劳累及情绪激动。\n\n*记录医师：×××*'
+  }
+];
+
+/* ---------- 生成鉴别诊断 ---------- */
+function composeDiff(kb) {
+  if (!kb) return [];
+  // 1) 优先使用病种自带的 diff 字段
+  if (kb.diff && kb.diff.length) return kb.diff;
+  // 2) 从 DIFF_TEMPLATES 按科室取
+  const dept = kb.dept || '';
+  const pool = DIFF_TEMPLATES[dept] || DIFF_TEMPLATES['default'] || [];
+  const diffs = [];
+  const seen = new Set();
+  pool.forEach(function (d) {
+    if (!seen.has(d.with)) { diffs.push(d); seen.add(d.with); }
+  });
+  // 3) 根据该病种的 wm 关键词，针对性追加
+  const kw = (kb.wm || []).join(',');
+  if (/中风|脑梗死|脑出血|卒中/.test(kw) || /中风病|脑卒中/.test(kb.name))
+    diffs.push({ with: '脑出血（头颅CT排除）', point: '头颅CT高密度影可资鉴别', method: '头颅CT' });
+  if (/眩晕|头晕|xuanyun/.test(kw) || /眩晕/.test(kb.name))
+    diffs.push({ with: '后循环缺血', point: '椎基底动脉供血不足，MRI见后循环梗死灶', method: '头颅MRI' });
+  if (/消渴|糖尿病|xiaoke/.test(kw) || /消渴/.test(kb.name))
+    diffs.push({ with: '甲状腺功能亢进', point: 'T3/T4升高、TSH降低可鉴别', method: '甲状腺功能' });
+  if (/胸痹|冠心病|心绞痛|心梗|xiongbi/.test(kw) || /胸痹|心痛/.test(kb.name))
+    diffs.push({ with: '主动脉夹层', point: '撕裂样胸背痛、血压不对称', method: 'CTA' });
+  if (/咳嗽|肺炎|kesou/.test(kw) || /咳嗽/.test(kb.name))
+    diffs.push({ with: '肺癌', point: '刺激性咳嗽、痰中带血、消瘦，CT见占位', method: '胸部CT' });
+  if (/哮病|哮喘|xiaobing/.test(kw) || /哮病/.test(kb.name))
+    diffs.push({ with: '心源性哮喘', point: '心衰引起，BNP升高，心脏扩大', method: 'BNP＋心脏超声' });
+  if (/水肿|肾|尿|shuizheng/.test(kw) || /水肿|淋证|癃闭/.test(kb.name))
+    diffs.push({ with: '肝硬化腹水', point: '肝病史、肝功能异常、低蛋白血症', method: '肝功能＋腹部B超' });
+  if (/泄泻|痢疾|xiexie|liji/.test(kw) || /泄泻|痢疾/.test(kb.name))
+    diffs.push({ with: '肠易激综合征', point: '无器质性病变，与情绪相关', method: '肠镜' });
+  if (/痹|痛|关|痛风|类风|bizheng/.test(kw) || /痹证/.test(kb.name))
+    diffs.push({ with: '假性痛风', point: '焦磷酸钙结晶沉积，血尿酸正常', method: '关节液' });
+  if (/痛经|月经|tongjing/.test(kw) || /痛经|月经不调/.test(kb.name))
+    diffs.push({ with: '子宫内膜异位症', point: '继发性痛经、CA125升高', method: 'CA125＋盆腔B超' });
+  if (/带下|盆腔炎/.test(kw) || /带下/.test(kb.name))
+    diffs.push({ with: '阑尾炎', point: '麦氏点压痛反跳痛', method: '专科查体' });
+  if (/失眠|郁|情志|bumei/.test(kw) || /不寐|郁证/.test(kb.name))
+    diffs.push({ with: '焦虑障碍', point: '以过度担心为核心症状，持续>6个月', method: '心理评估' });
+  // 去重，取前 6 条
+  const final = diffs.filter(function (d) { return d.with && d.point; }).slice(0, 6);
+  // 构造规范输出
+  return final.map(function (d) {
+    return {
+      with: d.with,
+      similar: (d.point.split('鉴别')[0].split('；')[0].split('，')[0]) + '等可出现类似表现',
+      diff: d.point.indexOf('鉴别') > -1 ? d.point.split('鉴别')[1].replace(/^[，,：:]*/, '') : d.point,
+      method: d.method || '综合评估'
+    };
+  });
+}
+
+/* ---------- 生成病程日程 ---------- */
+function composeCourse(kb) {
+  if (!kb) return [];
+  const dept = kb.dept || 'default';
+  const tpl = COURSE_TEMPLATES[dept] || COURSE_TEMPLATES['default'];
+  return tpl.map(function (item) {
+    return {
+      day: item.day,
+      label: item.label,
+      type: item.type,
+      content: (typeof item.gen === 'function' ? item.gen(kb) : (item.gen || ''))
+    };
+  });
+}
+
+/* ---------- 渲染鉴别诊断（全部用字符串拼接，避免模板字符串嵌套 bug） ---------- */
+function renderDiff() {
+  const box = document.getElementById('diffBox');
+  if (!box) return;
+  const kb = getCurrentKbForDiffCourse();
+  if (!kb || !kb.id) {
+    box.innerHTML = '<div class="hint"><b>💡 使用方法</b><br>① 在书写台选一个中医病种，或让系统自动识别<br>② 这里自动生成该病种的<b>鉴别诊断要点</b>，每条含「相似点、关键鉴别、辅助检查」<br>③ 一键复制到首次病程的「拟诊讨论」段落</div>';
+    return;
+  }
+  const diffs = composeDiff(kb);
+  // 取别名第一个，安全兜底
+  let alias0 = '';
+  try { alias0 = (kb.alias || '').split(/、|,/)[0] || ''; } catch (e) { alias0 = ''; }
+  let html = '';
+  html += '<div class="diff-head">';
+  html += '  <h4>' + esc(kb.name) + (alias0 ? '（' + esc(alias0) + '）' : '') + ' 需鉴别的 ' + diffs.length + ' 种疾病</h4>';
+  html += '  <button class="btn btn-ghost btn-sm" id="diffCopy" style="padding:4px 10px;font-size:12px">一键复制到拟诊讨论</button>';
+  html += '</div>';
+  html += '<div class="diff-list">';
+  for (let i = 0; i < diffs.length; i++) {
+    const d = diffs[i];
+    html += '<div class="diff-card">';
+    html += '  <div class="diff-num">' + (i + 1) + '</div>';
+    html += '  <div class="diff-body">';
+    html += '    <div class="diff-title"><b>与 ' + esc(d.with) + '</b> 相鉴别</div>';
+    html += '    <div class="diff-sim">🧩 <span class="label">相似点：</span>' + esc(d.similar) + '</div>';
+    html += '    <div class="diff-diff">🔍 <span class="label">关键鉴别：</span>' + esc(d.diff) + '</div>';
+    html += '    <div class="diff-method">🩺 <span class="label">辅助检查依据：</span>' + esc(d.method) + '</div>';
+    html += '  </div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div class="diff-tip"><b>📝 书写原则（参考《中医病历书写基本规范》）：</b>每条鉴别须含「中医病证鉴别」和「西医疾病鉴别」两部分，依据应基于病史、四诊、体征和辅助检查。</div>';
+  box.innerHTML = html;
+  const btn = document.getElementById('diffCopy');
+  if (btn) btn.onclick = function () {
+    const parts = [];
+    for (let i = 0; i < diffs.length; i++) {
+      const d = diffs[i];
+      parts.push('与' + d.with + '相鉴别：' + d.diff + '；可通过' + d.method + '辅助鉴别。');
+    }
+    const txt = parts.join('\n');
+    if (navigator.clipboard) navigator.clipboard.writeText('鉴别诊断：\n' + txt);
+    toast('鉴别诊断已复制到剪贴板', 'ok');
+  };
+}
+
+/* ---------- 渲染病程日程（全部用字符串拼接） ---------- */
+function renderCourse() {
+  const box = document.getElementById('courseBox');
+  if (!box) return;
+  const kb = getCurrentKbForDiffCourse();
+  if (!kb || !kb.id) {
+    box.innerHTML = '<div class="hint"><b>💡 使用方法</b><br>选一个中医病种（或让系统自动识别），这里自动生成该病种的<b>住院病程日程</b>，按时间点列出每天该写什么。</div>';
+    return;
+  }
+  const course = composeCourse(kb);
+  let html = '<div class="course-head"><h4>' + esc(kb.name) + ' · ' + esc(kb.dept) + ' · 住院 ' + course.length + ' 天病程日程</h4>';
+  html += '<span class="sub">首次病程 8h 内完成 / 日常病程按病情稳定度 1-3 天 1 次 / 出院前必须有小结</span></div>';
+  html += '<div class="timeline">';
+  for (let i = 0; i < course.length; i++) {
+    const c = course[i];
+    const isFirst = c.type.indexOf('首次') > -1;
+    const isRound = c.type.indexOf('查房') > -1;
+    const isDischarge = c.type.indexOf('出院') > -1 || c.type.indexOf('评估') > -1;
+    const color = isFirst ? '#C0392B' : isRound ? '#8E44AD' : isDischarge ? '#27AE60' : '#2C3E50';
+    html += '<div class="t-item">';
+    html += '  <div class="t-dot" style="background:' + color + '"></div>';
+    html += '  <div class="t-line"></div>';
+    html += '  <div class="t-body">';
+    html += '    <div class="t-hd">';
+    html += '      <span class="t-day">住院第 ' + c.day + ' 天</span>';
+    html += '      <span class="t-label" style="color:' + color + '">' + esc(c.label) + '</span>';
+    html += '      <span class="t-type">' + esc(c.type) + '</span>';
+    html += '      <button class="btn btn-ghost btn-sm t-copy" style="padding:2px 8px;font-size:11px;float:right" data-content="' + esc(encodeURIComponent(c.content)) + '">复制</button>';
+    html += '    </div>';
+    html += '    <pre class="t-content">' + esc(c.content) + '</pre>';
+    html += '  </div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
+  const btns = box.querySelectorAll('.t-copy');
+  for (let i = 0; i < btns.length; i++) {
+    btns[i].onclick = function () {
+      const text = decodeURIComponent(this.getAttribute('data-content') || '');
+      if (navigator.clipboard) navigator.clipboard.writeText(text);
+      toast('病程记录已复制', 'ok');
+    };
+  }
+}
+
+/* ---------- 工具函数 ---------- */
+
+/* ---------- CSS（注入） ---------- */
+const DIFF_COURSE_CSS = `
+<style>
+.view#view-diff, .view#view-course { padding: 16px 20px; }
+.diff-head { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:linear-gradient(135deg,#fef6e4,#f3d2c1); border-radius:10px; margin-bottom:12px; border-left:4px solid #c17c74; }
+.diff-head h4 { margin:0; color:#5a3e36; font-size:15px; }
+.diff-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:12px; }
+.diff-card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border-top:3px solid #c17c74; display:flex; gap:12px; transition:transform .15s; }
+.diff-card:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,0.1); }
+.diff-num { width:28px; height:28px; background:#c17c74; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; flex-shrink:0; }
+.diff-title { font-size:14px; color:#3a3a3a; margin-bottom:6px; }
+.diff-sim, .diff-diff, .diff-method { font-size:13px; line-height:1.6; color:#555; margin:2px 0; }
+.diff-sim .label, .diff-diff .label, .diff-method .label { font-weight:bold; color:#6a5044; }
+.diff-tip { margin-top:14px; padding:10px 14px; background:#f4f6f8; border-radius:8px; font-size:12px; color:#555; line-height:1.7; }
+
+.course-head { padding:12px 16px; background:linear-gradient(135deg,#e8f4f8,#d4e6f1); border-radius:10px; margin-bottom:12px; border-left:4px solid #3498db; }
+.course-head h4 { margin:0 0 4px; color:#1a5276; font-size:15px; }
+.course-head .sub { font-size:12px; color:#6b7c8a; }
+.timeline { position:relative; padding-left:20px; }
+.timeline::before { content:''; position:absolute; left:7px; top:0; bottom:0; width:2px; background:#bdc3c7; }
+.t-item { position:relative; margin-bottom:18px; padding:14px 16px; background:#fff; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+.t-dot { position:absolute; left:-19px; top:16px; width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px currentColor; }
+.t-hd { display:flex; align-items:center; gap:10px; margin-bottom:8px; border-bottom:1px dashed #eee; padding-bottom:6px; }
+.t-day { font-weight:bold; font-size:14px; color:#333; }
+.t-label { font-size:13px; font-weight:600; }
+.t-type { font-size:12px; color:#888; padding:1px 8px; background:#f0f0f0; border-radius:10px; }
+.t-content { margin:0; font-size:13px; line-height:1.7; white-space:pre-wrap; font-family:ui-monospace,Menlo,monospace; color:#333; background:#fafbfc; padding:10px; border-radius:6px; max-height:400px; overflow-y:auto; }
+.t-copy { cursor:pointer; }
+
+.hint { padding:24px; background:#fffde7; border-radius:10px; color:#6d4c41; line-height:1.9; font-size:14px; border:1px dashed #ffb74d; }
+</style>
+`;
+
+/* ---------- 自动注入 CSS ---------- */
+(function injectDiffCourseCSS() {
+  if (document.getElementById('diff-course-css')) return;
+  const st = document.createElement('style');
+  st.id = 'diff-course-css';
+  st.textContent = DIFF_COURSE_CSS.replace(/^<style>/, '').replace(/<\/style>$/, '');
+  (document.head || document.documentElement).appendChild(st);
+})();
+
+
 function renderGuideRx() {
   const box = document.getElementById('guideFx') || document.getElementById('guideRx');
   if (!box) return;
@@ -3631,7 +4114,7 @@ function renderCharts() {
 
 /* ===================== 视图切换 ===================== */
 function switchView(name) {
-  const views = ['overview', 'work', 'kb', 'tpl', 'rec', 'chart', 'guide'];
+  const views = ['overview', 'work', 'kb', 'tpl', 'rec', 'chart', 'guide', 'diff', 'course'];
   if (views.indexOf(name) < 0) name = 'overview';
   views.forEach(v => {
     const el = document.getElementById('view-' + v);
@@ -3642,6 +4125,8 @@ function switchView(name) {
   persist();
   if (name === 'chart') setTimeout(renderCharts, 30);
   if (name === 'work') { renderPreview(); renderQuality(); }
+  if (name === 'diff') renderDiff();
+  if (name === 'course') renderCourse();
   try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
 }
 
