@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F4EC">
+<title>AI 中医病历书写台 · 中医神经内科离线工作台</title>
+<style>
+:root{
+  --bg:#F7F4EC; --bg2:#FBF9F3; --card:#FFFFFF;
+  --ink:#2E3A36; --ink2:#57655F; --ink3:#8C998F;
+  --green:#5E8C81; --green-d:#46706A; --green-d2:#3F6A61; --green-l:#E7F0EC; --green-l2:#F2F7F4;
+  --sand:#EADCC8; --sand-d:#C8AE8C; --sand-l:#F6EEE1;
+  --line:#E7E1D4; --line2:#F0EBE0;
+  --danger:#B0827A; --danger-l:#F7EDEA;
+  --shadow:0 2px 14px rgba(58,74,66,.06), 0 1px 2px rgba(58,74,66,.04);
+  --shadow-lg:0 12px 40px rgba(58,74,66,.12);
+  --r:16px; --r-sm:10px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 600px at 88% -8%, #F2EFE3 0%, rgba(242,239,227,0) 60%),
+    radial-gradient(900px 500px at 5% 0%, #EAF1ED 0%, rgba(234,241,237,0) 55%),
+    var(--bg);
+  color:var(--ink);
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.72;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.35}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+::selection{background:#D8E7E0}
+.app{max-width:1280px;margin:0 auto;padding:0 22px 64px}
+
+/* ---------- 顶栏 ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px 2px 18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.logo{
+  width:46px;height:46px;border-radius:14px;flex:0 0 auto;
+  background:linear-gradient(150deg,#6E9A8F,#4E7A70);
+  color:#FBF8F0;font-family:"Songti SC","STSong",Georgia,serif;font-size:24px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 16px rgba(78,122,112,.24);letter-spacing:0
+}
+.brand h1{font-family:"Songti SC","STSong",Georgia,serif;font-size:21px;letter-spacing:1.5px;font-weight:600}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--ink3);letter-spacing:.6px}
+.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.save-badge{font-size:12px;color:var(--green-d2);background:var(--green-l);border:1px solid #D6E6DF;padding:5px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
+.save-badge i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.save-badge.off{color:#9A6B4F;background:#F8EDE3;border-color:#EAD7C4}
+.save-badge.off i{background:#C08A63}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 15px;border-radius:10px;font-size:13.5px;font-weight:500;
+  border:1px solid transparent;transition:.18s ease;white-space:nowrap;line-height:1.4
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(94,140,129,.22)}
+.btn-primary:hover{background:var(--green-d2)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink2)}
+.btn-ghost:hover{border-color:#CFDED7;color:var(--green-d2);background:var(--green-l2)}
+.btn-sand{background:var(--sand-l);border-color:#EADCC8;color:#8A6E4F}
+.btn-sand:hover{background:#F2E6D5}
+.btn-danger-ghost{background:#fff;border-color:#EADDD8;color:var(--danger)}
+.btn-danger-ghost:hover{background:var(--danger-l)}
+.btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- 标签页 ---------- */
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;margin:2px 0 20px;
+  background:rgba(255,255,255,.66);border:1px solid var(--line);border-radius:14px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;padding:9px 16px;border-radius:10px;color:var(--ink2);font-size:14px;
+  transition:.16s;white-space:nowrap;display:flex;align-items:center;gap:7px
+}
+.tab em{font-style:normal;font-size:11.5px;background:#EFEBE0;color:#8A8577;border-radius:20px;padding:1px 6px}
+.tab:hover{background:#F3F1E7;color:var(--ink)}
+.tab.on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(94,140,129,.2)}
+.tab.on em{background:rgba(255,255,255,.24);color:#fff}
+
+/* ---------- 卡片 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.card-hd h3{font-size:15.5px;letter-spacing:.3px;display:flex;align-items:center;gap:9px}
+.card-hd h3::before{content:"";width:3px;height:15px;border-radius:2px;background:var(--green);display:inline-block}
+.card-hd.flex-1 h3{flex:1}
+.card-bd{padding:18px 20px}
+.card-bd.tight{padding:14px 16px}
+.sub{font-size:12.5px;color:var(--ink3);font-weight:400;letter-spacing:.2px}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;right:-24px;top:-24px;width:78px;height:78px;border-radius:50%;background:var(--green-l2)}
+.kpi>*{position:relative;z-index:1}
+.kpi span{display:block;font-size:12.5px;color:var(--ink3);letter-spacing:.4px}
+.kpi b{font-family:"Songti SC","STSong",Georgia,serif;font-size:30px;font-weight:600;line-height:1.25;letter-spacing:.5px}
+.kpi b i{font-style:normal;font-size:13px;color:var(--ink3);margin-left:2px;font-family:inherit}
+.kpi small{display:block;font-size:11.5px;color:var(--ink3)}
+
+/* ---------- 表单 ---------- */
+.grid-work{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:18px;align-items:start}
+.field{margin-bottom:15px}
+.field label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--ink2);margin-bottom:6px;letter-spacing:.3px}
+.field label b{font-weight:600;color:var(--ink)}
+.field label i{font-style:normal;font-size:11px;color:#A8A192}
+textarea,input[type=text],input[type=search],select{
+  width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:13.5px;line-height:1.75;color:var(--ink);
+  transition:.16s;resize:vertical;outline:none
+}
+textarea:focus,input:focus,select:focus{background:#fff;border-color:#A9C6BC;box-shadow:0 0 0 3px rgba(94,140,129,.1)}
+textarea::placeholder,input::placeholder{color:#B5B0A3}
+select{appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238C998F' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:11.5px;color:var(--ink3);margin-top:5px;line-height:1.6}
+.hint.warn{color:#A9825F}
+
+/* ---------- 书写台 ---------- */
+.work-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line2);background:linear-gradient(180deg,#FCFBF6,#fff)}
+.work-bar .grow{flex:1;min-width:200px}
+.work-bar select{font-size:14px;font-weight:500}
+.quality{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--green-l2);border:1px solid #DFEBE5;border-radius:12px;margin-bottom:16px}
+.q-ring{width:56px;height:56px;flex:0 0 auto;position:relative}
+.q-ring svg{transform:rotate(-90deg)}
+.q-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:"Songti SC",serif}
+.q-txt{flex:1;min-width:0;font-size:12.5px;color:var(--ink2);line-height:1.6}
+.q-txt strong{color:var(--ink);font-size:13px}
+.q-issues{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.q-issue{font-size:11.5px;background:#fff;border:1px solid #E6D9C9;color:#966F4C;border-radius:20px;padding:2px 9px}
+.q-issue.ok{background:#fff;border-color:#CFE0D8;color:var(--green-d2)}
+
+/* 预览 */
+.preview-wrap{position:sticky;top:14px}
+.paper{
+  background:#FFFDF8;border:1px solid #EBE4D5;border-radius:12px;
+  padding:26px 26px 30px;min-height:420px;max-height:min(72vh,760px);overflow:auto;
+  box-shadow:inset 0 0 24px rgba(203,188,158,.07);
+  font-family:"Songti SC","STSong",Georgia,"Noto Serif CJK SC",serif;
+  font-size:13.5px;line-height:1.95;color:#333B36;
+  white-space:pre-wrap;word-break:break-word
+}
+.paper .pv-title{text-align:center;font-size:17px;letter-spacing:5px;font-weight:600;margin:0 0 6px;color:#2C3A34}
+.paper .pv-sub{text-align:center;font-size:11.5px;color:#8C998F;letter-spacing:1px;margin-bottom:18px;font-family:inherit}
+.paper .pv-empty{color:#A8A192;font-family:inherit}
+.paper-line{margin:0 0 8px}
+.paper-line .k{color:#5E8C81;font-weight:600}
+.preview-ft{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 4px 0;flex-wrap:wrap}
+.meta{font-size:12px;color:var(--ink3)}
+
+/* ---------- chips / 筛选 ---------- */
+.filters{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.chip{
+  padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-size:12.5px;color:var(--ink2);transition:.16s;white-space:nowrap
+}
+.chip:hover{border-color:#CFDED7;color:var(--green-d2)}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(94,140,129,.18)}
+.chip.on em{color:#fff;opacity:.8}
+.chip em{font-style:normal;font-size:11px;color:#A8A192;margin-left:4px}
+.search-box{position:relative;flex:1;min-width:180px}
+.search-box input{padding-left:34px;background:#fff}
+.search-box::before{content:"⌕";position:absolute;left:12px;top:50%;transform:translateY(-52%);color:#A8A192;font-size:16px}
+.sel-mini{width:auto;min-width:120px;background:#fff}
+
+/* ---------- 模板卡片 ---------- */
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.tpl-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:17px 18px 15px;box-shadow:var(--shadow);transition:.18s;display:flex;flex-direction:column;gap:9px;position:relative;overflow:hidden}
+.tpl-card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(58,74,66,.1);border-color:#D8E4DC}
+.tpl-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tpl-top h4{font-size:15px;line-height:1.5;letter-spacing:.2px}
+.tpl-score{flex:0 0 auto;font-family:"Songti SC",serif;font-size:17px;color:var(--green-d2);font-weight:600}
+.tpl-score span{font-size:11px;color:var(--ink3);font-family:inherit;font-weight:400}
+.tpl-meta{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;background:#F4F1E7;color:#7E8578;border:1px solid #EBE6D8}
+.tag.g{background:var(--green-l);color:var(--green-d2);border-color:#D8E6DF}
+.tag.s{background:var(--sand-l);color:#96794F;border-color:#EDE0CC}
+.tpl-src{font-size:11px;color:#A8A192;line-height:1.6;border-top:1px dashed #EDE7D9;padding-top:8px;margin-top:auto}
+.tpl-acts{display:flex;gap:8px;margin-top:2px}
+.tpl-acts .btn{flex:1}
+
+/* ---------- 病历列表 ---------- */
+.rec-list{display:flex;flex-direction:column;gap:10px}
+.rec{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px 16px;display:flex;gap:14px;align-items:center;box-shadow:0 1px 6px rgba(58,74,66,.04);transition:.16s}
+.rec:hover{border-color:#D8E4DC;box-shadow:0 6px 18px rgba(58,74,66,.07)}
+.rec-main{flex:1;min-width:0}
+.rec-main h4{font-size:14px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-sub{font-size:12px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:10px}
+.rec-side{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge{font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid transparent;white-space:nowrap}
+.st-draft{background:#F5F2E8;color:#8B8267;border-color:#EAE3D1}
+.st-review{background:#FBF0E2;color:#A5764B;border-color:#F0DEC8}
+.st-arch{background:var(--green-l);color:var(--green-d2);border-color:#D5E5DD}
+.score-pill{font-family:"Songti SC",serif;font-size:15px;color:var(--green-d2);min-width:32px;text-align:right}
+
+/* ---------- 空态 ---------- */
+.empty{text-align:center;padding:44px 20px;color:var(--ink3)}
+.empty .ico{width:56px;height:56px;border-radius:50%;background:var(--green-l2);border:1px dashed #CDDED6;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#A9C0B7}
+.empty h4{font-size:14.5px;color:var(--ink2);margin-bottom:5px}
+.empty p{font-size:12.5px;margin:0 0 14px}
+
+/* ---------- 图表 ---------- */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.chart-hd{padding:15px 18px 4px}
+.chart-hd h4{font-size:14.5px;display:flex;align-items:center;gap:8px}
+.chart-hd h4::before{content:"";width:3px;height:13px;background:var(--sand-d);border-radius:2px}
+.chart-hd p{margin:3px 0 0;font-size:11.5px;color:var(--ink3)}
+.chart-bd{padding:6px 12px 14px;overflow:hidden}
+.chart-bd svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);padding:0 18px 10px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+/* ---------- 规范速查 ---------- */
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.rule-list{counter-reset:r;list-style:none;padding:0;margin:0}
+.rule-list li{counter-increment:r;position:relative;padding:9px 0 9px 34px;border-bottom:1px dashed #EFEADE;font-size:13px;color:var(--ink2);line-height:1.7}
+.rule-list li:last-child{border-bottom:none}
+.rule-list li::before{content:counter(r);position:absolute;left:0;top:10px;width:22px;height:22px;border-radius:50%;background:var(--green-l2);color:var(--green-d2);font-size:11.5px;display:flex;align-items:center;justify-content:center;border:1px solid #DCE9E3}
+.rule-list li b{color:var(--ink);font-weight:600}
+.mini-list{list-style:none;padding:0;margin:0;font-size:12.5px;color:var(--ink2)}
+.mini-list li{padding:6px 0;border-bottom:1px dashed #F0EBE0;display:flex;gap:8px}
+.mini-list li:last-child{border-bottom:none}
+.mini-list li span{color:var(--green-d2);font-weight:600;flex:0 0 auto}
+
+/* ---------- 模态框 ---------- */
+.mask{position:fixed;inset:0;background:rgba(46,58,54,.34);backdrop-filter:blur(3px);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:760px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden;animation:pop .18s ease}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line2)}
+.modal-hd h3{font-size:15px}
+.modal-bd{padding:18px 20px;overflow:auto}
+.modal-ft{padding:14px 20px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:10px;background:#FCFBF6;flex-wrap:wrap}
+.modal-bd .paper{max-height:none;min-height:0;border:none;box-shadow:none;background:#fff;padding:0}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,20px);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;opacity:0;transition:.24s}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.toast-item{background:rgba(46,58,54,.93);color:#F7F4EC;padding:9px 18px;border-radius:999px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.16);display:flex;align-items:center;gap:8px;max-width:80vw}
+.toast-item.ok{background:rgba(70,112,103,.95)}
+.toast-item.warn{background:rgba(168,122,86,.95)}
+
+/* ---------- 概览 ---------- */
+.overview{display:grid;grid-template-columns:1.35fr .65fr;gap:16px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.q-card{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:linear-gradient(160deg,#FCFDFB,#F7F9F6);text-align:left;transition:.16s}
+.q-card:hover{border-color:#CDDFD7;background:#fff;box-shadow:0 6px 16px rgba(58,74,66,.07)}
+.q-card b{display:block;font-size:13.5px;margin-bottom:2px}
+.q-card span{font-size:11.5px;color:var(--ink3)}
+
+
+/* ---------- 资料清单 ---------- */
+.docs{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.doc{display:flex;gap:7px;font-size:12.5px;color:var(--ink2);padding:8px 0;border-bottom:1px dashed #F0EBE0;line-height:1.6;align-items:baseline}
+.doc b{font-weight:600;color:var(--ink);flex:0 0 auto}
+.doc span{color:var(--ink3);font-size:11.5px}
+.doc .dot{color:var(--sand-d);flex:0 0 auto;font-size:10px}
+@media (max-width:760px){.docs{grid-template-columns:1fr}}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1080px){
+  .grid-work{grid-template-columns:1fr}
+  .preview-wrap{position:static}
+  .overview{grid-template-columns:1fr}
+  .chart-grid,.guide-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .app{padding:0 14px 48px}
+  .topbar{padding:16px 0 12px}
+  .brand h1{font-size:18px;letter-spacing:1px}
+  .brand p{font-size:11px}
+  .logo{width:40px;height:40px;font-size:21px;border-radius:12px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{padding:13px 14px}
+  .kpi b{font-size:24px}
+  .tabs{margin-bottom:14px;border-radius:12px}
+  .tab{padding:8px 13px;font-size:13px}
+  .card-bd{padding:15px 14px}
+  .card-hd{padding:14px 14px}
+  .paper{padding:18px 15px 22px;font-size:13px;max-height:none;line-height:1.9}
+  .tpl-grid{grid-template-columns:1fr}
+  .rec{flex-wrap:wrap;gap:10px}
+  .rec-side{width:100%;justify-content:flex-end;border-top:1px dashed #F0EBE0;padding-top:8px}
+  .rec-main h4{white-space:normal}
+  .work-bar{padding:12px 14px}
+  .work-bar .btn{flex:1}
+  .quick{grid-template-columns:1fr}
+  textarea,input[type=text],input[type=search],select{font-size:16px}
+  .modal-bd{padding:14px}
+  .row2{grid-template-columns:1fr}
+  #toast{bottom:18px}
+}
+@media (max-width:380px){
+  .kpis{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">医</div>
+      <div>
+        <h1>AI 中医病历书写台</h1>
+        <p>中医神经内科 · 10 套规范模板 · 离线可用</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="save-badge" id="saveBadge"><i></i><span id="saveTxt">本机自动保存</span></span>
+      <button class="btn btn-ghost btn-sm" id="btnRestore">恢复示例数据</button>
+      <button class="btn btn-danger-ghost btn-sm" id="btnClearAll">一键清空</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-view="overview">概览</button>
+    <button class="tab" data-view="work">书写台</button>
+    <button class="tab" data-view="tpl">模板库<em id="tabTplCount">10</em></button>
+    <button class="tab" data-view="rec">病历<em id="tabRecCount">0</em></button>
+    <button class="tab" data-view="chart">数据看板</button>
+    <button class="tab" data-view="guide">规范速查</button>
+  </nav>
+
+  <main>
+    <!-- ============ 概览 ============ -->
+    <section class="view" id="view-overview">
+      <div class="kpis">
+        <div class="kpi"><span>规范模板</span><b id="kpiTpl">10<i>套</i></b><small>覆盖 6 个神经内科病种</small></div>
+        <div class="kpi"><span>已存病历</span><b id="kpiRec">0<i>份</i></b><small id="kpiRecSub">尚未保存病历</small></div>
+        <div class="kpi"><span>平均质评</span><b id="kpiScore">—<i>分</i></b><small>按规范条文自动评分</small></div>
+        <div class="kpi"><span>待审病历</span><b id="kpiReview">0<i>份</i></b><small id="kpiReviewSub">无待审任务</small></div>
+      </div>
+
+      <div class="overview">
+        <div class="card">
+          <div class="card-hd"><h3>最近书写</h3><span class="sub" id="recentSub">最近保存的 5 份</span></div>
+          <div class="card-bd" id="recentList"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>快捷入口</h3></div>
+          <div class="card-bd">
+            <div class="quick">
+              <button class="q-card" data-go="work"><b>开始写病历</b><span>选模板 → 填四诊 → 出成文</span></button>
+              <button class="q-card" data-go="tpl"><b>翻模板库</b><span>10 套模板，按病种筛选</span></button>
+              <button class="q-card" data-go="rec"><b>管我的病历</b><span>检索、改状态、导出</span></button>
+              <button class="q-card" data-go="chart"><b>看数据看板</b><span>4 张图表看清薄弱环节</span></button>
+            </div>
+            <div style="margin-top:14px;padding:12px 14px;background:var(--sand-l);border:1px solid #EDE0CC;border-radius:12px;font-size:12.5px;color:#8A6E4F;line-height:1.75">
+              <b style="color:#7A5F42">一句话用法</b><br>
+              先挑一个最接近的病种模板，把姓名、主诉、现病史、舌脉、方药改掉，右侧实时成文；质评低于 80 分会提示缺项，改完再保存。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 书写台 ============ -->
+    <section class="view" id="view-work" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="work-bar">
+          <div class="grow">
+            <label style="font-size:11.5px;color:var(--ink3);display:block;margin-bottom:4px">当前模板</label>
+            <select id="tplSelect"></select>
+          </div>
+          <button class="btn btn-sand btn-sm" id="btnFillDemo">填入示例内容</button>
+          <button class="btn btn-ghost btn-sm" id="btnResetForm">清空表单</button>
+          <button class="btn btn-primary btn-sm" id="btnSaveRec">保存病历</button>
+        </div>
+      </div>
+
+      <div class="grid-work">
+        <div class="card">
+          <div class="card-hd">
+            <h3>病历内容</h3>
+            <span class="sub">字段按《中医病历书写基本规范》项目顺序排列</span>
+          </div>
+          <div class="card-bd">
+            <div class="quality" id="qualityBox">
+              <div class="q-ring" id="qRing"></div>
+              <div class="q-txt">
+                <strong id="qTitle">质评：—</strong>
+                <div id="qDesc">选择模板后自动评分</div>
+                <div class="q-issues" id="qIssues"></div>
+              </div>
+            </div>
+            <div id="formArea"></div>
+          </div>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="card">
+            <div class="card-hd">
+              <h3>实时成文</h3>
+              <span class="sub" id="pvMeta">—</span>
+            </div>
+            <div class="card-bd tight">
+              <div class="paper" id="paper"></div>
+              <div class="preview-ft">
+                <span class="meta" id="pvCount">0 字</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost btn-sm" id="btnCopy">复制全文</button>
+                  <button class="btn btn-ghost btn-sm" id="btnDownload">下载 TXT</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 模板库 ============ -->
+    <section class="view" id="view-tpl" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-bd" style="padding-bottom:6px">
+          <div class="filters" id="tplDiseaseChips"></div>
+          <div class="filters" style="margin-bottom:8px">
+            <div class="search-box"><input type="search" id="tplSearch" placeholder="搜病种、证型、方名、标签…"></div>
+            <select class="sel-mini" id="tplTypeSel" style="width:auto"></select>
+            <select class="sel-mini" id="tplSortSel" style="width:auto">
+              <option value="score">评分从高到低</option>
+              <option value="scoreAsc">评分从低到高</option>
+              <option value="name">按病种排序</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="tplGrid" class="tpl-grid"></div>
+      <div id="tplEmpty"></div>
+    </section>
+
+    <!-- ============ 病历 ============ -->
+    <section class="view" id="view-rec" hidden>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-bd" style="padding-bottom:8px">
+          <div class="filters" id="recStatusChips"></div>
+          <div class="filters" style="margin-bottom:0">
+            <div class="search-box"><input type="search" id="recSearch" placeholder="搜标题、患者、病种…"></div>
+            <select class="sel-mini" id="recSortSel" style="width:auto">
+              <option value="dateDesc">最近保存在前</option>
+              <option value="dateAsc">最早保存在前</option>
+              <option value="scoreDesc">质评从高到低</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="recList" class="rec-list"></div>
+      <div id="recEmpty"></div>
+    </section>
+
+    <!-- ============ 数据看板 ============ -->
+    <section class="view" id="view-chart" hidden>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-hd"><h4>模板评分榜</h4><p>10 套模板的规范度综合评分，虚线为平均值</p></div>
+          <div class="chart-bd" id="chartRank"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd"><h4>配比对比</h4><p>各病种「模板数」与「已存病历数」对照</p></div>
+          <div class="legend">
+            <span><i style="background:#7FA79C"></i>模板数</span>
+            <span><i style="background:#D9C3A4"></i>已存病历</span>
+          </div>
+          <div class="chart-bd" id="chartMix"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd"><h4>状态漏斗</h4><p>从已建病历到完成归档的流转情况</p></div>
+          <div class="chart-bd" id="chartFunnel"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd"><h4>阅读效果</h4><p>病历质评随保存日期的变化，含 85 分合格参考线</p></div>
+          <div class="chart-bd" id="chartTrend"></div>
+        </div>
+      </div>
+      <p class="meta" style="text-align:center;margin-top:14px">评分依据：字段完整度 60 分（规范必备项）＋ 书写规范 40 分（主诉字数、舌脉、方药剂数、诊断证型等）</p>
+    </section>
+
+    <!-- ============ 规范速查 ============ -->
+    <section class="view" id="view-guide" hidden>
+      <div class="guide-grid">
+        <div class="card">
+          <div class="card-hd"><h3>入院记录项目顺序</h3><span class="sub">《中医病历书写基本规范》第十九条</span></div>
+          <div class="card-bd">
+            <ol class="rule-list">
+              <li><b>患者一般情况</b>：姓名、性别、年龄、民族、婚姻、出生地、职业、入院时间、记录时间、发病节气、病史陈述者</li>
+              <li><b>主诉</b>：主要症状（体征）＋持续时间</li>
+              <li><b>现病史</b>：发病情况、症状特点及变化、伴随症状、诊疗经过、一般情况</li>
+              <li><b>既往史</b>：健康与疾病史、传染病史、手术外伤输血史、过敏史</li>
+              <li><b>个人史、婚育史、家族史</b></li>
+              <li><b>中医望、闻、切诊</b>：神色、形态、语声、气息、舌象、脉象</li>
+              <li><b>体格检查</b>及专科情况</li>
+              <li><b>辅助检查</b>：按时间顺序，外院检查注明机构与检查号</li>
+              <li><b>初步诊断</b>：中医病名＋证候诊断、西医诊断，主次分明</li>
+              <li><b>医师签名</b></li>
+            </ol>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>书写时限</h3><span class="sub">超时是病历质控最常见的扣分项</span></div>
+          <div class="card-bd">
+            <ul class="mini-list">
+              <li><span>入院记录</span>入院后 24 小时内完成</li>
+              <li><span>首次病程</span>入院后 8 小时内完成（病例特点＋拟诊讨论＋诊疗计划）</li>
+              <li><span>主治首查</span>入院 48 小时内完成，须含理法方药分析</li>
+              <li><span>日常病程</span>病危随时记、每日至少 1 次；病重至少 2 天 1 次；病情稳定至少 3 天 1 次</li>
+              <li><span>出院记录</span>出院后 24 小时内完成，含出院医嘱与中医调护</li>
+            </ul>
+            <div style="margin-top:14px;padding:12px 14px;background:var(--green-l2);border:1px solid #DCE9E3;border-radius:12px;font-size:12.5px;color:var(--green-d2);line-height:1.75">
+              日常病程记录要反映<b>四诊变化</b>与<b>治法、方药调整依据</b>——这是中医病历区别于西医病历的关键，也是质评最常扣分处。
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>神经内科问诊要点</h3><span class="sub">来自神经内科病历书写培训材料</span></div>
+          <div class="card-bd">
+            <ul class="mini-list">
+              <li><span>主诉</span>宜少于 20 字，能导出第一诊断，不用诊断名或检查结果代替</li>
+              <li><span>现病史六要素</span>起病情况（时间、地点、诱因）、主要症状特点、伴随症状、院外诊疗经过、有鉴别意义的阴性症状、一般情况</li>
+              <li><span>用词要抠</span>“头晕”要分清是旋转感的眩晕还是头昏；“昏迷”要分清意识丧失还是嗜睡无力</li>
+              <li><span>定位线索</span>一侧肢体发作性抽搐提示对侧中央前回；持续麻木无力提示该侧颈胸神经根</li>
+              <li><span>定性线索</span>突然起病多为血管病；急性或亚急性多为炎症；缓慢进展多为肿瘤或变性病</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>常见证型与方药速查</h3><span class="sub">本工作台模板所用，出自知识库诊疗方案</span></div>
+          <div class="card-bd">
+            <ul class="mini-list">
+              <li><span>中风·风痰阻络</span>半夏白术天麻汤加减</li>
+              <li><span>中风·肝阳暴亢</span>天麻钩藤饮加减</li>
+              <li><span>中风·气虚血瘀</span>补阳还五汤加减</li>
+              <li><span>眩晕·痰浊中阻</span>半夏白术天麻汤合泽泻汤</li>
+              <li><span>眩晕·肝阳上亢</span>天麻钩藤饮加减</li>
+              <li><span>头痛·瘀血头痛</span>通窍活血汤加减</li>
+              <li><span>口僻·风寒袭络</span>祛风通络，针灸取攒竹、阳白、四白、颊车、地仓、合谷</li>
+              <li><span>不寐·肝火扰心</span>龙胆泻肝汤加减</li>
+              <li><span>颤证·风阳内动</span>天麻钩藤饮合镇肝息风汤</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-hd"><h3>本工作台抓取的资料清单</h3><span class="sub">全部来自本机知识库，模板字段与方药均可溯源</span></div>
+          <div class="card-bd">
+            <div class="docs">
+              <div class="doc"><i class="dot">●</i><b>中医病历书写基本规范（第1版）</b><span>项目顺序、时限、四诊要求</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历书写基本规范（最新）</b><span>门急诊与住院病历格式、签名修改规则</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历书写手册</b><span>门诊、急诊、入院、首程、出院示例原文</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历及处方书写规范手册</b><span>处方书写与病历对应要求</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医病历书写规范与质量评价标准（修订版）</b><span>质评扣分点，评分规则参考</span></div>
+              <div class="doc"><i class="dot">●</i><b>住院病历的书写 / 书写规范及范例 / 格式及要求全</b><span>一般项目、既往史、查体顺序</span></div>
+              <div class="doc"><i class="dot">●</i><b>病历模板2-病程记录</b><span>日常病程、查房记录写法</span></div>
+              <div class="doc"><i class="dot">●</i><b>各科病历书写范文（完整版）</b><span>神经科病历范例</span></div>
+              <div class="doc"><i class="dot">●</i><b>神经内科病历书写（培训课件）</b><span>主诉≤20字、现病史六要素、定性定位</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医门诊病历书写模板</b><span>四诊、辨证分析、治法、方药、医嘱字段</span></div>
+              <div class="doc"><i class="dot">●</i><b>针灸治疗病例模板</b><span>中风、眩晕、头痛、面瘫、痿病证型与处方</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医优势病种诊疗方案临床路径（2018版）</b><span>耳眩晕路径、住院日、检查安排</span></div>
+              <div class="doc"><i class="dot">●</i><b>第二批24个专业105个病种中医诊疗方案</b><span>中风病各证型方药与针灸方案</span></div>
+              <div class="doc"><i class="dot">●</i><b>广西眩晕中西医诊疗专家共识</b><span>眩晕五个证型、治法与推荐方</span></div>
+              <div class="doc"><i class="dot">●</i><b>中医内科学（第十版）</b><span>中风、头痛、不寐、颤证、痫病、痿病证治</span></div>
+              <div class="doc"><i class="dot">●</i><b>卒中相关非运动症状多学科管理专家共识</b><span>神经内科常见合并症处理</span></div>
+            </div>
+            <p class="hint" style="margin-top:12px">说明：模板内容按上述规范的项目顺序组织，方药与证型取自诊疗方案与教材原文；示例中的患者姓名、检查数值均为虚构示例，实际书写时请按真实情况填写。</p>
+          </div>
+        </div>
+      <p class="meta" style="text-align:center;margin-top:14px">资料取自本机知识库：《中医病历书写基本规范》《中医病历书写手册》《中医优势病种诊疗方案临床路径（2018版）》《广西眩晕中西医诊疗专家共识》《中医内科学（第十版）》《针灸治疗》《神经内科病历书写》</p>
+    </section>
+  </main>
+</div>
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="modalTitle">提示</h3><button class="btn btn-ghost btn-sm" id="modalClose">关闭</button></div>
+    <div class="modal-bd" id="modalBody"></div>
+    <div class="modal-ft" id="modalFoot"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ===================== 模板数据（1-5） ===================== */
+const TPL = [
+  {
+    id: 't1',
+    name: '中风病（脑梗死）急性期住院记录',
+    disease: '中风病',
+    type: '入院记录',
+    syn: '风痰阻络证',
+    dept: '脑病科',
+    score: 96,
+    tags: ['中经络', '半夏白术天麻汤', 'NIHSS'],
+    src: '依据《第二批24个专业105个病种中医诊疗方案》中风病（脑梗死）条；项目顺序依《中医病历书写基本规范》第十九条',
+    sections: [
+      { key: 'base', label: '患者一般情况', rows: 3, v: '姓名：李某某　性别：男　年龄：63岁　民族：汉　婚姻：已婚　出生地：山东青岛　职业：退休工人　入院时间：2026-10-18 09:40　记录时间：2026-10-18 14:20　发病节气：寒露　病史陈述者：患者本人及家属（可靠）' },
+      { key: 'chief', label: '主诉', rows: 2, v: '右侧肢体无力伴言语不清2天。' },
+      { key: 'hpi', label: '现病史', rows: 6, v: '患者2天前晨起时无明显诱因出现右侧肢体无力，持物不稳，行走拖步，伴言语含糊不清，无头痛呕吐，无意识障碍及肢体抽搐，无发热。当日于外院查头颅CT示左侧基底节区低密度影，予阿司匹林、阿托伐他汀口服后转诊我院。入院症见：右侧肢体无力，上肢不能抬举过肩，下肢可扶行数步，言语謇涩，口舌歪斜，口角流涎，头晕，纳可，夜寐安，大便偏干，小便调。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 4, v: '望诊：神志清楚，精神倦怠，面色少华，形体偏胖，步入病房，右侧口角低垂。舌质暗淡，舌体胖大，边有齿痕，舌苔白腻，舌下脉络迂曲。闻诊：语声低微，言语謇涩，气息平稳，未闻及异常气味。切诊：脉弦滑。' },
+      { key: 'past', label: '既往史、个人史、家族史', rows: 5, v: '既往高血压病史12年，最高170/100mmHg，长期服苯磺酸氨氯地平5mg每日1次，血压控制欠佳；2型糖尿病史6年，口服二甲双胍0.5g每日3次。否认冠心病、心房颤动病史，否认肝炎、结核等传染病史，否认手术外伤及输血史，否认食物药物过敏史。个人史：生于原籍，久居本地，吸烟30年、每日约20支，偶饮酒。婚育史：已婚，育有1子1女，配偶及子女体健。家族史：父母均有高血压病史，父因脑卒中去世。' },
+      { key: 'exam', label: '体格检查（含神经系统专科）', rows: 6, v: 'T 36.5℃　P 78次/分　R 18次/分　BP 158/92mmHg。神志清楚，查体合作。双肺呼吸音清，未闻及干湿性啰音。心率78次/分，律齐，各瓣膜听诊区未闻及病理性杂音。腹平软，无压痛及反跳痛，肝脾肋下未及。专科情况：神志清，言语謇涩，高级皮层功能粗测正常。双侧瞳孔等大等圆，直径约3.0mm，对光反射灵敏，眼球各向运动充分，未见眼震。右侧鼻唇沟变浅，口角左偏，伸舌右偏。右侧肢体肌张力略低，右上肢肌力2级、右下肢肌力3级，左侧肌力5级。右侧肱二头肌反射、膝腱反射活跃，右侧巴宾斯基征阳性，右侧偏身痛觉减退。NIHSS评分8分。' },
+      { key: 'aux', label: '辅助检查', rows: 3, v: '2026-10-17 外院头颅CT：左侧基底节区及放射冠区低密度影，考虑急性脑梗死。入院后头颅MRI＋DWI：左侧基底节区急性梗死灶。颈动脉超声：双侧颈动脉内中膜增厚伴斑块形成。糖化血红蛋白7.4%；LDL-C 3.6mmol/L。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '中风病（中经络）——风痰阻络证' },
+      { key: 'wmDx', label: '西医诊断', rows: 3, v: '1. 急性缺血性脑卒中（左侧基底节区）　2. 高血压病3级（极高危）　3. 2型糖尿病' },
+      { key: 'basis', label: '中医辨病辨证依据', rows: 5, v: '患者年逾六旬，形体偏胖，平素嗜食肥甘，脾运不健，痰浊内生；肝风内动，挟痰上扰，蒙蔽清窍，流窜经络，气血运行不利，筋脉失养，故见半身不遂、言语謇涩、口舌歪斜。舌暗淡、体胖有齿痕、苔白腻、脉弦滑，皆为风痰阻络之象。病位在脑，涉及肝脾；病性属本虚标实，以风、痰、瘀为主。鉴别：患者神志清楚，无昏仆、二便失禁，故属中经络而非中脏腑；无猝然昏倒、四肢抽搐、口吐涎沫及反复发作史，可与痫病相鉴别。' },
+      { key: 'treat', label: '治法', rows: 2, v: '息风化痰，活血通络。' },
+      { key: 'rx', label: '方药', rows: 4, v: '法半夏10g　炒白术12g　天麻15g　茯苓15g　陈皮10g　胆南星6g　竹茹12g　石菖蒲12g　丹参20g　地龙10g　川牛膝15g　炙甘草6g。7剂，水煎服，每日1剂，分早晚温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 3, v: '醒脑开窍针刺法：内关（双）、水沟、三阴交（双）为主穴，辅以极泉、尺泽、委中（患侧）；风痰阻络加丰隆、合谷。内关施泻法，水沟施雀啄泻法，三阴交沿胫骨内侧缘45°斜刺、提插补法，留针30分钟，每日1次，每周5次。' },
+      { key: 'advice', label: '诊疗计划与调护', rows: 4, v: '1. 脑病科护理常规，一级护理，低盐低脂糖尿病饮食。2. 良肢位摆放，床边被动关节活动，预防肩手综合征及下肢深静脉血栓。3. 监测血压、血糖，血压控制在140/90mmHg以下。4. 完善血常规、凝血功能、心电图、心脏超声等检查。5. 避风寒，畅情志，忌肥甘厚味，不适随诊。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　上级医师：×××' }
+    ]
+  },
+  {
+    id: 't2',
+    name: '中风病首次病程记录（肝阳暴亢证）',
+    disease: '中风病',
+    type: '首次病程记录',
+    syn: '肝阳暴亢证',
+    dept: '脑病科',
+    score: 92,
+    tags: ['8小时内完成', '天麻钩藤饮', '病例特点'],
+    src: '依据《中医病历书写基本规范》第二十三条（一）：病例特点、拟诊讨论、诊疗计划；证治依中风病诊疗方案',
+    sections: [
+      { key: 'base', label: '记录时间与患者', rows: 2, v: '记录时间：2026-10-18 15:10（入院后5小时30分）。患者王某某，男，58岁，因“突发左侧肢体麻木无力伴头胀痛1天”于2026-10-18 09:40入院。' },
+      { key: 'feature', label: '病例特点', rows: 6, v: '1. 患者男性，58岁，急性起病，既往高血压病史10年，服药不规律。2. 主要症状：左侧肢体麻木无力，头胀痛，面红目赤，口苦，心烦易怒，大便三日未行。3. 中医四诊：面色潮红，语气粗促，舌质红、苔黄腻，脉弦有力。4. 查体：BP 172/98mmHg，神志清，左侧鼻唇沟变浅，左上肢肌力3级、左下肢肌力4级，左侧巴宾斯基征阳性。5. 辅助检查：头颅CT未见出血；头颅MRI示右侧放射冠急性梗死。' },
+      { key: 'discuss', label: '拟诊讨论（辨病辨证依据与鉴别诊断）', rows: 7, v: '中医辨病辨证依据：患者平素情志不畅，肝郁化火，肝阳偏亢，遇劳而发，阳亢风动，气血上逆，上扰清窍则头胀痛、面红目赤；横窜经络，筋脉失养则肢体麻木无力；舌红苔黄腻、脉弦有力，为肝阳暴亢、痰热内蕴之征。四诊合参，辨为中风病（中经络）·肝阳暴亢证。西医诊断依据：急性起病、局灶性神经功能缺损、影像学见责任病灶，符合急性缺血性脑卒中。鉴别诊断：与脑出血相鉴别，头颅CT未见高密度影可资鉴别；与痫病相鉴别，无意识丧失及抽搐；与痿病相鉴别，痿病多起病缓慢、呈对称性弛缓性瘫痪，无口舌歪斜及神志改变。' },
+      { key: 'plan', label: '诊疗计划', rows: 6, v: '1. 脑病科护理常规，一级护理，低盐低脂饮食，监测血压、神志、瞳孔及肢体肌力变化。2. 完善血常规、凝血四项、肝肾功能、血脂、心电图、颈动脉超声等检查。3. 中医治疗：平肝潜阳、清热息风，予天麻钩藤饮加减（天麻15g、钩藤15g后下、石决明30g先煎、川牛膝15g、杜仲12g、桑寄生15g、黄芩10g、栀子10g、益母草15g、首乌藤15g、茯神15g）；针刺取内关、水沟、三阴交、太冲、太溪，留针30分钟，每日1次。4. 西医治疗：抗血小板聚集、他汀调脂稳斑、控制血压及脑保护，暂不溶栓。5. 中医调护：避风寒、畅情志、忌恼怒，保持大便通畅。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××' }
+    ]
+  },
+  {
+    id: 't3',
+    name: '中风病恢复期日常病程记录（气虚血瘀证）',
+    disease: '中风病',
+    type: '日常病程记录',
+    syn: '气虚血瘀证',
+    dept: '脑病科',
+    score: 88,
+    tags: ['补阳还五汤', '3天1次', '四诊变化'],
+    src: '依据《中医病历书写基本规范》第二十三条（二）：日常病程记录须反映四诊情况及治法、方药变化及依据',
+    sections: [
+      { key: 'base', label: '记录时间与患者', rows: 1, v: '记录时间：2026-10-26 09:20。患者李某某，男，63岁，中风病（中经络）住院第9天，恢复期。' },
+      { key: 'course', label: '四诊与病情变化', rows: 6, v: '患者神志清，精神较前振作，诉右侧肢体无力较入院时减轻，可扶杖缓行，言语较前清晰，仍感乏力、气短，动则汗出，纳寐一般，大便偏溏，小便调。查体：BP 138/84mmHg，右侧鼻唇沟变浅，右上肢肌力3级、右下肢肌力4级，右侧肢体肌张力略增高，右侧巴宾斯基征阳性。舌质淡暗，边有齿痕，苔薄白，脉细弱。NIHSS评分4分。' },
+      { key: 'adjust', label: '治法方药调整及依据', rows: 5, v: '患者风痰渐化，痰热已减，现值恢复期，气虚血瘀之象显露：乏力、气短、动则汗出、舌淡暗、脉细弱，故治法转为益气活血、化瘀通络，方选补阳还五汤加减：生黄芪30g、当归尾12g、赤芍12g、川芎10g、桃仁10g、红花6g、地龙10g、川牛膝15g、鸡血藤20g。7剂，水煎服，每日1剂。针刺调整为患侧阳明经穴为主，加足三里、气海用补法。' },
+      { key: 'plan', label: '下一步计划', rows: 4, v: '1. 继续康复训练：坐位平衡、床边站立、步行训练及作业治疗，每日1次。2. 复查血常规、肝肾功能，观察他汀及抗血小板药物不良反应。3. 加强良肢位管理与肩关节保护，预防肩痛及异常运动模式。4. 指导家属居家照护与二级预防用药。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××' }
+    ]
+  },
+  {
+    id: 't4',
+    name: '中风后痉挛性瘫痪上级医师查房记录',
+    disease: '中风病',
+    type: '上级医师查房记录',
+    syn: '气虚血瘀兼阴阳两虚',
+    dept: '脑病科',
+    score: 84,
+    tags: ['48小时内首查', '理法方药分析', 'Ashworth'],
+    src: '依据《中医病历书写基本规范》第二十三条（三）：主治医师首次查房于入院48小时内完成，须含理法方药分析',
+    sections: [
+      { key: 'base', label: '查房时间与参加人员', rows: 2, v: '查房时间：2026-10-19 08:30。参加人员：×××副主任医师、薛××主治医师、规培医师1名。患者张某某，女，71岁，中风病（中经络）住院第2天。' },
+      { key: 'round', label: '病情汇报与上级医师分析', rows: 7, v: '床位医师汇报病史及诊疗经过（略）。×××副主任医师查看患者后指出：患者年逾七旬，肝肾已亏，此次中风后患侧肢体拘急僵硬，屈伸不利，肘腕内收、足内翻，属中风后痉挛性瘫痪范畴。查体：左上肢屈肌张力按改良Ashworth量表2级，左下肢伸肌张力1＋级，左腱反射亢进，左踝阵挛阳性。舌质淡暗、苔少，脉沉细。分析：病之本在肝肾阴虚、气血不足，筋脉失于濡养；病之标为痰瘀阻络、阳亢风动，标本相兼顾。治法宜阴阳双补、柔肝舒筋，佐以化痰通络，方以地黄饮子加减：熟地黄15g、山茱萸12g、石斛12g、肉苁蓉12g、巴戟天10g、附子6g先煎、肉桂3g后下、茯苓15g、石菖蒲10g、远志10g、白芍20g、炙甘草10g。' },
+      { key: 'adjust', label: '查房后诊疗意见落实情况', rows: 5, v: '1. 中药按上方调整，5剂，水煎服，每日1剂，观察口干、便秘等反应。2. 针刺改用阴阳调衡透刺法，取极泉、曲池、外关、合谷、血海、阳陵泉、三阴交、太冲，留针30分钟，每日1次，每周5次，4周为1疗程。3. 康复科会诊，加抗痉挛体位、被动牵伸与拮抗肌训练。4. 中药熏洗（伸筋草30g、透骨草30g、桂枝15g、艾叶15g）每日1次，水温不超过40℃。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　查房医师：×××（副主任医师）' }
+    ]
+  },
+  {
+    id: 't5',
+    name: '耳眩晕（梅尼埃病）住院记录',
+    disease: '眩晕',
+    type: '入院记录',
+    syn: '痰浊中阻证',
+    dept: '脑病科',
+    score: 94,
+    tags: ['半夏白术天麻汤合泽泻汤', '前庭检查', '发作期'],
+    src: '依据《中医优势病种诊疗方案临床路径（2018版）》耳眩晕（梅尼埃病）、《广西眩晕中西医诊疗专家共识》痰湿中阻证',
+    sections: [
+      { key: 'base', label: '患者一般情况', rows: 3, v: '姓名：赵某某　性别：女　年龄：46岁　民族：汉　婚姻：已婚　出生地：山东潍坊　职业：教师　入院时间：2026-10-22 10:15　记录时间：2026-10-22 16:00　发病节气：霜降　病史陈述者：患者本人（可靠）' },
+      { key: 'chief', label: '主诉', rows: 2, v: '反复发作性眩晕3年，再发伴恶心呕吐2天。' },
+      { key: 'hpi', label: '现病史', rows: 6, v: '患者3年来反复出现发作性眩晕，每于劳累或情绪波动后诱发，发作时视物旋转，持续约30分钟至2小时，伴耳鸣、耳闷胀感，右耳听力渐降，发作间期如常。2天前晨起翻身时再次发作，视物旋转，不能站立，伴恶心呕吐3次，呕吐物为胃内容物，无黑蒙、无肢体无力及言语不利，无头痛发热。曾于外院按“梅尼埃病”予倍他司汀口服，症状稍缓。入院症见：头晕目眩，如坐舟车，不敢睁眼，胸闷，恶心欲吐，纳呆，倦怠乏力，夜寐不安，大便黏滞。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 4, v: '望诊：神志清，精神萎靡，面色萎黄，闭目卧姿，形体偏胖。舌质淡红，舌体胖大，边有齿痕，苔白厚腻。闻诊：语声低怯，时有嗳气，未闻及异常气味。切诊：脉濡滑。' },
+      { key: 'past', label: '既往史、个人史、家族史', rows: 4, v: '既往体健，否认高血压、糖尿病、冠心病病史，否认头部外伤及耳毒性药物使用史，否认中耳炎及耳部手术史。否认肝炎、结核等传染病史，否认食物药物过敏史。个人史：久居本地，饮食偏嗜肥甘，不嗜烟酒。婚育史：已婚，育有1女，配偶体健，月经规律。家族史：母亲有“头晕”病史，否认家族遗传性疾病。' },
+      { key: 'exam', label: '体格检查（含专科）', rows: 6, v: 'T 36.6℃　P 82次/分　R 18次/分　BP 126/78mmHg。神志清楚，查体合作。双肺呼吸音清，心界不大，心率82次/分，律齐，未闻及杂音。腹平软，无压痛，肝脾肋下未及。专科情况：双耳外耳道通畅，鼓膜完整，标志清晰。自发性眼震（－），Dix-Hallpike试验（－），滚转试验（－）。纯音测听：右耳低频感音神经性听力下降（0.5/1/2kHz平均听阈38dBHL），左耳正常。声导抗：双耳A型图。闭目难立征（＋），直线行走不能完成。' },
+      { key: 'aux', label: '辅助检查', rows: 3, v: '2026-10-22 电耳镜：双耳鼓膜完整。纯音测听＋声导抗：右耳低频感音神经性聋，双耳A型图。头颅MRI＋内听道薄层：未见颅内占位及脑干梗死灶。颈椎正侧位片：颈椎生理曲度变直。血常规、肝肾功能、血脂、血糖未见明显异常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '耳眩晕——痰浊中阻证' },
+      { key: 'wmDx', label: '西医诊断', rows: 3, v: '1. 梅尼埃病（右耳，发作期）　2. 感音神经性听力损失（右耳）' },
+      { key: 'basis', label: '中医辨病辨证依据', rows: 5, v: '患者中年女性，形体偏胖，嗜食肥甘，脾失健运，痰浊内生，痰湿中阻，清阳不升，浊阴上蒙清窍，故头晕目眩、视物旋转；痰浊阻滞中焦，气机升降失常，故胸闷、恶心呕吐、纳呆；舌体胖大、苔白厚腻、脉濡滑，为痰湿内盛之象。四诊合参，辨为耳眩晕·痰浊中阻证。与中风相鉴别：无肢体偏瘫、口舌歪斜、言语不利；与厥证相鉴别：无突然昏倒、不省人事、四肢厥冷。西医方面，发作性眩晕≥2次、每次20分钟至12小时，伴波动性听力下降及耳鸣、耳闷，符合梅尼埃病诊断标准，需与前庭性偏头痛、BPPV、后循环缺血相鉴别。' },
+      { key: 'treat', label: '治法', rows: 2, v: '化痰祛湿，健脾和胃，升清定眩。' },
+      { key: 'rx', label: '方药', rows: 4, v: '法半夏10g　炒白术12g　天麻15g　茯苓20g　陈皮10g　泽泻20g　竹茹12g　石菖蒲12g　生姜6g　大枣10g　炙甘草6g。3剂，水煎服，每日1剂，分2次温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 3, v: '取风池（双）、百会、内关（双）、太冲（双）、丰隆（双）、中脘、阴陵泉（双）。风池平补平泻，百会、内关施泻法，丰隆、中脘、阴陵泉健脾化痰，留针30分钟，每日1次。另予耳穴贴压：肾、肝、脾、内耳、神门，王不留行籽贴压，每日按压3次。' },
+      { key: 'advice', label: '诊疗计划与调护', rows: 4, v: '1. 脑病科护理常规，二级护理，发作期卧床休息，防跌倒坠床。2. 低盐饮食（每日食盐＜5g），忌肥甘厚味及浓茶咖啡。3. 完善前庭功能检查、心电图、腹部超声；必要时内耳钆造影MRI。4. 西医予倍他司汀改善内耳微循环，发作期对症止吐。5. 缓解期行前庭康复操训练，避风寒，畅情志，勿劳累。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　上级医师：×××' }
+    ]
+  }
+];
+/* ===================== 模板数据（6-10） ===================== */
+TPL.push(
+  {
+    id: 't6',
+    name: '眩晕（肝阳上亢证）门诊初诊病历',
+    disease: '眩晕',
+    type: '门诊病历',
+    syn: '肝阳上亢证',
+    dept: '脑病科门诊',
+    score: 90,
+    tags: ['天麻钩藤饮', '门诊初诊', '血压'],
+    src: '依据《中医病历书写手册》门诊初诊病历示例结构；证治依《广西眩晕中西医诊疗专家共识》肝阳上亢证',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：孙某某　性别：男　年龄：54岁　科别：脑病科　时间：2026-10-20 09:30　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '头晕胀痛反复1年，加重3天。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者1年来反复头晕胀痛，多于情绪激动或熬夜后发作，自服“降压药”可缓解。3天前因工作劳累再发，头晕且胀，两侧太阳穴为重，伴耳鸣、口苦、心烦易怒、夜寐多梦，无恶心呕吐，无肢体麻木无力，无一过性黑蒙。刻下症：头晕胀痛，面红目赤，口苦咽干，急躁易怒，纳可，大便干，小便黄。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：面色潮红，形体壮实，精神略显焦躁；舌质红，苔黄，舌下脉络未见明显迂曲。闻诊：语声洪亮，气息略粗。切诊：脉弦数。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 162/96mmHg。神志清，双肺呼吸音清，心率84次/分、律齐。神经系统检查：双侧瞳孔等大等圆、对光反射灵敏，眼球运动充分，未见眼震；四肢肌力5级，肌张力正常，双侧病理征阴性；指鼻试验、跟膝胫试验稳准。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '2026-10-19 头颅CT平扫：未见异常。颈动脉超声：双侧颈动脉内中膜增厚。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '眩晕——肝阳上亢证' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '1. 高血压病2级（高危）　2. 椎动脉型颈椎病待排' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者平素性情急躁，肝郁化火，肝阳偏亢，上扰清窍，故头晕胀痛、耳鸣；阳亢化火，故面红目赤、口苦咽干、便干溲黄；舌红苔黄、脉弦数，为肝阳上亢、火热内扰之象。' },
+      { key: 'treat', label: '治法', rows: 2, v: '平肝潜阳，清火息风。' },
+      { key: 'rx', label: '方药', rows: 4, v: '天麻15g　钩藤15g（后下）　石决明30g（先煎）　川牛膝15g　杜仲12g　桑寄生15g　黄芩10g　栀子10g　益母草15g　首乌藤15g　茯神15g。7剂，水煎服，每日1剂，分2次温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 2, v: '风池（双）、百会、内关（双）、太冲（双）、行间（双）、侠溪（双）、太溪（双），毫针泻法，留针30分钟，隔日1次。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 监测血压，每日早晚各1次并记录；降压药遵嘱服用，不可自行停药。2. 低盐饮食，忌辛辣烟酒，忌恼怒熬夜。3. 建议完善动态血压、颈椎MRI。4. 若出现肢体麻木无力、言语不清、剧烈头痛，立即就诊。5. 7剂后复诊。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't7',
+    name: '头痛（瘀血头痛）门诊病历',
+    disease: '头痛',
+    type: '门诊病历',
+    syn: '瘀血头痛',
+    dept: '脑病科门诊',
+    score: 86,
+    tags: ['通窍活血汤', '外伤史', '痛有定处'],
+    src: '依据《中医内科学》（第十版）头痛·瘀血头痛（通窍活血汤）；病历结构依门诊病历书写示例',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：周某某　性别：女　年龄：41岁　科别：脑病科　时间：2026-10-24 15:20　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '头部刺痛反复2年，加重1周。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者2年前骑车摔倒致头部碰伤，此后反复出现头部刺痛，痛处固定于右侧颞顶部，每于夜间及情绪不畅时加重，偶伴恶心，无呕吐，无肢体抽搐及意识障碍。1周前因工作熬夜后再发，疼痛持续约2小时，自服“布洛芬”可暂缓。刻下症：头部刺痛，痛有定处，入夜尤甚，健忘，夜寐差，纳可，二便调。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：面色晦暗，口唇色暗；舌质紫暗，边有瘀点，苔薄白。闻诊：语声正常，无异常气味。切诊：脉细涩。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 118/76mmHg。神志清，查体合作。右侧颞部轻压痛，未及包块。神经系统检查未见阳性体征，双侧病理征阴性，脑膜刺激征阴性。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '2026-10-24 头颅MRI平扫：未见颅内占位及出血灶；双侧额叶少许缺血灶。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '头痛——瘀血头痛' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '1. 紧张型头痛　2. 头部外伤后头痛' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者有头部外伤史，瘀血内停，阻滞脉络，气血不通，不通则痛，故头痛如刺、痛有定处；瘀血不去，新血不生，心神失养，故健忘、夜寐差；舌紫暗有瘀点、脉细涩，皆瘀血内阻之征。' },
+      { key: 'treat', label: '治法', rows: 2, v: '活血化瘀，通窍止痛。' },
+      { key: 'rx', label: '方药', rows: 4, v: '川芎15g　赤芍15g　桃仁10g　红花10g　当归12g　白芷10g　石菖蒲10g　地龙10g　全蝎3g（研末冲服）　延胡索12g　夜交藤20g　炙甘草6g。7剂，水煎服，每日1剂。' },
+      { key: 'acu', label: '针灸治疗', rows: 2, v: '百会、四神聪、太阳（双）、风池（双）、合谷（双）、血海（双）、膈俞（双）、阿是穴。毫针泻法，阿是穴可加刺络拔罐，每周2次。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 忌辛辣刺激之品，戒烟酒，避免熬夜及长时间伏案。2. 保持情绪舒畅，适度有氧运动。3. 若头痛突然加剧、伴呕吐或肢体无力，立即急诊。4. 7剂后复诊，必要时复查头颅影像。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't8',
+    name: '口僻（面瘫·风寒袭络证）门诊病历',
+    disease: '面瘫',
+    type: '门诊病历',
+    syn: '风寒袭络证',
+    dept: '脑病科门诊',
+    score: 89,
+    tags: ['针灸为主', '急性期', 'House-Brackmann'],
+    src: '依据《针灸治疗》面瘫辨证与处方（攒竹、鱼腰、阳白、四白、颧髎、颊车、地仓、合谷、昆仑）；病历结构依门诊病历书写示例',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：刘某某　性别：男　年龄：35岁　科别：脑病科　时间：2026-10-23 10:05　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '左侧口眼歪斜2天。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者2天前夜间开窗睡眠，晨起洗漱时发现左侧口角漏水，左眼闭合不全，面部板滞麻木，伴左耳后疼痛，无耳痛流脓，无耳鸣听力下降，无肢体无力及言语不利，无头痛发热。刻下症：左侧额纹变浅，左眼闭合露睛、流泪，左侧鼻唇沟变浅，口角右偏，鼓腮漏气，进食时食物滞留于左侧齿颊间，纳可，二便调。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：左侧面部肌肉板滞，额纹消失，眼裂增宽，露睛流泪，鼻唇沟变浅，口角下垂歪向右侧；舌质淡红，苔薄白。闻诊：语声清晰，无异常气味。切诊：脉浮紧。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 124/78mmHg。神志清。左侧不能皱眉、蹙额、闭目、露齿、鼓颊；左耳后乳突区轻压痛，外耳道通畅，鼓膜完整。面部感觉对称，四肢肌力5级，肌张力正常，双侧病理征阴性。House-Brackmann分级：Ⅳ级。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '2026-10-23 头颅CT平扫：未见明显异常（排除中枢性病变）。血常规、血糖未见异常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '口僻——风寒袭络证' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '周围性面神经麻痹（左侧，急性期）' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者正气不足，脉络空虚，卫外不固，夜间开窗，风寒之邪乘虚侵袭面部经络，气血痹阻，经筋失养，筋肉失于约束，故口眼歪斜、眼睑闭合不全。舌淡红、苔薄白、脉浮紧，为风寒外袭之象。与中枢性面瘫相鉴别：患者额纹消失、闭目不全，为周围性损害；且无肢体偏瘫、无病理征，头颅CT未见异常。' },
+      { key: 'treat', label: '治法', rows: 2, v: '祛风通络，疏调经筋。' },
+      { key: 'rx', label: '方药', rows: 3, v: '炙麻黄6g　桂枝10g　白芷10g　防风10g　羌活10g　当归12g　川芎10g　白芍15g　僵蚕10g　全蝎3g（研末冲服）　炙甘草6g。7剂，水煎服，每日1剂。' },
+      { key: 'acu', label: '针灸治疗', rows: 4, v: '取攒竹、鱼腰、阳白、四白、颧髎、颊车、地仓（均患侧），合谷（双）、昆仑（双）；风寒加风池（双）。急性期面部穴位浅刺、轻刺激、取穴宜少，远端合谷、昆仑行泻法；留针20分钟，每日1次。恢复期加足三里用补法，可加艾灸。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 面部避风寒，外出戴口罩、眼罩，勿用冷水洗脸。2. 左眼闭合不全，日间滴人工泪液、夜间涂眼膏保护角膜。3. 每日行皱眉、鼓腮、露齿等面肌功能训练3组。4. 忌辛辣烟酒，注意休息。5. 每日或隔日复诊，2周后评估。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't9',
+    name: '不寐（肝火扰心证）门诊病历',
+    disease: '不寐',
+    type: '门诊病历',
+    syn: '肝火扰心证',
+    dept: '脑病科门诊',
+    score: 82,
+    tags: ['龙胆泻肝汤', 'PSQI', '情志调摄'],
+    src: '依据《中医内科学》（第十版）不寐·肝火扰心（龙胆泻肝汤）；病历结构依门诊病历书写示例',
+    sections: [
+      { key: 'base', label: '就诊信息', rows: 2, v: '姓名：陈某某　性别：女　年龄：38岁　科别：脑病科　时间：2026-10-30 16:10　就诊类型：初诊' },
+      { key: 'chief', label: '主诉', rows: 2, v: '入睡困难伴心烦3个月，加重10天。' },
+      { key: 'hpi', label: '现病史', rows: 5, v: '患者3个月前因工作压力增大出现入睡困难，卧床1至2小时方能入睡，睡后易醒，每晚睡眠约4小时，伴心烦、易怒、口苦、头胀。10天前因家事烦扰加重，甚至通宵不寐，日间头昏乏力，注意力不集中。曾自服“安神补脑液”效果不佳。刻下症：入睡困难，心烦易怒，口苦口干，胸胁胀满，目赤，纳可，大便干结，小便黄。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 3, v: '望诊：面红，目睛略赤，精神焦虑；舌质红，苔黄，舌边偏红。闻诊：语声急促，时有叹息。切诊：脉弦数。' },
+      { key: 'exam', label: '体格检查', rows: 3, v: 'BP 132/84mmHg。神志清，甲状腺未及肿大。心肺腹查体未见异常。神经系统检查未见阳性体征。PSQI评分15分（睡眠质量差）。' },
+      { key: 'aux', label: '辅助检查', rows: 2, v: '血常规、甲状腺功能、血糖未见异常；心电图：窦性心律，大致正常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '不寐——肝火扰心证' },
+      { key: 'wmDx', label: '西医诊断', rows: 2, v: '非器质性失眠症（慢性）' },
+      { key: 'basis', label: '辨证分析', rows: 4, v: '患者情志不遂，肝郁化火，火性炎上，扰乱心神，故入睡困难、心烦易怒；肝火上炎，故口苦目赤、头胀；肝气郁结，故胸胁胀满；舌红苔黄、脉弦数，为肝火内盛之象。' },
+      { key: 'treat', label: '治法', rows: 2, v: '清肝泻火，镇心安神。' },
+      { key: 'rx', label: '方药', rows: 4, v: '龙胆草6g　黄芩10g　栀子10g　泽泻12g　车前子12g（包煎）　当归12g　生地黄15g　柴胡10g　酸枣仁20g　珍珠母30g（先煎）　首乌藤20g　生甘草6g。7剂，水煎服，每日1剂，晚饭后及睡前1小时分服。' },
+      { key: 'acu', label: '针灸治疗', rows: 2, v: '百会、四神聪、安眠（双）、神门（双）、内关（双）、太冲（双）、行间（双）。毫针泻法，留针30分钟，每日1次或隔日1次；睡前可加耳穴贴压（神门、心、肝、皮质下）。' },
+      { key: 'advice', label: '医嘱', rows: 3, v: '1. 规律作息，固定起床时间，午睡不超过30分钟；睡前1小时不看手机。2. 忌咖啡、浓茶及辛辣之品，晚餐不宜过饱。3. 每日步行30分钟，睡前可练八段锦“摇头摆尾去心火”。4. 调畅情志，必要时心理科会诊。5. 7剂后复诊评估睡眠日记。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '医师：薛××' }
+    ]
+  },
+  {
+    id: 't10',
+    name: '颤证（风阳内动证）住院记录',
+    disease: '颤证',
+    type: '入院记录',
+    syn: '风阳内动证',
+    dept: '脑病科',
+    score: 91,
+    tags: ['天麻钩藤饮合镇肝息风汤', 'UPDRS', '肝肾阴虚'],
+    src: '依据《中医内科学》（第十版）颤证·风阳内动（天麻钩藤饮合镇肝息风汤）；项目顺序依《中医病历书写基本规范》第十九条',
+    sections: [
+      { key: 'base', label: '患者一般情况', rows: 3, v: '姓名：高某某　性别：男　年龄：69岁　民族：汉　婚姻：已婚　出生地：山东青岛　职业：退休教师　入院时间：2026-10-27 14:30　记录时间：2026-10-27 20:10　发病节气：霜降　病史陈述者：患者本人及配偶（可靠）' },
+      { key: 'chief', label: '主诉', rows: 2, v: '双手震颤伴行动迟缓3年，加重1个月。' },
+      { key: 'hpi', label: '现病史', rows: 6, v: '患者3年前无明显诱因出现右手静止性震颤，多于安静时明显、活动时减轻，逐渐累及左手，伴动作迟缓、走路拖步、起步困难、书写变小。于外院诊为“帕金森病”，予多巴丝肼片125mg每日3次口服，症状部分缓解。1个月前因情绪波动后震颤加重，持筷进食困难，转身缓慢，时有头晕、耳鸣、腰膝酸软、夜尿2至3次，大便干。入院症见：双手震颤，头摇肢颤，动作迟缓，表情呆板，头晕耳鸣，腰膝酸软，心烦少寐，纳可，大便干结。' },
+      { key: 'four', label: '中医望、闻、切诊', rows: 4, v: '望诊：神志清楚，面容呆板呈“面具脸”，形体消瘦，步态慌张，书写字迹细小；舌质红，舌体瘦，苔少而干，舌下脉络略迂曲。闻诊：语声低微，言语缓慢，气息尚匀。切诊：四肢拘急，脉弦细数。' },
+      { key: 'past', label: '既往史、个人史、家族史', rows: 4, v: '既往高血压病史8年，服缬沙坦80mg每日1次，血压控制可。否认糖尿病、脑血管病、头部外伤史，否认一氧化碳中毒及锰接触史，否认吩噻嗪类药物长期服用史。否认肝炎、结核等传染病史，否认食物药物过敏史。个人史：久居本地，不吸烟，偶饮酒。婚育史：已婚，育有2子，均体健。家族史：否认类似疾病及遗传病史。' },
+      { key: 'exam', label: '体格检查（含专科）', rows: 6, v: 'T 36.4℃　P 76次/分　R 18次/分　BP 142/84mmHg。神志清，查体合作。双肺呼吸音清，心率76次/分、律齐。腹平软，无压痛。专科情况：面具脸，瞬目减少，言语缓慢、音调低。双手静止性震颤，频率约4至6Hz，呈“搓丸样”，左侧为著。四肢肌张力齿轮样增高，双上肢为著。双下肢肌力5级。指鼻试验、跟膝胫试验尚稳准。后拉试验（＋），慌张步态，步幅小，双上肢摆臂减少。双侧病理征阴性。UPDRS-Ⅲ评分32分。' },
+      { key: 'aux', label: '辅助检查', rows: 3, v: '2026-10-27 头颅MRI：双侧基底节区腔隙性缺血灶，脑萎缩，未见占位。经颅超声：中脑黑质区回声增强。血常规、肝肾功能、电解质未见明显异常。' },
+      { key: 'tcmDx', label: '中医诊断', rows: 2, v: '颤证——风阳内动证' },
+      { key: 'wmDx', label: '西医诊断', rows: 3, v: '1. 帕金森病（Hoehn-Yahr 2.5期）　2. 高血压病2级（高危）　3. 脑梗死病史（腔隙性）' },
+      { key: 'basis', label: '中医辨病辨证依据', rows: 5, v: '患者年近七旬，肝肾阴虚，精血亏耗，水不涵木，肝阳偏亢，阳动化风，风阳内动，筋脉失养，故见头摇肢颤、动作迟缓；肾精不足，髓海空虚，故头晕耳鸣、腰膝酸软；阴虚火旺，心神不宁，故心烦少寐；舌红体瘦、苔少而干、脉弦细数，为肝肾阴虚、风阳内动之象。病位在筋脉，与肝、肾、脾密切相关；病性为本虚标实，本虚为肝肾阴虚，标实为风、火、痰、瘀。与瘛疭相鉴别：瘛疭多见于热病过程中，四肢抽搐、颈项强直，常伴高热；与痉病相鉴别：痉病以项背强急、四肢抽搐、甚至角弓反张为主症。' },
+      { key: 'treat', label: '治法', rows: 2, v: '镇肝息风，舒筋止颤，佐以滋补肝肾。' },
+      { key: 'rx', label: '方药', rows: 4, v: '天麻15g　钩藤15g（后下）　生石决明30g（先煎）　生龙骨30g（先煎）　生牡蛎30g（先煎）　代赭石20g（先煎）　怀牛膝20g　生白芍20g　玄参15g　天冬12g　龟甲15g（先煎）　杜仲12g　桑寄生15g　炙甘草6g。7剂，水煎服，每日1剂，分2次温服。' },
+      { key: 'acu', label: '针灸治疗', rows: 3, v: '取百会、四神聪、风池（双）、太冲（双）、太溪（双）、合谷（双）、阳陵泉（双）、足三里（双）。风池、太冲用平补平泻，太溪、足三里用补法，留针30分钟，每日1次，每周5次。' },
+      { key: 'advice', label: '诊疗计划与调护', rows: 4, v: '1. 脑病科护理常规，二级护理，防跌倒，病室设置扶手，夜间如厕需陪护。2. 多巴丝肼片按原方案服用，记录“开-关”现象及异动情况，避免与高蛋白饮食同服。3. 完善统一帕金森病评定量表、认知功能评估、平衡功能评估。4. 康复训练：步态训练、节律性听觉提示、姿势转换训练，每日1次。5. 饮食宜富含纤维，多饮水，保持大便通畅；避风寒，慎起居，调情志。' },
+      { key: 'sign', label: '医师签名', rows: 1, v: '记录医师：薛××　　上级医师：×××' }
+    ]
+  }
+);
+
+/* ===================== 示例病历（可恢复） ===================== */
+const DEMO_RECORDS = [
+  { id: 'r7', tplId: 't3', title: '中风病恢复期病程记录·李某某', patient: '李某某　男　63岁', disease: '中风病', type: '日常病程记录', score: 86, status: 'archived', date: '2026-10-15', fields: null },
+  { id: 'r1', tplId: 't1', title: '中风病急性期入院记录·李某某', patient: '李某某　男　63岁', disease: '中风病', type: '入院记录', score: 96, status: 'archived', date: '2026-10-18', fields: null },
+  { id: 'r4', tplId: 't6', title: '眩晕门诊初诊·孙某某', patient: '孙某某　男　54岁', disease: '眩晕', type: '门诊病历', score: 87, status: 'archived', date: '2026-10-20', fields: null },
+  { id: 'r2', tplId: 't5', title: '耳眩晕住院记录·赵某某', patient: '赵某某　女　46岁', disease: '眩晕', type: '入院记录', score: 93, status: 'review', date: '2026-10-22', fields: null },
+  { id: 'r5', tplId: 't8', title: '口僻门诊病历·刘某某', patient: '刘某某　男　35岁', disease: '面瘫', type: '门诊病历', score: 89, status: 'review', date: '2026-10-23', fields: null },
+  { id: 'r3', tplId: 't10', title: '颤证住院记录·高某某', patient: '高某某　男　69岁', disease: '颤证', type: '入院记录', score: 91, status: 'draft', date: '2026-10-27', fields: null },
+  { id: 'r6', tplId: 't9', title: '不寐门诊病历·陈某某', patient: '陈某某　女　38岁', disease: '不寐', type: '门诊病历', score: 82, status: 'draft', date: '2026-10-30', fields: null }
+];
+
+const STATUS_MAP = {
+  draft: { label: '草稿', cls: 'st-draft', next: 'review', nextLabel: '提交待审' },
+  review: { label: '待审', cls: 'st-review', next: 'archived', nextLabel: '标记归档' },
+  archived: { label: '已归档', cls: 'st-arch', next: 'draft', nextLabel: '退回草稿' }
+};
+
+const TITLE_MAP = {
+  '入院记录': '入　院　记　录',
+  '首次病程记录': '首 次 病 程 记 录',
+  '日常病程记录': '病 程 记 录',
+  '上级医师查房记录': '上 级 医 师 查 房 记 录',
+  '门诊病历': '门（急）诊 病 历'
+};
+
+const TYPE_ORDER = ['入院记录', '首次病程记录', '日常病程记录', '上级医师查房记录', '门诊病历'];
+/* ===================== 存储与状态 ===================== */
+const LS_KEY = 'tcmws_v1';
+const state = {
+  records: [],
+  fields: {},
+  currentTpl: 't1',
+  editingId: null,
+  prefs: { view: 'overview', tplDisease: '全部', tplType: '全部', tplSort: 'score', recStatus: 'all', recSort: 'dateDesc' }
+};
+let storageOK = true;
+let seededOnce = false;
+
+function persist() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      records: state.records, prefs: state.prefs,
+      lastTpl: state.currentTpl, lastFields: state.fields
+    }));
+    storageOK = true;
+  } catch (e) { storageOK = false; }
+  paintSaveBadge();
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || typeof d !== 'object') return false;
+    state.records = Array.isArray(d.records) ? d.records : [];
+    state.prefs = Object.assign(state.prefs, d.prefs || {});
+    if (d.lastTpl && TPL.some(t => t.id === d.lastTpl)) state.currentTpl = d.lastTpl;
+    if (d.lastFields && typeof d.lastFields === 'object') state.fields = d.lastFields;
+    return true;
+  } catch (e) { storageOK = false; return false; }
+}
+
+function paintSaveBadge() {
+  const b = document.getElementById('saveBadge');
+  const t = document.getElementById('saveTxt');
+  if (!b) return;
+  if (storageOK) { b.classList.remove('off'); t.textContent = '本机自动保存'; }
+  else { b.classList.add('off'); t.textContent = '存储受限·仅本次有效'; }
+}
+
+/* ===================== 小工具 ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const nowStamp = () => {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+};
+const today = () => nowStamp().slice(0, 10);
+const uid = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const tplById = id => TPL.find(t => t.id === id);
+
+function toast(msg, type) {
+  const box = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  box.appendChild(el);
+  box.classList.add('on');
+  setTimeout(() => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(-6px)'; el.style.transition = '.25s';
+    setTimeout(() => { el.remove(); if (!box.children.length) box.classList.remove('on'); }, 260);
+  }, 2100);
+}
+
+/* ===================== 评分引擎 ===================== */
+const TIME_RE = /\d+\s*(小时|分钟|天|日|周|月|年|h|d)/;
+const DxNameRE = /脑梗死|脑卒中|中风病|梅尼埃|帕金森|面神经麻痹|失眠症|高血压/;
+
+function evalQuality(tpl, f) {
+  const secs = tpl.sections;
+  const filled = secs.filter(s => (f[s.key] || '').trim().length > 0);
+  const completeRatio = secs.length ? filled.length / secs.length : 0;
+  const completeScore = completeRatio * 60;
+
+  const get = k => (f[k] || '').trim();
+  const all = secs.map(s => get(s.key)).join(' ');
+  const chief = get('chief');
+  const hist = get('hpi') || get('course') || get('feature') || get('round') || '';
+  const four = get('four') || '';
+  const tcm = get('tcmDx') || '';
+  const treat = get('treat') || '';
+  const rx = get('rx') || '';
+  const adv = get('advice') || get('plan') || '';
+  const sign = get('sign') || '';
+  const basis = get('basis') || get('discuss') || get('adjust') || '';
+
+  const checks = [
+    { name: '主诉含时间', pass: TIME_RE.test(chief), tip: '主诉缺持续时间' },
+    { name: '主诉不超过20字', pass: chief.length > 0 && chief.replace(/[，。、；：\s]/g, '').length <= 20, tip: '主诉超过20字' },
+    { name: '主诉不含诊断名', pass: chief.length > 0 && !DxNameRE.test(chief), tip: '主诉用了诊断名' },
+    { name: '病史够具体', pass: hist.length >= 60, tip: '病史描述过简' },
+    { name: '有四诊舌脉', pass: /舌/.test(four || all) && /脉/.test(four || all), tip: '缺舌象或脉象' },
+    { name: '中医诊断带证型', pass: /证/.test(tcm), tip: '中医诊断未写证型' },
+    { name: '有治法', pass: treat.length >= 4, tip: '治法未写' },
+    { name: '方药剂量与剂数', pass: /g|克/.test(rx) && /剂/.test(rx), tip: '方药缺剂量或剂数' },
+    { name: '有辨证分析', pass: basis.length >= 30, tip: '辨证依据不足30字' },
+    { name: '医嘱与调护', pass: adv.length >= 15, tip: '医嘱过于简略' },
+    { name: '医师签名', pass: sign.length >= 2, tip: '缺医师签名' }
+  ];
+  const passCount = checks.filter(c => c.pass).length;
+  const normScore = checks.length ? (passCount / checks.length) * 40 : 0;
+  const score = Math.round(Math.min(100, completeScore + normScore));
+  const issues = checks.filter(c => !c.pass).map(c => c.tip);
+  if (filled.length < secs.length) issues.unshift('还有 ' + (secs.length - filled.length) + ' 项未填');
+  return { score: score, issues: issues, passCount: passCount, total: checks.length, filled: filled.length, totalSec: secs.length };
+}
+
+function gradeOf(s) {
+  if (s >= 90) return { t: '优秀', c: '#4A736A' };
+  if (s >= 80) return { t: '良好', c: '#5E8C81' };
+  if (s >= 70) return { t: '合格', c: '#A9895F' };
+  return { t: '待完善', c: '#B0827A' };
+}
+
+/* ===================== 成文 ===================== */
+function buildLines(tpl, f) {
+  const lines = [];
+  tpl.sections.forEach(s => {
+    const v = (f[s.key] || '').trim();
+    if (!v) return;
+    const inline = s.key === 'base' || s.key === 'sign';
+    lines.push({ label: inline ? '' : s.label + '：', value: v });
+  });
+  return lines;
+}
+
+function plainText(tpl) {
+  const f = state.fields;
+  const lines = buildLines(tpl, f);
+  let out = (TITLE_MAP[tpl.type] || '病历记录') + '\n';
+  out += '（' + tpl.dept + '　' + tpl.disease + '·' + tpl.syn + '）\n\n';
+  lines.forEach(l => { out += l.label + l.value + '\n'; });
+  out += '\n—— 本文件由「AI 中医病历书写台」离线生成，须经执业医师审核签名后使用 ——\n';
+  return out;
+}
+
+function renderPreview() {
+  const tpl = tplById(state.currentTpl);
+  const paper = document.getElementById('paper');
+  if (!tpl) return;
+  const lines = buildLines(tpl, state.fields);
+  let html = '<div class="pv-title">' + esc(TITLE_MAP[tpl.type] || '病历记录') + '</div>';
+  html += '<div class="pv-sub">' + esc(tpl.dept + '　' + tpl.disease + '·' + tpl.syn) + '</div>';
+  if (!lines.length) {
+    html += '<div class="pv-empty">左侧还没有内容。<br>可点「填入示例内容」看规范写法，或直接开始写。<br><br>提示：先把主诉和现病史写清楚，其余按四诊→诊断→治法→方药→调护的顺序补。</div>';
+  } else {
+    lines.forEach(l => {
+      html += '<div class="paper-line">' + (l.label ? '<span class="k">' + esc(l.label) + '</span>' : '') + esc(l.value) + '</div>';
+    });
+  }
+  paper.innerHTML = html;
+  const txt = plainText(tpl);
+  document.getElementById('pvCount').textContent = txt.replace(/\s/g, '').length + ' 字';
+  document.getElementById('pvMeta').textContent = tpl.type + ' · ' + tpl.syn;
+}
+
+function renderQuality() {
+  const tpl = tplById(state.currentTpl);
+  const q = evalQuality(tpl, state.fields);
+  const g = gradeOf(q.score);
+  const r = 22, c = 2 * Math.PI * r;
+  const ring = document.getElementById('qRing');
+  ring.innerHTML = '<svg width="56" height="56" viewBox="0 0 56 56">' +
+    '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="#E3EDE8" stroke-width="5"/>' +
+    '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="' + g.c + '" stroke-width="5" stroke-linecap="round" stroke-dasharray="' + (c * q.score / 100).toFixed(1) + ' ' + c.toFixed(1) + '"/>' +
+    '</svg><b style="color:' + g.c + '">' + q.score + '</b>';
+  document.getElementById('qTitle').textContent = '质评：' + q.score + ' 分 · ' + g.t;
+  document.getElementById('qDesc').innerHTML = '必备字段 ' + q.filled + '/' + q.totalSec + ' 项已填，书写规范 ' + q.passCount + '/' + q.total + ' 项达标。' +
+    (q.score >= 85 ? '已达合格线（85 分），可保存后提交上级审核。' : '低于 85 分合格线，先补下面的红标项。');
+  const box = document.getElementById('qIssues');
+  if (!q.issues.length) {
+    box.innerHTML = '<span class="q-issue ok">✓ 规范检查全部通过</span>';
+  } else {
+    box.innerHTML = q.issues.slice(0, 6).map(t => '<span class="q-issue">' + esc(t) + '</span>').join('');
+  }
+}
+
+function renderForm() {
+  const tpl = tplById(state.currentTpl);
+  const area = document.getElementById('formArea');
+  area.innerHTML = tpl.sections.map(s => {
+    const v = state.fields[s.key] || '';
+    return '<div class="field">' +
+      '<label><b>' + esc(s.label) + '</b><i>' + (v.replace(/\s/g, '').length) + ' 字</i></label>' +
+      '<textarea data-key="' + s.key + '" rows="' + (s.rows || 3) + '" placeholder="' + esc(s.label) + '…">' + esc(v) + '</textarea>' +
+      '</div>';
+  }).join('');
+}
+
+/* ===================== 书写台动作 ===================== */
+function loadTemplate(id, opts) {
+  const tpl = tplById(id);
+  if (!tpl) return;
+  state.currentTpl = id;
+  state.editingId = null;
+  const useDemo = !opts || opts.demo !== false;
+  state.fields = {};
+  tpl.sections.forEach(s => { state.fields[s.key] = useDemo ? s.v : ''; });
+  const sel = document.getElementById('tplSelect');
+  if (sel) sel.value = id;
+  renderForm(); renderPreview(); renderQuality(); persist();
+}
+
+function fillDemo() {
+  const tpl = tplById(state.currentTpl);
+  tpl.sections.forEach(s => { state.fields[s.key] = s.v; });
+  renderForm(); renderPreview(); renderQuality(); persist();
+  toast('已填入「' + tpl.disease + '·' + tpl.syn + '」示例内容，可直接改写', 'ok');
+}
+
+function resetForm() {
+  const tpl = tplById(state.currentTpl);
+  Object.keys(state.fields).forEach(k => state.fields[k] = '');
+  state.editingId = null;
+  renderForm(); renderPreview(); renderQuality(); persist();
+  toast('表单已清空，可以开始写新的了');
+}
+
+function parsePatient(base) {
+  const nameM = /姓名[：:]\s*([^\s　，,。]{1,12})/.exec(base || '');
+  const sexM = /性别[：:]\s*([男女])/.exec(base || '');
+  const ageM = /年龄[：:]\s*(\d{1,3}\s*岁)/.exec(base || '');
+  const name = nameM ? nameM[1] : '未署名';
+  return { name: name, text: name + '　' + (sexM ? sexM[1] : '—') + '　' + (ageM ? ageM[1] : '—') };
+}
+
+function saveRecord() {
+  const tpl = tplById(state.currentTpl);
+  const q = evalQuality(tpl, state.fields);
+  const filledAny = tpl.sections.some(s => (state.fields[s.key] || '').trim());
+  if (!filledAny) { toast('还没有内容，先填几项再保存', 'warn'); return; }
+  const p = parsePatient(state.fields.base);
+  const title = tpl.disease + tpl.type + '·' + p.name;
+  if (state.editingId) {
+    const rec = state.records.find(r => r.id === state.editingId);
+    if (rec) {
+      rec.title = title; rec.patient = p.text; rec.score = q.score;
+      rec.fields = JSON.parse(JSON.stringify(state.fields));
+      rec.date = today(); rec.updatedAt = nowStamp();
+      persist(); renderKpis(); renderRecent(); renderRecList(); renderCharts();
+      toast('已更新病历：' + title + '（质评 ' + q.score + ' 分）', 'ok');
+      return;
+    }
+  }
+  const rec = {
+    id: uid(), tplId: tpl.id, title: title, patient: p.text,
+    disease: tpl.disease, type: tpl.type, score: q.score, status: 'draft',
+    date: today(), createdAt: nowStamp(), updatedAt: nowStamp(),
+    fields: JSON.parse(JSON.stringify(state.fields))
+  };
+  state.records.unshift(rec);
+  state.editingId = rec.id;
+  persist(); renderKpis(); renderRecent(); renderRecList(); renderCharts();
+  toast('已保存为草稿：' + title + '（质评 ' + q.score + ' 分）', 'ok');
+}
+
+function copyText() {
+  const tpl = tplById(state.currentTpl);
+  const txt = plainText(tpl);
+  const done = () => toast('全文已复制，可直接粘贴到病历系统', 'ok');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt, done));
+  } else { fallbackCopy(txt, done); }
+}
+function fallbackCopy(txt, done) {
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败，请手动选中预览区内容', 'warn'); }
+  ta.remove();
+}
+
+function downloadTxt() {
+  const tpl = tplById(state.currentTpl);
+  const p = parsePatient(state.fields.base);
+  const name = tpl.disease + tpl.type + '·' + p.name + '.txt';
+  const blob = new Blob([plainText(tpl)], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  toast('已下载：' + name, 'ok');
+}
+/* ===================== 概览 ===================== */
+function renderKpis() {
+  const n = state.records.length;
+  const avg = n ? Math.round(state.records.reduce((s, r) => s + (r.score || 0), 0) / n) : 0;
+  const review = state.records.filter(r => r.status === 'review').length;
+  const drafts = state.records.filter(r => r.status === 'draft').length;
+  document.getElementById('kpiTpl').innerHTML = TPL.length + '<i>套</i>';
+  document.getElementById('kpiRec').innerHTML = n + '<i>份</i>';
+  document.getElementById('kpiRecSub').textContent = n ? ('草稿 ' + drafts + ' 份 · 已归档 ' + state.records.filter(r => r.status === 'archived').length + ' 份') : '尚未保存病历';
+  document.getElementById('kpiScore').innerHTML = (n ? avg : '—') + '<i>分</i>';
+  document.getElementById('kpiReview').innerHTML = review + '<i>份</i>';
+  document.getElementById('kpiReviewSub').textContent = review ? '需上级医师审核签名' : '无待审任务';
+  const tc = document.getElementById('tabRecCount');
+  if (tc) tc.textContent = n;
+  const tt = document.getElementById('tabTplCount');
+  if (tt) tt.textContent = TPL.length;
+}
+
+function renderRecent() {
+  const box = document.getElementById('recentList');
+  const list = state.records.slice().sort((a, b) => (b.updatedAt || b.date).localeCompare(a.updatedAt || a.date)).slice(0, 5);
+  if (!list.length) {
+    box.innerHTML = emptyHtml('还没有病历', '点下面按钮，用模板写第一份', '<button class="btn btn-primary btn-sm" data-go="work">去书写台</button>');
+    return;
+  }
+  box.innerHTML = list.map(r => '<div class="rec" style="box-shadow:none">' +
+    '<div class="rec-main"><h4>' + esc(r.title) + '</h4>' +
+    '<div class="rec-sub"><span>' + esc(r.patient) + '</span><span>' + esc(r.type) + '</span><span>' + esc((r.updatedAt || r.date).slice(0, 16)) + '</span></div></div>' +
+    '<div class="rec-side"><span class="badge ' + STATUS_MAP[r.status].cls + '">' + STATUS_MAP[r.status].label + '</span>' +
+    '<span class="score-pill">' + (r.score || '—') + '</span></div></div>').join('');
+}
+
+function emptyHtml(title, desc, btn) {
+  return '<div class="empty"><div class="ico">✎</div><h4>' + esc(title) + '</h4><p>' + esc(desc) + '</p>' + (btn || '') + '</div>';
+}
+
+/* ===================== 模板库 ===================== */
+function renderTplSelect() {
+  const sel = document.getElementById('tplSelect');
+  const groups = {};
+  TPL.forEach(t => { (groups[t.disease] = groups[t.disease] || []).push(t); });
+  let html = '';
+  Object.keys(groups).forEach(d => {
+    html += '<optgroup label="' + esc(d) + '">';
+    groups[d].forEach(t => { html += '<option value="' + t.id + '">' + esc(t.name) + '（' + t.score + '分）</option>'; });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+  sel.value = state.currentTpl;
+}
+
+function renderTplChips() {
+  const box = document.getElementById('tplDiseaseChips');
+  const diseases = ['全部'].concat(TPL.map(t => t.disease).filter((v, i, a) => a.indexOf(v) === i));
+  box.innerHTML = diseases.map(d => {
+    const c = d === '全部' ? TPL.length : TPL.filter(t => t.disease === d).length;
+    return '<button class="chip' + (state.prefs.tplDisease === d ? ' on' : '') + '" data-disease="' + esc(d) + '">' + esc(d) + '<em>' + c + '</em></button>';
+  }).join('');
+
+  const sel = document.getElementById('tplTypeSel');
+  if (!sel.options.length) {
+    sel.innerHTML = '<option value="全部">全部记录类型</option>' + TYPE_ORDER.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+  }
+  sel.value = state.prefs.tplType;
+  document.getElementById('tplSortSel').value = state.prefs.tplSort;
+}
+
+function filteredTpls() {
+  const kw = (document.getElementById('tplSearch').value || '').trim().toLowerCase();
+  let list = TPL.filter(t => {
+    const okD = state.prefs.tplDisease === '全部' || t.disease === state.prefs.tplDisease;
+    const okT = state.prefs.tplType === '全部' || t.type === state.prefs.tplType;
+    const hay = (t.name + t.disease + t.syn + t.tags.join('') + t.src).toLowerCase();
+    const okK = !kw || hay.indexOf(kw) > -1;
+    return okD && okT && okK;
+  });
+  const s = state.prefs.tplSort;
+  if (s === 'score') list.sort((a, b) => b.score - a.score);
+  else if (s === 'scoreAsc') list.sort((a, b) => a.score - b.score);
+  else list.sort((a, b) => a.disease.localeCompare(b.disease, 'zh'));
+  return list;
+}
+
+function renderTplGrid() {
+  const list = filteredTpls();
+  const grid = document.getElementById('tplGrid');
+  const empty = document.getElementById('tplEmpty');
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.innerHTML = emptyHtml('没有匹配的模板', '换个病种或清空搜索词试试', '<button class="btn btn-ghost btn-sm" id="btnResetTplFilter">清空筛选条件</button>');
+    const b = document.getElementById('btnResetTplFilter');
+    if (b) b.onclick = () => {
+      state.prefs.tplDisease = '全部'; state.prefs.tplType = '全部';
+      document.getElementById('tplSearch').value = '';
+      renderTplChips(); renderTplGrid(); toast('已清空筛选');
+    };
+    return;
+  }
+  empty.innerHTML = '';
+  grid.innerHTML = list.map(t => '<div class="tpl-card">' +
+    '<div class="tpl-top"><h4>' + esc(t.name) + '</h4><div class="tpl-score">' + t.score + '<span>分</span></div></div>' +
+    '<div class="tpl-meta">' +
+    '<span class="tag g">' + esc(t.disease) + '</span>' +
+    '<span class="tag s">' + esc(t.syn) + '</span>' +
+    '<span class="tag">' + esc(t.type) + '</span>' +
+    t.tags.slice(0, 2).map(x => '<span class="tag">' + esc(x) + '</span>').join('') +
+    '</div>' +
+    '<div class="tpl-src">依据：' + esc(t.src) + '</div>' +
+    '<div class="tpl-acts">' +
+    '<button class="btn btn-primary btn-sm" data-use="' + t.id + '">用此模板</button>' +
+    '<button class="btn btn-ghost btn-sm" data-view-demo="' + t.id + '">看示例</button>' +
+    '</div></div>').join('');
+}
+
+/* ===================== 病历列表 ===================== */
+function renderRecChips() {
+  const box = document.getElementById('recStatusChips');
+  const items = [
+    { k: 'all', label: '全部', n: state.records.length },
+    { k: 'draft', label: '草稿', n: state.records.filter(r => r.status === 'draft').length },
+    { k: 'review', label: '待审', n: state.records.filter(r => r.status === 'review').length },
+    { k: 'archived', label: '已归档', n: state.records.filter(r => r.status === 'archived').length }
+  ];
+  box.innerHTML = items.map(i => '<button class="chip' + (state.prefs.recStatus === i.k ? ' on' : '') + '" data-status="' + i.k + '">' + i.label + '<em>' + i.n + '</em></button>').join('');
+  document.getElementById('recSortSel').value = state.prefs.recSort;
+}
+
+function filteredRecords() {
+  const kw = (document.getElementById('recSearch').value || '').trim().toLowerCase();
+  let list = state.records.filter(r => {
+    const okS = state.prefs.recStatus === 'all' || r.status === state.prefs.recStatus;
+    const hay = (r.title + r.patient + r.disease + r.type).toLowerCase();
+    return okS && (!kw || hay.indexOf(kw) > -1);
+  });
+  const s = state.prefs.recSort;
+  if (s === 'dateDesc') list.sort((a, b) => (b.date + (b.updatedAt || '')).localeCompare(a.date + (a.updatedAt || '')));
+  else if (s === 'dateAsc') list.sort((a, b) => (a.date + (a.updatedAt || '')).localeCompare(b.date + (b.updatedAt || '')));
+  else list.sort((a, b) => (b.score || 0) - (a.score || 0));
+  return list;
+}
+
+function renderRecList() {
+  const list = filteredRecords();
+  const box = document.getElementById('recList');
+  const empty = document.getElementById('recEmpty');
+  if (!list.length) {
+    box.innerHTML = '';
+    if (!state.records.length) {
+      empty.innerHTML = emptyHtml('病历库是空的', '去书写台写第一份，或用下方按钮恢复示例数据',
+        '<button class="btn btn-primary btn-sm" data-go="work" style="margin-right:8px">去书写台</button><button class="btn btn-ghost btn-sm" id="btnRestore2">恢复示例数据</button>');
+    } else {
+      empty.innerHTML = emptyHtml('没有符合条件的病历', '换个状态或清空搜索词',
+        '<button class="btn btn-ghost btn-sm" id="btnResetRecFilter">清空筛选条件</button>');
+    }
+    const b1 = document.getElementById('btnRestore2'); if (b1) b1.onclick = restoreDemo;
+    const b2 = document.getElementById('btnResetRecFilter');
+    if (b2) b2.onclick = () => {
+      state.prefs.recStatus = 'all'; document.getElementById('recSearch').value = '';
+      renderRecChips(); renderRecList(); toast('已清空筛选');
+    };
+    return;
+  }
+  empty.innerHTML = '';
+  box.innerHTML = list.map(r => '<div class="rec">' +
+    '<div class="rec-main"><h4>' + esc(r.title) + '</h4>' +
+    '<div class="rec-sub"><span>' + esc(r.patient) + '</span><span>' + esc(r.disease) + '·' + esc(r.type) + '</span><span>' + esc(r.date) + '</span></div></div>' +
+    '<div class="rec-side">' +
+    '<span class="score-pill" title="质评分">' + (r.score || '—') + '</span>' +
+    '<span class="badge ' + STATUS_MAP[r.status].cls + '">' + STATUS_MAP[r.status].label + '</span>' +
+    '<button class="btn btn-ghost btn-sm" data-open="' + r.id + '">打开</button>' +
+    '<button class="btn btn-sand btn-sm" data-cycle="' + r.id + '">' + STATUS_MAP[r.status].nextLabel + '</button>' +
+    '<button class="btn btn-danger-ghost btn-sm" data-del="' + r.id + '">删除</button>' +
+    '</div></div>').join('');
+}
+
+/* ===================== 图表 ===================== */
+const PALETTE = ['#5E8C81', '#7FA79C', '#A9C0B7', '#D9C3A4', '#C9AE8C', '#8FA9A0'];
+
+function svgWrap(w, h, inner) {
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" role="img">' + inner + '</svg>';
+}
+function clipText(s, width, fs) {
+  const max = Math.max(3, Math.floor(width / (fs * 0.95)));
+  return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
+function chartRank() {
+  const el = document.getElementById('chartRank');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const rows = TPL.slice().sort((a, b) => b.score - a.score);
+  const rowH = 34, top = 16, bot = 26;
+  const h = rows.length * rowH + top + bot;
+  const labelW = Math.min(160, Math.round(w * 0.4));
+  const valueW = 34;
+  const barMax = Math.max(60, w - labelW - valueW - 10);
+  const min = 70, max = 100;
+  const avg = rows.reduce((s, r) => s + r.score, 0) / rows.length;
+  let s = '';
+  rows.forEach((r, i) => {
+    const y = top + i * rowH;
+    const bw = Math.max(6, barMax * (r.score - min) / (max - min));
+    const col = r.score >= 94 ? '#5E8C81' : (r.score >= 88 ? '#7FA79C' : '#A9C0B7');
+    s += '<rect x="0" y="' + (y + 9) + '" width="' + barMax + '" height="13" rx="6.5" fill="#F4F1E7"/>';
+    s += '<rect x="0" y="' + (y + 9) + '" width="' + bw.toFixed(1) + '" height="13" rx="6.5" fill="' + col + '"/>';
+    s += '<text x="' + (barMax + 6) + '" y="' + (y + 19.5) + '" font-size="11.5" fill="#4A736A" font-weight="600">' + r.score + '</text>';
+    s += '<text x="0" y="' + (y + 3) + '" font-size="10.5" fill="#8C998F">' + esc(clipText(r.name.replace('（', '·').replace('）', ''), labelW - 8, 10.5)) + '</text>';
+  });
+  const ax = barMax * (avg - min) / (max - min);
+  s += '<line x1="' + ax.toFixed(1) + '" y1="' + (top - 2) + '" x2="' + ax.toFixed(1) + '" y2="' + (h - bot + 4) + '" stroke="#C8AE8C" stroke-width="1" stroke-dasharray="4 4"/>';
+  s += '<text x="' + ax.toFixed(1) + '" y="' + (h - 8) + '" font-size="10" fill="#A9895F" text-anchor="middle">均 ' + avg.toFixed(1) + '</text>';
+  s += '<text x="0" y="' + (h - 8) + '" font-size="10" fill="#B5B0A3">' + min + ' 分</text>';
+  s += '<text x="' + barMax + '" y="' + (h - 8) + '" font-size="10" fill="#B5B0A3" text-anchor="end">' + max + ' 分</text>';
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function chartMix() {
+  const el = document.getElementById('chartMix');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const diseases = TPL.map(t => t.disease).filter((v, i, a) => a.indexOf(v) === i);
+  const data = diseases.map(d => ({
+    d: d,
+    t: TPL.filter(t => t.disease === d).length,
+    r: state.records.filter(x => x.disease === d).length
+  }));
+  const max = Math.max(1, ...data.map(x => Math.max(x.t, x.r)));
+  const rowH = 40, top = 14, bot = 26;
+  const h = data.length * rowH + top + bot;
+  const labelW = Math.min(66, Math.round(w * 0.22));
+  const barMax = Math.max(50, w - labelW - 28);
+  let s = '';
+  [0, Math.ceil(max / 2), max].forEach(v => {
+    const x = labelW + barMax * v / max;
+    s += '<line x1="' + x.toFixed(1) + '" y1="' + top + '" x2="' + x.toFixed(1) + '" y2="' + (h - bot + 2) + '" stroke="#F0EBE0" stroke-width="1"/>';
+    s += '<text x="' + x.toFixed(1) + '" y="' + (h - 8) + '" font-size="10" fill="#B5B0A3" text-anchor="middle">' + v + '</text>';
+  });
+  data.forEach((x, i) => {
+    const y = top + i * rowH;
+    const h1 = 10, gap = 5;
+    const w1 = Math.max(3, barMax * x.t / max);
+    const w2 = Math.max(x.r ? 3 : 0, barMax * x.r / max);
+    s += '<text x="0" y="' + (y + 17) + '" font-size="11.5" fill="#57655F">' + esc(x.d) + '</text>';
+    s += '<rect x="' + labelW + '" y="' + y + '" width="' + w1.toFixed(1) + '" height="' + h1 + '" rx="5" fill="#7FA79C"/>';
+    s += '<text x="' + (labelW + w1 + 5).toFixed(1) + '" y="' + (y + 8.5) + '" font-size="10" fill="#4A736A">' + x.t + '</text>';
+    if (x.r) {
+      s += '<rect x="' + labelW + '" y="' + (y + h1 + gap) + '" width="' + w2.toFixed(1) + '" height="' + h1 + '" rx="5" fill="#D9C3A4"/>';
+      s += '<text x="' + (labelW + w2 + 5).toFixed(1) + '" y="' + (y + h1 + gap + 8.5) + '" font-size="10" fill="#A9895F">' + x.r + '</text>';
+    } else {
+      s += '<text x="' + (labelW + 4) + '" y="' + (y + h1 + gap + 8.5) + '" font-size="10" fill="#C9C3B4">无病历</text>';
+    }
+  });
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function chartFunnel() {
+  const el = document.getElementById('chartFunnel');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const total = state.records.length;
+  if (!total) {
+    el.innerHTML = '<div class="empty" style="padding:36px 10px"><div class="ico">▽</div><h4>还没有数据</h4><p>保存一份病历后，这里会显示流转漏斗</p></div>';
+    return;
+  }
+  const stages = [
+    { label: '已建病历', v: total, c: '#4A736A' },
+    { label: '草稿', v: state.records.filter(r => r.status === 'draft').length, c: '#5E8C81' },
+    { label: '待审', v: state.records.filter(r => r.status === 'review').length, c: '#7FA79C' },
+    { label: '已归档', v: state.records.filter(r => r.status === 'archived').length, c: '#A9C0B7' }
+  ];
+  const pad = 10, maxW = w - pad * 2, layerH = 50, top = 8, h = stages.length * layerH + top + 8;
+  let s = '';
+  stages.forEach((st, i) => {
+    const ratio = Math.max(0.18, st.v / total);
+    const nextRatio = i < stages.length - 1 ? Math.max(0.18, stages[i + 1].v / total) : ratio * 0.9;
+    const tw = maxW * ratio, bw = maxW * nextRatio;
+    const y = top + i * layerH;
+    const x1 = pad + (maxW - tw) / 2, x2 = pad + (maxW + tw) / 2;
+    const x3 = pad + (maxW + bw) / 2, x4 = pad + (maxW - bw) / 2;
+    s += '<path d="M' + x1.toFixed(1) + ' ' + y + ' L' + x2.toFixed(1) + ' ' + y + ' L' + x3.toFixed(1) + ' ' + (y + layerH - 4) + ' L' + x4.toFixed(1) + ' ' + (y + layerH - 4) + ' Z" fill="' + st.c + '" opacity="0.94"/>';
+    const midY = y + layerH / 2 - 2;
+    s += '<text x="' + (pad + 10) + '" y="' + (midY + 4) + '" font-size="11.5" fill="' + (i < 3 ? '#FFFFFF' : '#33544C') + '">' + st.label + '</text>';
+    s += '<text x="' + (w - pad - 10) + '" y="' + (midY + 4) + '" font-size="12" fill="' + (i < 3 ? '#FFFFFF' : '#33544C') + '" text-anchor="end" font-weight="600">' + st.v + ' 份 · ' + Math.round(st.v / total * 100) + '%</text>';
+  });
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function chartTrend() {
+  const el = document.getElementById('chartTrend');
+  const w = Math.max(300, (el.clientWidth || 590) - 24);
+  const list = state.records.slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(w < 420 ? -6 : -10);
+  if (!list.length) {
+    el.innerHTML = '<div class="empty" style="padding:36px 10px"><div class="ico">◔</div><h4>还没有可分析的数据</h4><p>保存病历后，这里会画出质评变化曲线</p></div>';
+    return;
+  }
+  const pad = { l: 32, r: 14, t: 18, b: 32 };
+  const h = 236;
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const scores = list.map(r => r.score || 0);
+  let lo = Math.min(70, ...scores) - 4, hi = Math.max(96, ...scores) + 3;
+  lo = Math.max(0, Math.floor(lo / 5) * 5); hi = Math.ceil(hi / 5) * 5;
+  const px = i => pad.l + (list.length === 1 ? iw / 2 : iw * i / (list.length - 1));
+  const py = v => pad.t + ih - ih * (v - lo) / (hi - lo);
+  let s = '';
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const v = lo + (hi - lo) * i / ticks, y = py(v);
+    s += '<line x1="' + pad.l + '" y1="' + y.toFixed(1) + '" x2="' + (w - pad.r) + '" y2="' + y.toFixed(1) + '" stroke="#F2EDE2" stroke-width="1"/>';
+    s += '<text x="' + (pad.l - 6) + '" y="' + (y + 3.5).toFixed(1) + '" font-size="9.5" fill="#B5B0A3" text-anchor="end">' + Math.round(v) + '</text>';
+  }
+  const refY = py(85);
+  s += '<line x1="' + pad.l + '" y1="' + refY.toFixed(1) + '" x2="' + (w - pad.r) + '" y2="' + refY.toFixed(1) + '" stroke="#C8AE8C" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  s += '<text x="' + (w - pad.r) + '" y="' + (refY - 5).toFixed(1) + '" font-size="9.5" fill="#A9895F" text-anchor="end">合格参考线 85</text>';
+
+  let line = '', area = '';
+  list.forEach((r, i) => { line += (i ? ' L' : 'M') + px(i).toFixed(1) + ' ' + py(r.score).toFixed(1); });
+  if (list.length > 1) {
+    area = line + ' L' + px(list.length - 1).toFixed(1) + ' ' + (pad.t + ih) + ' L' + px(0).toFixed(1) + ' ' + (pad.t + ih) + ' Z';
+    s += '<defs><linearGradient id="gTrend" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7FA79C" stop-opacity=".28"/><stop offset="100%" stop-color="#7FA79C" stop-opacity="0"/></linearGradient></defs>';
+    s += '<path d="' + area + '" fill="url(#gTrend)"/>';
+    s += '<path d="' + line + '" fill="none" stroke="#5E8C81" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  }
+  list.forEach((r, i) => {
+    const x = px(i), y = py(r.score);
+    s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.6" fill="#fff" stroke="#5E8C81" stroke-width="1.8"/>';
+    const lbl = (r.date || '').slice(5);
+    s += '<text x="' + x.toFixed(1) + '" y="' + (h - 12) + '" font-size="9" fill="#A8A192" text-anchor="middle">' + esc(lbl) + '</text>';
+  });
+  const last = list[list.length - 1];
+  s += '<text x="' + px(list.length - 1).toFixed(1) + '" y="' + (py(last.score) - 9).toFixed(1) + '" font-size="10.5" fill="#4A736A" text-anchor="end" font-weight="600">' + last.score + ' 分</text>';
+  el.innerHTML = svgWrap(w, h, s);
+}
+
+function renderCharts() {
+  chartRank(); chartMix(); chartFunnel(); chartTrend();
+}
+
+/* ===================== 视图切换 ===================== */
+function switchView(name) {
+  const views = ['overview', 'work', 'tpl', 'rec', 'chart', 'guide'];
+  if (views.indexOf(name) < 0) name = 'overview';
+  views.forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.hidden = (v !== name);
+  });
+  $$('#tabs .tab').forEach(t => t.classList.toggle('on', t.dataset.view === name));
+  state.prefs.view = name;
+  persist();
+  if (name === 'chart') setTimeout(renderCharts, 30);
+  if (name === 'work') { renderPreview(); renderQuality(); }
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+}
+
+/* ===================== 弹窗 ===================== */
+function openModal(title, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  const ft = document.getElementById('modalFoot');
+  ft.innerHTML = '';
+  (actions || [{ label: '关闭', cls: 'btn-ghost', fn: closeModal }]).forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (a.cls || 'btn-ghost');
+    b.textContent = a.label;
+    b.onclick = a.fn;
+    ft.appendChild(b);
+  });
+  document.getElementById('mask').classList.add('on');
+}
+function closeModal() { document.getElementById('mask').classList.remove('on'); }
+
+function confirmDialog(title, text, okLabel, onOk, danger) {
+  openModal(title, '<p style="font-size:13.5px;color:#57655F;margin:0;line-height:1.9">' + esc(text) + '</p>', [
+    { label: '取消', cls: 'btn-ghost', fn: closeModal },
+    { label: okLabel, cls: danger ? 'btn-danger-ghost' : 'btn-primary', fn: function () { closeModal(); onOk(); } }
+  ]);
+}
+
+/* ===================== 示例数据 ===================== */
+function demoFields(tplId) {
+  const tpl = tplById(tplId);
+  const f = {};
+  if (!tpl) return f;
+  tpl.sections.forEach(s => { f[s.key] = s.v; });
+  return f;
+}
+
+function restoreDemo() {
+  confirmDialog('恢复示例数据', '将把 7 份中医神经内科示例病历写回本机（现有病历会被替换，此操作不可撤销）。', '确认恢复', function () {
+    state.records = DEMO_RECORDS.map(function (r) {
+      return Object.assign({}, r, {
+        fields: demoFields(r.tplId),
+        createdAt: r.date + ' 09:00',
+        updatedAt: r.date + ' 16:40'
+      });
+    });
+    state.editingId = null;
+    if (!state.fields || !Object.keys(state.fields).length) state.fields = demoFields(state.currentTpl);
+    persist();
+    renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts(); renderTplGrid();
+    renderForm(); renderPreview(); renderQuality();
+    toast('已恢复 7 份示例病历', 'ok');
+  });
+}
+
+function clearAll() {
+  confirmDialog('一键清空', '将清空本机保存的全部病历与书写台当前内容（模板不会删除）。清空后可用「恢复示例数据」找回示例。', '确认清空', function () {
+    state.records = [];
+    state.fields = {};
+    state.editingId = null;
+    persist();
+    renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts(); renderForm(); renderPreview(); renderQuality();
+    toast('已清空全部病历', 'warn');
+  }, true);
+}
+
+/* ===================== 事件绑定 ===================== */
+function bindEvents() {
+  $$('#tabs .tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+
+  document.body.addEventListener('click', function (e) {
+    const go = e.target.closest('[data-go]');
+    if (go) { switchView(go.dataset.go); return; }
+
+    const use = e.target.closest('[data-use]');
+    if (use) { state.prefs.view = 'work'; loadTemplate(use.dataset.use, { demo: true }); switchView('work'); toast('已载入模板：' + tplById(use.dataset.use).name + '（书写台原内容已替换）', 'ok'); return; }
+
+    const demo = e.target.closest('[data-view-demo]');
+    if (demo) {
+      const t = tplById(demo.dataset.viewDemo);
+      const f = {}; t.sections.forEach(s => f[s.key] = s.v);
+      const lines = buildLines(t, f);
+      let html = '<div class="paper"><div class="pv-title">' + esc(TITLE_MAP[t.type] || '病历') + '</div><div class="pv-sub">' + esc(t.dept + '　' + t.disease + '·' + t.syn) + '</div>';
+      lines.forEach(l => { html += '<div class="paper-line">' + (l.label ? '<span class="k">' + esc(l.label) + '</span>' : '') + esc(l.value) + '</div>'; });
+      html += '</div>';
+      openModal(t.name, html, [
+        { label: '关闭', cls: 'btn-ghost', fn: closeModal },
+        { label: '用这个模板写', cls: 'btn-primary', fn: function () { closeModal(); loadTemplate(t.id, { demo: true }); switchView('work'); toast('已载入模板，可直接改写', 'ok'); } }
+      ]);
+      return;
+    }
+
+    const open = e.target.closest('[data-open]');
+    if (open) {
+      const rec = state.records.find(r => r.id === open.dataset.open);
+      if (!rec) return;
+      state.currentTpl = rec.tplId;
+      state.fields = JSON.parse(JSON.stringify(rec.fields || demoFields(rec.tplId)));
+      state.editingId = rec.id;
+      document.getElementById('tplSelect').value = rec.tplId;
+      renderForm(); renderPreview(); renderQuality(); persist();
+      switchView('work');
+      toast('已打开：' + rec.title + '（改动后点保存即更新）', 'ok');
+      return;
+    }
+
+    const cyc = e.target.closest('[data-cycle]');
+    if (cyc) {
+      const rec = state.records.find(r => r.id === cyc.dataset.cycle);
+      if (!rec) return;
+      rec.status = STATUS_MAP[rec.status].next;
+      rec.updatedAt = nowStamp();
+      persist(); renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts();
+      toast('状态已改为「' + STATUS_MAP[rec.status].label + '」', 'ok');
+      return;
+    }
+
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      const rec = state.records.find(r => r.id === del.dataset.del);
+      if (!rec) return;
+      confirmDialog('删除病历', '确认删除「' + rec.title + '」？删除后不可恢复。', '删除', function () {
+        state.records = state.records.filter(r => r.id !== rec.id);
+        if (state.editingId === rec.id) state.editingId = null;
+        persist(); renderKpis(); renderRecent(); renderRecChips(); renderRecList(); renderCharts();
+        toast('已删除：' + rec.title, 'warn');
+      }, true);
+      return;
+    }
+
+    const dis = e.target.closest('[data-disease]');
+    if (dis) { state.prefs.tplDisease = dis.dataset.disease; persist(); renderTplChips(); renderTplGrid(); return; }
+
+    const st = e.target.closest('[data-status]');
+    if (st) { state.prefs.recStatus = st.dataset.status; persist(); renderRecChips(); renderRecList(); return; }
+  });
+
+  // 书写台
+  document.getElementById('tplSelect').addEventListener('change', function () {
+    loadTemplate(this.value, { demo: true });
+    toast('已切换到：' + tplById(this.value).name, 'ok');
+  });
+  document.getElementById('btnFillDemo').addEventListener('click', fillDemo);
+  document.getElementById('btnResetForm').addEventListener('click', function () {
+    confirmDialog('清空表单', '将清空书写台里的全部字段（已保存的病历不受影响）。', '清空', resetForm);
+  });
+  document.getElementById('btnSaveRec').addEventListener('click', saveRecord);
+  document.getElementById('btnCopy').addEventListener('click', copyText);
+  document.getElementById('btnDownload').addEventListener('click', downloadTxt);
+  document.getElementById('btnRestore').addEventListener('click', restoreDemo);
+  document.getElementById('btnClearAll').addEventListener('click', clearAll);
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('mask').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+  // 表单输入（只更新预览与评分，不重建表单，避免光标丢失）
+  let t = null;
+  document.getElementById('formArea').addEventListener('input', function (e) {
+    const ta = e.target;
+    if (ta.tagName !== 'TEXTAREA') return;
+    const k = ta.dataset.key;
+    state.fields[k] = ta.value;
+    const counter = ta.parentElement.querySelector('label i');
+    if (counter) counter.textContent = ta.value.replace(/\s/g, '').length + ' 字';
+    renderPreview(); renderQuality();
+    clearTimeout(t); t = setTimeout(persist, 500);
+  });
+
+  // 筛选
+  document.getElementById('tplSearch').addEventListener('input', renderTplGrid);
+  document.getElementById('tplTypeSel').addEventListener('change', function () { state.prefs.tplType = this.value; persist(); renderTplGrid(); });
+  document.getElementById('tplSortSel').addEventListener('change', function () { state.prefs.tplSort = this.value; persist(); renderTplGrid(); });
+  document.getElementById('recSearch').addEventListener('input', renderRecList);
+  document.getElementById('recSortSel').addEventListener('change', function () { state.prefs.recSort = this.value; persist(); renderRecList(); });
+
+  let rz = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(rz);
+    rz = setTimeout(function () {
+      if (!document.getElementById('view-chart').hidden) renderCharts();
+    }, 220);
+  });
+}
+
+/* ===================== 启动 ===================== */
+function init() {
+  const had = restore();
+  if (!had) {
+    state.records = DEMO_RECORDS.map(function (r) {
+      return Object.assign({}, r, { fields: demoFields(r.tplId), createdAt: r.date + ' 09:00', updatedAt: r.date + ' 16:40' });
+    });
+    state.fields = demoFields(state.currentTpl);
+    persist();
+    seededOnce = true;
+  }
+  if (!state.fields || !Object.keys(state.fields).length) state.fields = demoFields(state.currentTpl);
+  paintSaveBadge();
+  renderKpis(); renderRecent(); renderTplChips(); renderTplSelect(); renderTplGrid();
+  renderRecChips(); renderRecList(); renderForm(); renderPreview(); renderQuality();
+  bindEvents();
+  switchView(state.prefs.view || 'overview');
+  if (!had) setTimeout(function () { toast('首次使用：已放好 7 份示例病历，可一键清空', 'ok'); }, 600);
+  if (!storageOK) setTimeout(function () { toast('本机存储不可用，刷新后数据会丢失', 'warn'); }, 1200);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>
