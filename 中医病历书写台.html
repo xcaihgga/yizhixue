@@ -1505,8 +1505,82 @@ KB.push(
       { name: '痰瘀阻络证', points: `关节肿胀变形，屈伸不利，疼痛固定，肌肤麻木，舌紫暗、苔白腻，脉弦涩。`, treat: '化痰行瘀，蠲痹通络', formula: '双合汤加减', herbs: `桃仁10g　红花6g　当归12g　川芎10g　法半夏10g　陈皮10g　茯苓15g　白芥子6g　地龙10g`, acu: `阿是穴、丰隆、膈俞、血海、阳陵泉`, kw: ['肿胀变形', '疼痛固定', '肌肤麻木', '舌紫暗', '脉弦涩'] },
       { name: '肝肾亏虚证', points: `关节疼痛日久，时轻时重，屈伸不利，肌肉萎缩，腰膝酸软，舌淡、苔薄白，脉沉细。`, treat: '补益肝肾，舒筋通络', formula: '独活寄生汤加减', herbs: `独活10g　桑寄生15g　杜仲12g　牛膝15g　熟地黄15g　当归12g　白芍15g　党参15g　秦艽10g`, acu: `肝俞、肾俞、足三里、太溪、阿是穴，补法`, kw: ['日久', '肌肉萎缩', '腰膝酸软', '屈伸不利', '脉沉细'] }
     ]
+  },
+  {
+    id: 'ganmao', name: '感冒', alias: '伤风、上呼吸道感染', dept: '肺病科', type: '门诊病历',
+    wm: ['感冒', '普通感冒', '上呼吸道感染', '急性上呼吸道感染', '流感', '流行性感冒'],
+    sig: ['发热', '恶寒', '鼻塞', '流涕', '喷嚏', '咽痛', '咽痒', '头身疼痛'],
+    def: `感冒是感受触冒风邪所导致的常见外感疾病，临床表现以鼻塞、流涕、喷嚏、咳嗽、头痛、恶寒、发热、全身不适为特征。`,
+    cause: `病位在肺卫，基本病机为卫表不和、肺失宣肃。风邪乘袭，从口鼻或皮毛而入，与寒、热、暑湿相合而发病；素体气虚者卫外不固，易反复感邪。`,
+    chief: '发热恶寒伴鼻塞流涕2天。',
+    hpi: `患者2天前受凉后出现发热恶寒，鼻塞流清涕，喷嚏时作，咽痒咳嗽，痰白稀，无胸痛及呼吸困难。自服感冒药后症状缓解不明显。刻下：恶寒重，发热轻，无汗，头身疼痛，鼻塞声重，纳差，二便调。`,
+    exam: `T 38.1℃　P 92次/分　BP 118/76mmHg。神志清，精神可，咽部轻度充血，双侧扁桃体无肿大；双肺呼吸音清，未闻及干湿啰音。`,
+    aux: `血常规：WBC 6.8×10⁹/L，N 62%，L 30%；CRP 8mg/L；甲型/乙型流感病毒抗原阴性。`,
+    wmDx: `急性上呼吸道感染（病毒性）`,
+    adv: `1. 注意休息，多饮温水，饮食清淡易消化。2. 监测体温，体温≥38.5℃可物理降温或对症处理。3. 中药每日1剂，分2次温服。4. 避风寒，戴口罩，避免传染家人。5. 若持续高热超过3天、气促、胸痛，及时就诊。`,
+    src: `《中医内科学》（第十版）感冒；《中医病证诊断疗效标准》感冒`,
+    synd: [
+      { name: '风寒束表证', points: `恶寒重，发热轻，无汗，头身疼痛，鼻塞流清涕，喷嚏，咽痒咳嗽，痰白稀，舌淡、苔薄白，脉浮紧。`, treat: '辛温解表，宣肺散寒', formula: '荆防败毒散加减', herbs: `荆芥10g　防风10g　羌活10g　独活10g　柴胡10g　前胡10g　川芎10g　枳壳10g　桔梗10g　茯苓15g　炙甘草6g`, acu: `风池、大椎、列缺、合谷、风门，泻法，留针20分钟`, kw: ['恶寒重', '无汗', '流清涕', '头身痛', '脉浮紧'] },
+      { name: '风热犯表证', points: `身热较著，微恶风，汗少，头胀痛，鼻塞流黄涕，咽喉红肿疼痛，咳嗽痰黄，舌红、苔薄黄，脉浮数。`, treat: '辛凉解表，宣肺清热', formula: '银翘散加减', herbs: `金银花15g　连翘15g　薄荷6g（后下）　荆芥穗10g　淡豆豉10g　牛蒡子10g　桔梗10g　竹叶10g　芦根20g　甘草6g`, acu: `大椎、曲池、合谷、外关、少商（点刺放血），泻法`, kw: ['发热重', '黄涕', '咽痛', '痰黄', '脉浮数'] },
+      { name: '暑湿伤表证', points: `身热，微恶风，汗少，肢体酸重或疼痛，头昏重胀痛，心烦口渴，胸闷，恶心，小便短赤，舌苔薄黄腻，脉濡数。`, treat: '清暑祛湿解表', formula: '新加香薷饮加减', herbs: `香薷10g　金银花15g　连翘15g　厚朴10g　白扁豆15g　藿香10g　佩兰10g　荷叶15g`, acu: `大椎、曲池、合谷、阴陵泉、足三里，平补平泻`, kw: ['暑湿', '头昏重', '胸闷', '恶心', '苔黄腻', '脉濡数'] },
+      { name: '气虚感冒', points: `恶寒较甚，发热，无汗，头身疼痛，倦怠乏力，气短懒言，反复易感，舌淡、苔薄白，脉浮无力。`, treat: '益气解表', formula: '参苏饮加减', herbs: `党参15g　紫苏叶10g　葛根15g　前胡10g　法半夏10g　茯苓15g　陈皮10g　桔梗10g　枳壳10g　木香6g　炙甘草6g`, acu: `风池、大椎、足三里、气海，补泻兼施`, kw: ['气虚', '倦怠', '气短', '反复易感', '脉浮无力'] }
+    ]
+  },
+  {
+    id: 'linzheng', name: '淋证', alias: '尿路感染、泌尿系结石', dept: '肾病科', type: '门诊病历',
+    wm: ['尿路感染', '泌尿系感染', '膀胱炎', '肾盂肾炎', '尿道炎', '尿道综合征', '泌尿系结石', '肾结石', '输尿管结石'],
+    sig: ['尿频', '尿急', '尿痛', '排尿不畅', '血尿', '腰腹绞痛', '小便涩痛'],
+    def: `淋证是以小便频数短涩、淋沥刺痛、欲出未尽、小腹拘急，或痛引腰腹为主症的病证。`,
+    cause: `病位在肾与膀胱，与脾、肝相关。基本病机为湿热蕴结下焦、膀胱气化不利；病久可致脾肾两虚、虚实夹杂。`,
+    chief: '尿频尿急尿痛3天。',
+    hpi: `患者3天前无明显诱因出现尿频、尿急、尿痛，排尿时尿道灼热，小便色黄，无发热及腰痛，口干欲饮，纳可，大便调。`,
+    exam: `T 37.2℃　P 84次/分　BP 120/78mmHg。双肾区无叩击痛，下腹轻压痛，尿道口无分泌物。`,
+    aux: `尿常规：WBC 15~20/HP，RBC 3~5/HP，蛋白（±）；尿培养：大肠埃希菌生长；泌尿系超声未见结石。`,
+    wmDx: `急性单纯性膀胱炎`,
+    adv: `1. 多饮水，勤排尿，每日饮水量1500~2000ml。2. 忌辛辣刺激及饮酒。3. 注意会阴部清洁，治疗期间避免性生活。4. 中药每日1剂，分2次温服。5. 出现高热、腰痛、血尿加重及时就诊。`,
+    src: `《中医内科学》（第十版）淋证；《中医病证诊断疗效标准》淋证`,
+    synd: [
+      { name: '热淋证', points: `小便频数短涩，灼热刺痛，溺色黄赤，少腹拘急，口苦，大便秘结，舌红、苔黄腻，脉滑数。`, treat: '清热利湿通淋', formula: '八正散加减', herbs: `车前子15g（包煎）　瞿麦15g　萹蓄15g　滑石20g（包煎）　栀子10g　大黄6g（后下）　木通6g　灯心草3g　甘草6g`, acu: `膀胱俞、中极、阴陵泉、三阴交、行间，泻法`, kw: ['尿频', '尿急', '尿痛', '灼热', '苔黄腻', '脉滑数'] },
+      { name: '石淋证', points: `尿中夹砂石，排尿涩痛，或排尿突然中断，尿道窘迫疼痛，少腹拘急，腰腹绞痛，尿中带血，舌红、苔薄黄，脉弦或带数。`, treat: '清热利湿，排石通淋', formula: '石韦散加减', herbs: `石韦15g　冬葵子15g　瞿麦15g　滑石20g（包煎）　车前子15g（包煎）　金钱草30g　海金沙15g（包煎）　鸡内金15g`, acu: `膀胱俞、中极、阴陵泉、三阴交、肾俞，泻法`, kw: ['砂石', '排尿中断', '腰腹绞痛', '血尿', '脉弦'] },
+      { name: '气淋证', points: `郁怒之后小便涩滞，淋沥不畅，少腹胀满疼痛，情志不舒，舌苔薄白，脉弦。`, treat: '理气疏导，通淋利尿', formula: '沉香散加减', herbs: `沉香3g（后下）　石韦15g　滑石20g（包煎）　当归12g　橘皮10g　白芍15g　冬葵子15g　王不留行12g　甘草6g`, acu: `中极、膀胱俞、肝俞、太冲、三阴交，平补平泻`, kw: ['情志不舒', '少腹胀满', '淋沥不畅', '脉弦'] },
+      { name: '劳淋证', points: `小便不甚赤涩，溺痛不甚，时作时止，遇劳即发，腰膝酸软，神疲乏力，舌淡、苔薄白，脉细弱。`, treat: '补脾益肾', formula: '无比山药丸加减', herbs: `山药20g　熟地黄15g　山茱萸12g　菟丝子15g　肉苁蓉12g　杜仲12g　牛膝15g　茯苓15g　泽泻12g　五味子10g`, acu: `脾俞、肾俞、关元、足三里、三阴交，补法`, kw: ['遇劳即发', '腰膝酸软', '乏力', '时作时止', '脉细弱'] }
+    ]
   }
 );
+/* ===================== 西医→中医 映射规则 ===================== */
+const kbById = id => KB.find(k => k.id === id);
+const WM_MAP = [
+  { kb: 'zhongfeng', w: ['脑梗死', '脑梗塞', '脑血栓形成', '脑栓塞', '脑梗', '缺血性脑卒中', '急性缺血性卒中', '脑卒中', '脑血管意外', '脑出血', '脑溢血', '蛛网膜下腔出血', '短暂性脑缺血发作', 'TIA'], syn: ['风痰阻络证', '肝阳暴亢证', '气虚血瘀证'], note: '卒中急性期与恢复期' },
+  { kb: 'xuanyun', w: ['眩晕症', '梅尼埃病', '美尼尔病', '耳石症', '良性阵发性位置性眩晕', '前庭神经炎', '椎基底动脉供血不足', '脑供血不足', '高血压病', '原发性高血压', '血压升高', '体位性低血压'], syn: ['肝阳上亢证', '痰湿中阻证', '气血亏虚证'], note: '以眩晕为主症者' },
+  { kb: 'toutong', w: ['偏头痛', '紧张性头痛', '紧张型头痛', '血管性头痛', '丛集性头痛', '三叉神经痛', '颈源性头痛', '高血压性头痛'], syn: ['肝阳头痛证', '瘀血头痛证', '痰浊头痛证'], note: '以头痛为主症者' },
+  { kb: 'koupi', w: ['面神经麻痹', '面神经炎', '周围性面神经炎', '贝尔面瘫', '贝尔麻痹', '亨特综合征'], syn: ['风寒袭络证', '风痰阻络证'], note: '周围性面瘫' },
+  { kb: 'bumei', w: ['失眠', '失眠症', '睡眠障碍', '入睡困难', '早醒', '睡眠维持障碍', '非器质性失眠'], syn: ['肝火扰心证', '心脾两虚证', '心胆气虚证'], note: '以失眠为主症者' },
+  { kb: 'chanzheng', w: ['帕金森病', '帕金森综合征', '特发性震颤', '老年性震颤', '肝豆状核变性'], syn: ['风阳内动证', '气血亏虚证', '髓海不足证'], note: '以震颤、强直为主症者' },
+  { kb: 'xianbing', w: ['癫痫', '癫痫发作', '全面性强直阵挛发作', '强直-阵挛发作', '局灶性癫痫', '失神发作'], syn: ['风痰闭阻证', '痰火扰神证'], note: '发作期与缓解期' },
+  { kb: 'weibing', w: ['吉兰-巴雷综合征', '格林巴利综合征', '重症肌无力', '运动神经元病', '肌萎缩侧索硬化', '脊髓损伤', '周期性麻痹'], syn: ['肺热津伤证', '湿热浸淫证', '脾胃虚弱证', '肝肾亏损证'], note: '以肢体痿软无力为主症者' },
+  { kb: 'chidai', w: ['阿尔茨海默病', '阿尔兹海默病', '老年性痴呆', '血管性痴呆', '认知障碍', '轻度认知功能障碍', '记忆力减退'], syn: ['髓海不足证', '痰浊蒙窍证', '瘀血内阻证'], note: '以智能减退为主症者' },
+  { kb: 'yuzheng', w: ['抑郁症', '抑郁状态', '焦虑症', '焦虑状态', '惊恐障碍', '躯体形式障碍', '更年期综合征', '神经症'], syn: ['肝气郁结证', '气郁化火证', '心脾两虚证'], note: '以情志抑郁、焦虑为主症者' },
+  { kb: 'xiongbi', w: ['冠心病', '冠状动脉粥样硬化性心脏病', '心绞痛', '稳定型心绞痛', '不稳定型心绞痛', '心肌缺血', '心肌梗死', '心梗', '冠脉支架术后'], syn: ['心血瘀阻证', '痰浊闭阻证', '气阴两虚证'], note: '以胸痛、胸闷为主症者' },
+  { kb: 'xinji', w: ['心律失常', '房颤', '心房颤动', '室性早搏', '房性早搏', '心动过速', '心动过缓', '心脏神经症', '心脏神经官能症'], syn: ['心虚胆怯证', '心血不足证', '阴虚火旺证'], note: '以心悸、心慌为主症者' },
+  { kb: 'xinshuai', w: ['心力衰竭', '慢性心力衰竭', '心功能不全', '心衰', 'NYHA分级', '射血分数降低'], syn: ['气虚血瘀证', '阳虚水泛证', '气阴两虚证'], note: '心衰失代偿期' },
+  { kb: 'ganmao', w: ['普通感冒', '上呼吸道感染', '急性上呼吸道感染', '流行性感冒', '甲型流感', '乙型流感', '新型冠状病毒感染'], syn: ['风寒束表证', '风热犯表证', '暑湿伤表证'], note: '外感初起，病位在肺卫' },
+  { kb: 'kesou', w: ['急性支气管炎', '慢性支气管炎', '支气管炎', '咳嗽变异性哮喘', '感染后咳嗽', '支气管扩张', '急慢性咽炎'], syn: ['风寒袭肺证', '风热犯肺证', '痰热郁肺证', '肺阴亏耗证'], note: '以咳嗽为主症者' },
+  { kb: 'feizhang', w: ['慢性阻塞性肺疾病', '慢阻肺', 'COPD', '肺气肿', '慢性肺源性心脏病', '肺心病', '呼吸衰竭', 'Ⅱ型呼吸衰竭', 'II型呼吸衰竭'], syn: ['痰浊壅肺证', '痰热郁肺证', '肺肾气虚证', '阳虚水泛证'], note: '以咳喘、气促、水肿为主症者' },
+  { kb: 'weitong', w: ['慢性胃炎', '急性胃炎', '胃溃疡', '十二指肠溃疡', '胃十二指肠溃疡', '功能性消化不良', '胃食管反流', '反流性食管炎', '幽门螺杆菌感染', '慢性萎缩性胃炎'], syn: ['寒邪客胃证', '饮食伤胃证', '肝气犯胃证', '脾胃虚寒证'], note: '以上腹胃脘疼痛为主症者' },
+  { kb: 'xiexie', w: ['急性肠炎', '慢性肠炎', '肠易激综合征', '感染性腹泻', '功能性腹泻', '溃疡性结肠炎', '克罗恩病'], syn: ['寒湿内盛证', '湿热伤中证', '脾虚湿盛证', '肾阳虚衰证'], note: '以大便次数增多、粪质稀薄为主症者' },
+  { kb: 'bianmi', w: ['功能性便秘', '习惯性便秘', '慢性便秘', '慢传输型便秘', '肠功能紊乱'], syn: ['热秘证', '气秘证', '气虚秘证', '血虚秘证'], note: '以排便困难为主症者' },
+  { kb: 'xietong', w: ['慢性乙型肝炎', '慢性丙型肝炎', '病毒性肝炎', '脂肪肝', '非酒精性脂肪性肝病', '酒精性肝病', '胆囊炎', '慢性胆囊炎', '胆石症', '胆囊结石', '肝纤维化', '肝硬化代偿期', '肝功能异常'], syn: ['肝郁气滞证', '肝胆湿热证', '肝络失养证'], note: '以胁肋疼痛为主症者' },
+  { kb: 'shuizheng', w: ['肾病综合征', '慢性肾小球肾炎', '慢性肾炎', '急性肾小球肾炎', '肾功能不全', '慢性肾脏病', 'CKD', 'IgA肾病', '肾性水肿', '低蛋白血症'], syn: ['风水相搏证', '脾阳虚衰证', '肾阳衰微证'], note: '以水肿为主症者' },
+  { kb: 'linzheng', w: ['尿路感染', '泌尿系感染', '膀胱炎', '急性膀胱炎', '肾盂肾炎', '急性肾盂肾炎', '尿道炎', '尿道综合征', '泌尿系结石', '肾结石', '输尿管结石'], syn: ['热淋证', '石淋证', '气淋证', '劳淋证'], note: '以尿频尿急尿痛为主症者' },
+  { kb: 'xiaoke', w: ['2型糖尿病', '1型糖尿病', '糖尿病', '血糖升高', '高血糖', '糖耐量异常', '糖尿病前期', '糖尿病肾病', '糖尿病周围神经病变'], syn: ['肺热津伤证（上消）', '胃热炽盛证（中消）', '肾阴亏虚证（下消）', '阴阳两虚证'], note: '以多饮多食多尿为主症者' },
+  { kb: 'yingbing', w: ['甲状腺功能亢进', '甲亢', '甲状腺功能减退', '甲减', '甲状腺结节', '桥本甲状腺炎', '桥本病', '甲状腺肿', '亚急性甲状腺炎', 'Graves病'], syn: ['气郁痰阻证', '痰结血瘀证', '肝火旺盛证', '心肝阴虚证'], note: '以颈前肿大或代谢异常为主症者' },
+  { kb: 'jingbi', w: ['颈椎病', '神经根型颈椎病', '颈肩综合征', '颈椎间盘突出', '颈型颈椎病', '落枕'], syn: ['寒湿阻络证', '气滞血瘀证', '肝肾不足证'], note: '以颈肩疼痛、上肢麻木为主症者' },
+  { kb: 'yaobi', w: ['腰椎间盘突出', '腰椎间盘突出症', '腰突', '腰肌劳损', '腰椎退行性变', '腰椎管狭窄', '第三腰椎横突综合征'], syn: ['寒湿腰痛证', '瘀血腰痛证', '肾虚腰痛证'], note: '以腰痛为主症者' },
+  { kb: 'xibi', w: ['膝骨关节炎', '膝关节骨性关节炎', '退行性膝关节炎', '膝关节滑膜炎', '半月板损伤', '髌骨软化症'], syn: ['寒湿痹阻证', '湿热痹阻证', '肝肾亏虚证'], note: '以膝痛、屈伸不利为主症者' },
+  { kb: 'jianbi', w: ['肩周炎', '肩关节周围炎', '冻结肩', '五十肩', '肩袖损伤', '肱二头肌长头腱炎'], syn: ['风寒湿痹证', '气血亏虚证'], note: '以肩痛、活动受限为主症者' },
+  { kb: 'guwei', w: ['骨质疏松', '骨质疏松症', '骨量减少', '绝经后骨质疏松', '老年性骨质疏松'], syn: ['肾精亏虚证', '脾肾两虚证'], note: '以腰背酸痛、骨量下降为主症者' },
+  { kb: 'bizheng', w: ['类风湿关节炎', '类风湿性关节炎', '风湿性关节炎', '痛风', '痛风性关节炎', '高尿酸血症', '强直性脊柱炎', '骨关节炎', '反应性关节炎', '银屑病关节炎'], syn: ['风湿热痹证', '风寒湿痹证（痛痹）', '肝肾亏虚证'], note: '以关节疼痛、肿胀、变形为主症者' }
+];
 /* ===================== 动态模板（由病种库自动生成） ===================== */
 const DYN = {};
 const deptOf = d => String(d || '').replace(/门诊$/, '');
@@ -2075,23 +2149,42 @@ function newRecord() {
 function detectDisease(text) {
   const t = text.toLowerCase();
   let best = null;
+  const consider = (kb, s, hits, rule) => {
+    if (s > 0 && (!best || s > best.score)) best = { kb: kb, score: s, hits: hits, rule: rule || null };
+  };
+  // 1) 西医→中医 映射规则：命中具体西医病名时优先
+  WM_MAP.forEach(r => {
+    const kb = kbById(r.kb);
+    if (!kb) return;
+    let hit = '';
+    r.w.forEach(w => { if (!hit && t.indexOf(w.toLowerCase()) > -1) hit = w; });
+    if (!hit) return;
+    const extra = [];
+    kb.wm.forEach(w => { if (t.indexOf(w.toLowerCase()) > -1) extra.push(w); });
+    kb.sig.forEach(w => { if (t.indexOf(w) > -1) extra.push(w); });
+    consider(kb, 20 + Math.min(hit.length, 8),
+      ['西医「' + hit + '」→ 中医「' + kb.name + '」'].concat(extra.slice(0, 6)),
+      Object.assign({}, r, { hit: hit }));
+  });
+  // 2) 病种库自带关键词兜底（未命中映射规则或症状描述为主时）
   KB.forEach(kb => {
     let s = 0; const hits = [];
     kb.wm.forEach(w => { if (t.indexOf(w.toLowerCase()) > -1) { s += 6; hits.push(w); } });
     kb.sig.forEach(w => { if (t.indexOf(w) > -1) { s += 2; hits.push(w); } });
     if (t.indexOf(kb.name) > -1) { s += 8; hits.push(kb.name); }
-    if (s > 0 && (!best || s > best.score)) best = { kb: kb, score: s, hits: hits.filter((v, i, a) => a.indexOf(v) === i) };
+    consider(kb, s, hits.filter((v, i, a) => a.indexOf(v) === i), null);
   });
-  return best || { kb: null, score: 0, hits: [] };
+  return best || { kb: null, score: 0, hits: [], rule: null };
 }
 
-function detectSyndrome(kb, text) {
+function detectSyndrome(kb, text, rule) {
   let best = { idx: 0, score: 0, hits: [] };
   kb.synd.forEach((sy, i) => {
     let s = 0; const hits = [];
     sy.kw.forEach(k => { if (text.indexOf(k) > -1) { s += 3; hits.push(k); } });
     const core = sy.name.replace(/[（(].*|[证证型].*$/g, '');
-    if (core && text.indexOf(core) > -1) { s += 2; hits.push(core); }
+    if (core && text.indexOf(core) > -1) { s += 3; hits.push(core); }
+    if (rule && rule.syn && rule.syn.indexOf(sy.name) > -1) { s += 2; hits.push('西医病名提示'); }
     if (s > best.score) best = { idx: i, score: s, hits: hits.filter((v, j, a) => a.indexOf(v) === j) };
   });
   return best;
@@ -2180,7 +2273,9 @@ function renderGenResult(kb, idx, type, meta) {
     '<div class="gen-row"><label for="genSynSel">换个证型</label><select id="genSynSel">' +
     kb.synd.map((s, i) => '<option value="' + i + '"' + (i === idx ? ' selected' : '') + '>' + esc(s.name) + '｜' + esc(s.treat) + '</option>').join('') +
     '</select><span class="sub">换证型会按同一份输入重新成文</span></div>' +
-    '<div class="gen-note">依据：' + esc(kb.src) + '。中医病名描述见「中医病种库」。</div>';
+    '<div class="gen-note">' +
+    (meta.rule ? '映射规则：西医「' + esc(meta.rule.hit || '') + '」→ 中医「' + esc(kb.name) + '」（' + esc(meta.rule.note || '常见对应关系') + '）。' : '') +
+    '依据：' + esc(kb.src) + '。中医病名描述见「中医病种库」。</div>';
 }
 
 function generateFromWM() {
@@ -2191,10 +2286,11 @@ function generateFromWM() {
   const pick = document.getElementById('genKbSel').value;
   const det = pick && pick !== 'auto' ? { kb: KB.find(k => k.id === pick), score: 0, hits: [] } : detectDisease(text);
   if (!det.kb) { toast('没识别出中医病种，请在“病种”里手动选一个再生成', 'warn'); return; }
-  const sd = detectSyndrome(det.kb, text);
+  const sd = detectSyndrome(det.kb, text, det.rule);
   const meta = {
     hits: det.hits.concat(sd.hits).filter((v, i, a) => a.indexOf(v) === i),
     score: det.score + sd.score, dScore: det.score, synScore: sd.score,
+    rule: det.rule || null,
     textHits: /主诉[：:]|现病史[：:]|查体[：:]|体格检查[：:]|辅助检查[：:]/.test(text)
   };
   applyGeneration(det.kb, sd.idx, type, text, meta);
@@ -2205,7 +2301,8 @@ function generateFromWM() {
 
 /* ===================== 中医病种库 ===================== */
 function kbHay(kb) {
-  return (kb.name + kb.alias + kb.dept + kb.wm.join('') + kb.synd.map(s => s.name + s.treat + s.formula + s.herbs + s.kw.join('')).join('') + kb.def).toLowerCase();
+  const mapTerms = WM_MAP.filter(r => r.kb === kb.id).map(r => r.w.join('') + (r.note || '')).join('');
+  return (kb.name + kb.alias + kb.dept + kb.wm.join('') + mapTerms + kb.synd.map(s => s.name + s.treat + s.formula + s.herbs + s.kw.join('')).join('') + kb.def).toLowerCase();
 }
 
 function renderKbChips() {
@@ -2245,12 +2342,17 @@ function renderKb() {
     '</div></div>').join('');
 }
 
+function kbWmText(kb) {
+  const mapped = WM_MAP.filter(r => r.kb === kb.id).map(r => r.w).reduce((a, b) => a.concat(b), []);
+  return kb.wm.concat(mapped).filter((v, i, a) => a.indexOf(v) === i && v !== kb.name).join('、');
+}
+
 function openKbCard(id) {
   const kb = KB.find(k => k.id === id);
   if (!kb) return;
   let body = '<p class="kb-desc">' + esc(kb.def) + '</p>' +
     '<table class="kb-table">' +
-    '<tr><th>西医对应</th><td>' + esc(kb.alias) + '</td></tr>' +
+    '<tr><th>西医对应</th><td>' + esc(kbWmText(kb)) + '</td></tr>' +
     '<tr><th>病因病机</th><td>' + esc(kb.cause) + '</td></tr>' +
     '<tr><th>常见证型</th><td>' + kb.synd.map(s => '· ' + esc(s.name) + '：' + esc(s.treat) + '（' + esc(s.formula) + '）').join('<br>') + '</td></tr>' +
     '<tr><th>针灸取穴</th><td>' + esc(kb.synd[0].acu) + '</td></tr>' +
@@ -2775,10 +2877,12 @@ function bindEvents() {
     const kb = KB.find(k => k.id === state.gen.kbId);
     if (!kb) return;
     const text = state.gen.text, type = state.gen.type;
-    const sd = detectSyndrome(kb, text), det = detectDisease(text);
+    const det = detectDisease(text);
+    const sd = detectSyndrome(kb, text, det.rule);
     applyGeneration(kb, +e.target.value, type, text, {
-      hits: kb.synd[+e.target.value].kw.slice(0, 6), score: det.score + sd.score,
-      dScore: det.score, synScore: sd.score, textHits: true
+      hits: (det.hits || []).concat(kb.synd[+e.target.value].kw.slice(0, 6)).filter((v, i, a) => a.indexOf(v) === i),
+      score: det.score + sd.score,
+      dScore: det.score, synScore: sd.score, rule: det.rule || null, textHits: true
     });
     toast('已换为：' + kb.synd[+e.target.value].name, 'ok');
   });
